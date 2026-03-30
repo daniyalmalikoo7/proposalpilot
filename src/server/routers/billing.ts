@@ -5,27 +5,35 @@
 import Stripe from "stripe";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { router, protectedProcedure } from "@/server/trpc";
+import { router, orgProtectedProcedure } from "@/server/trpc";
 import { logger } from "@/lib/logger";
+import { env } from "@/lib/config";
 
 const PLAN_CONFIG = {
-  starter: { envKey: "STRIPE_PRICE_STARTER", monthlyProposalLimit: 10 },
-  growth: { envKey: "STRIPE_PRICE_GROWTH", monthlyProposalLimit: 30 },
-  scale: { envKey: "STRIPE_PRICE_SCALE", monthlyProposalLimit: 100 },
-  enterprise: { envKey: "STRIPE_PRICE_ENTERPRISE", monthlyProposalLimit: 999 },
+  starter: {
+    envField: "STRIPE_PRICE_STARTER" as const,
+    monthlyProposalLimit: 10,
+  },
+  growth: {
+    envField: "STRIPE_PRICE_GROWTH" as const,
+    monthlyProposalLimit: 30,
+  },
+  scale: { envField: "STRIPE_PRICE_SCALE" as const, monthlyProposalLimit: 100 },
+  enterprise: {
+    envField: "STRIPE_PRICE_ENTERPRISE" as const,
+    monthlyProposalLimit: 999,
+  },
 } as const;
 
 type Plan = keyof typeof PLAN_CONFIG;
 
 function getStripe(): Stripe {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) throw new Error("STRIPE_SECRET_KEY is not configured");
-  return new Stripe(key);
+  return new Stripe(env.STRIPE_SECRET_KEY);
 }
 
 function getPriceId(plan: Plan): string {
-  const envKey = PLAN_CONFIG[plan].envKey;
-  const priceId = process.env[envKey];
+  const envField = PLAN_CONFIG[plan].envField;
+  const priceId = env[envField];
   if (!priceId) {
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
@@ -40,7 +48,7 @@ export const billingRouter = router({
    * Create a Stripe Checkout session for upgrading/subscribing to a plan.
    * Reuses an existing Stripe customer if the org has one.
    */
-  createCheckout: protectedProcedure
+  createCheckout: orgProtectedProcedure
     .input(
       z.object({
         orgId: z.string().cuid(),
@@ -111,7 +119,7 @@ export const billingRouter = router({
   /**
    * Create a Stripe customer portal session for managing an existing subscription.
    */
-  createPortalSession: protectedProcedure
+  createPortalSession: orgProtectedProcedure
     .input(
       z.object({
         orgId: z.string().cuid(),

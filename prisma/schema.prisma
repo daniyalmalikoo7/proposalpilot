@@ -170,6 +170,14 @@ model KnowledgeBaseItem {
   @@index([orgId, isActive])
 }
 
+model ProcessedWebhookEvent {
+  id             String   @id @default(cuid())
+  stripeEventId  String   @unique
+  processedAt    DateTime @default(now())
+
+  @@index([stripeEventId])
+}
+
 model BrandVoice {
   id          String   @id @default(cuid())
   orgId       String   @unique

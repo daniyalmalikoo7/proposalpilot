@@ -6,6 +6,7 @@
 import { PrismaClient } from "@prisma/client";
 import { logger } from "../logger";
 import { AppError } from "../types/errors";
+import { env } from "../config";
 
 // ── Provider interface ─────────────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ export class VoyageEmbeddingProvider implements EmbeddingProvider {
   readonly dimensions = 1024; // voyage-large-2 / voyage-2
 
   async embed(text: string): Promise<number[]> {
-    const key = process.env.VOYAGE_API_KEY;
+    const key = env.VOYAGE_API_KEY;
     if (!key) {
       throw new AppError(
         "VOYAGE_API_KEY is not set. Configure an embedding provider.",
@@ -72,7 +73,7 @@ export class VoyageEmbeddingProvider implements EmbeddingProvider {
   }
 
   async embedBatch(texts: string[]): Promise<number[][]> {
-    const key = process.env.VOYAGE_API_KEY;
+    const key = env.VOYAGE_API_KEY;
     if (!key) {
       throw new AppError(
         "VOYAGE_API_KEY is not set.",

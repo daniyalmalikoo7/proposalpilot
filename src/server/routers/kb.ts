@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { type Prisma } from "@prisma/client";
 import { z } from "zod";
-import { router, protectedProcedure } from "@/server/trpc";
+import { router, orgProtectedProcedure } from "@/server/trpc";
 import {
   VoyageEmbeddingProvider,
   upsertEmbedding,
@@ -26,7 +26,7 @@ export const kbRouter = router({
    * Upload and index a knowledge base item.
    * Creates the DB record then asynchronously generates and stores the embedding.
    */
-  create: protectedProcedure
+  create: orgProtectedProcedure
     .input(
       z.object({
         orgId: z.string().cuid(),
@@ -70,7 +70,7 @@ export const kbRouter = router({
   /**
    * List knowledge base items for an organization.
    */
-  list: protectedProcedure
+  list: orgProtectedProcedure
     .input(
       z.object({
         orgId: z.string().cuid(),
@@ -114,7 +114,7 @@ export const kbRouter = router({
    * Semantic search over the knowledge base using pgvector.
    * Falls back to full-text search if embedding is unavailable.
    */
-  search: protectedProcedure
+  search: orgProtectedProcedure
     .input(
       z.object({
         orgId: z.string().cuid(),
@@ -191,7 +191,7 @@ export const kbRouter = router({
   /**
    * Soft-delete a knowledge base item.
    */
-  delete: protectedProcedure
+  delete: orgProtectedProcedure
     .input(z.object({ id: z.string().cuid(), orgId: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const item = await ctx.db.knowledgeBaseItem.findFirst({

@@ -8,8 +8,9 @@ import { calculateCost, logAICall } from "./cost-tracker";
 import { runGuards } from "./guards/hallucination";
 import { AIError } from "../types/errors";
 import { logger } from "../logger";
+import { env } from "../config";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
 
 // ADR-004: Sonnet for generation, Haiku for extraction/classification
 const FALLBACK_CHAIN = [

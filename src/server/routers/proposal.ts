@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { router, protectedProcedure } from "@/server/trpc";
+import { router, orgProtectedProcedure } from "@/server/trpc";
 import { exportProposal } from "@/lib/services/export-service";
 
 const ProposalStatusSchema = z.enum([
@@ -17,7 +17,7 @@ export const proposalRouter = router({
   /**
    * Create a new proposal (without RFP — file upload handled separately).
    */
-  create: protectedProcedure
+  create: orgProtectedProcedure
     .input(
       z.object({
         title: z.string().min(1).max(255),
@@ -43,7 +43,7 @@ export const proposalRouter = router({
   /**
    * List proposals for the organization — pipeline view.
    */
-  list: protectedProcedure
+  list: orgProtectedProcedure
     .input(
       z.object({
         orgId: z.string().cuid(),
@@ -79,7 +79,7 @@ export const proposalRouter = router({
   /**
    * Fetch a single proposal with all relations.
    */
-  get: protectedProcedure
+  get: orgProtectedProcedure
     .input(z.object({ id: z.string().cuid(), orgId: z.string().cuid() }))
     .query(async ({ ctx, input }) => {
       const proposal = await ctx.db.proposal.findFirst({
@@ -106,7 +106,7 @@ export const proposalRouter = router({
   /**
    * Update a proposal section's content.
    */
-  updateSection: protectedProcedure
+  updateSection: orgProtectedProcedure
     .input(
       z.object({
         sectionId: z.string().cuid(),
@@ -117,15 +117,6 @@ export const proposalRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Verify the authenticated user's session org matches the client-provided orgId.
-      // ctx.orgId comes from Clerk's auth() — it cannot be spoofed by the client.
-      if (!ctx.orgId || ctx.orgId !== input.orgId) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "You do not have access to this organization.",
-        });
-      }
-
       // Verify org ownership before mutation
       const proposal = await ctx.db.proposal.findFirst({
         where: { id: input.proposalId, orgId: input.orgId },
@@ -152,7 +143,7 @@ export const proposalRouter = router({
   /**
    * Export a proposal as PDF or DOCX (returns a signed URL).
    */
-  export: protectedProcedure
+  export: orgProtectedProcedure
     .input(
       z.object({
         id: z.string().cuid(),
@@ -201,7 +192,7 @@ export const proposalRouter = router({
   /**
    * Mark a proposal as won or lost.
    */
-  setOutcome: protectedProcedure
+  setOutcome: orgProtectedProcedure
     .input(
       z.object({
         id: z.string().cuid(),

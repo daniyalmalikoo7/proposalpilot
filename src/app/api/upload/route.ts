@@ -13,6 +13,7 @@ import { z } from "zod";
 import { processUpload } from "@/lib/services/file-processor";
 import { isAppError } from "@/lib/types/errors";
 import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/middleware/rate-limit";
 import {
   SUPPORTED_MIME_TYPES,
   MAX_FILE_SIZE_BYTES,
@@ -62,6 +63,15 @@ export async function POST(
 
   if (!userId) {
     return errorResponse("UNAUTHORIZED", "Authentication required", 401);
+  }
+
+  // SEC-004: 50 uploads per hour per user
+  try {
+    checkRateLimit(`upload:${userId}`, 50, 60 * 60_000);
+  } catch (err) {
+    if (isAppError(err)) {
+      return errorResponse("RATE_LIMIT_EXCEEDED", err.message, 429);
+    }
   }
 
   const requestId = crypto.randomUUID();

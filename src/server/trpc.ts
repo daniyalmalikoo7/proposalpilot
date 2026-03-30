@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import { type FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { auth } from "@clerk/nextjs/server";
 import superjson from "superjson";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import { db } from "@/lib/db";
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -63,3 +63,21 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
     },
   });
 });
+
+/**
+ * Organization-scoped procedure — requires auth AND enforces that
+ * ctx.orgId (from Clerk session) matches input.orgId.
+ * SEC-003: Prevents IDOR by never trusting client-provided orgId.
+ */
+export const orgProtectedProcedure = protectedProcedure
+  .input(z.object({ orgId: z.string() }).passthrough())
+  .use(async ({ ctx, input, next }) => {
+    const { orgId } = input as { orgId: string };
+    if (!ctx.orgId || ctx.orgId !== orgId) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Organization access denied.",
+      });
+    }
+    return next({ ctx: { ...ctx, orgId: ctx.orgId } });
+  });

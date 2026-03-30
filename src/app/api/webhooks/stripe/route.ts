@@ -1,11 +1,13 @@
 // Stripe webhook handler — processes billing events and syncs org plan state.
 // Events handled: checkout.session.completed, customer.subscription.updated/deleted
 // Security: signature verified via STRIPE_WEBHOOK_SECRET before any processing.
+// SEC-002: Event deduplication via ProcessedWebhookEvent table.
 
 import { type NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { env } from "@/lib/config";
 
 // Build price-id → plan mapping at module load (values come from env vars)
 const PRICE_TO_PLAN: Record<
@@ -15,15 +17,14 @@ const PRICE_TO_PLAN: Record<
 
 (function buildPriceMap() {
   const entries = [
-    { envKey: "STRIPE_PRICE_STARTER", plan: "starter", limit: 10 },
-    { envKey: "STRIPE_PRICE_GROWTH", plan: "growth", limit: 30 },
-    { envKey: "STRIPE_PRICE_SCALE", plan: "scale", limit: 100 },
-    { envKey: "STRIPE_PRICE_ENTERPRISE", plan: "enterprise", limit: 999 },
+    { priceId: env.STRIPE_PRICE_STARTER, plan: "starter", limit: 10 },
+    { priceId: env.STRIPE_PRICE_GROWTH, plan: "growth", limit: 30 },
+    { priceId: env.STRIPE_PRICE_SCALE, plan: "scale", limit: 100 },
+    { priceId: env.STRIPE_PRICE_ENTERPRISE, plan: "enterprise", limit: 999 },
   ];
   for (const entry of entries) {
-    const id = process.env[entry.envKey];
-    if (id) {
-      PRICE_TO_PLAN[id] = {
+    if (entry.priceId) {
+      PRICE_TO_PLAN[entry.priceId] = {
         plan: entry.plan,
         monthlyProposalLimit: entry.limit,
       };
@@ -34,17 +35,20 @@ const PRICE_TO_PLAN: Record<
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature");
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  if (!sig || !secret) {
-    logger.warn("Stripe webhook: missing signature or secret");
+  if (!sig) {
+    logger.warn("Stripe webhook: missing signature");
     return NextResponse.json({ error: "Bad request" }, { status: 400 });
   }
 
   let event: Stripe.Event;
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "");
-    event = stripe.webhooks.constructEvent(body, sig, secret);
+    const stripe = new Stripe(env.STRIPE_SECRET_KEY);
+    event = stripe.webhooks.constructEvent(
+      body,
+      sig,
+      env.STRIPE_WEBHOOK_SECRET,
+    );
   } catch (err) {
     logger.warn("Stripe webhook: signature verification failed", {
       error: err instanceof Error ? err.message : String(err),
@@ -52,8 +56,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
+  // SEC-002: Deduplicate — skip events already processed
+  const existing = await db.processedWebhookEvent.findUnique({
+    where: { stripeEventId: event.id },
+  });
+  if (existing) {
+    logger.info("Stripe webhook: skipping duplicate event", {
+      eventId: event.id,
+    });
+    return NextResponse.json({ received: true });
+  }
+
   try {
-    await handleEvent(event);
+    await db.$transaction(async (tx) => {
+      await tx.processedWebhookEvent.create({
+        data: { stripeEventId: event.id },
+      });
+      await handleEvent(event, tx);
+    });
   } catch (err) {
     logger.error("Stripe webhook: handler threw", {
       eventType: event.type,
@@ -67,7 +87,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   return NextResponse.json({ received: true });
 }
 
-async function handleEvent(event: Stripe.Event): Promise<void> {
+type TxClient = Parameters<Parameters<typeof db.$transaction>[0]>[0];
+
+async function handleEvent(event: Stripe.Event, tx: TxClient): Promise<void> {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -87,7 +109,7 @@ async function handleEvent(event: Stripe.Event): Promise<void> {
       }
 
       const config = Object.values(PRICE_TO_PLAN).find((c) => c.plan === plan);
-      await db.organization.update({
+      await tx.organization.update({
         where: { id: orgId },
         data: {
           plan,
@@ -118,7 +140,7 @@ async function handleEvent(event: Stripe.Event): Promise<void> {
       if (priceId) {
         const config = PRICE_TO_PLAN[priceId];
         if (config) {
-          await db.organization.update({
+          await tx.organization.update({
             where: { id: orgId },
             data: {
               plan: config.plan,
@@ -148,7 +170,7 @@ async function handleEvent(event: Stripe.Event): Promise<void> {
         return;
       }
 
-      await db.organization.update({
+      await tx.organization.update({
         where: { id: orgId },
         data: { plan: "starter", monthlyProposalLimit: 10 },
       });

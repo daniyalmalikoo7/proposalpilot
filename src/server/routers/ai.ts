@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { router, protectedProcedure } from "@/server/trpc";
+import { router, orgProtectedProcedure } from "@/server/trpc";
 import { loadPrompt, renderPrompt } from "@/lib/ai/prompts/base";
 import { executeWithFallback } from "@/lib/ai/fallback-chain";
 import {
@@ -19,7 +19,7 @@ export const aiRouter = router({
    * Parse an RFP document into structured requirements.
    * Uses Claude Haiku for cost-efficient extraction (ADR-004).
    */
-  extractRequirements: protectedProcedure
+  extractRequirements: orgProtectedProcedure
     .input(
       z.object({
         proposalId: z.string().cuid(),
@@ -95,7 +95,7 @@ export const aiRouter = router({
    * Find relevant knowledge base items for a given requirement.
    * Embeds the requirement text and runs pgvector cosine similarity search.
    */
-  matchContent: protectedProcedure
+  matchContent: orgProtectedProcedure
     .input(
       z.object({
         orgId: z.string().cuid(),
@@ -133,7 +133,7 @@ export const aiRouter = router({
    * Generate a draft for a proposal section using Claude Sonnet.
    * Pulls KB context and brand voice, then invokes the section-generator prompt.
    */
-  generateSection: protectedProcedure
+  generateSection: orgProtectedProcedure
     .input(
       z.object({
         proposalId: z.string().cuid(),
@@ -229,7 +229,7 @@ export const aiRouter = router({
   /**
    * Analyze brand voice from uploaded proposal examples.
    */
-  analyzeBrandVoice: protectedProcedure
+  analyzeBrandVoice: orgProtectedProcedure
     .input(
       z.object({
         orgId: z.string().cuid(),
@@ -261,7 +261,7 @@ export const aiRouter = router({
   /**
    * Fetch the current brand voice profile for an organisation.
    */
-  getBrandVoice: protectedProcedure
+  getBrandVoice: orgProtectedProcedure
     .input(z.object({ orgId: z.string().cuid() }))
     .query(async ({ ctx, input }) => {
       return ctx.db.brandVoice.findUnique({
@@ -272,7 +272,7 @@ export const aiRouter = router({
   /**
    * Verify that all extracted requirements are addressed in the proposal.
    */
-  checkCompliance: protectedProcedure
+  checkCompliance: orgProtectedProcedure
     .input(
       z.object({
         proposalId: z.string().cuid(),

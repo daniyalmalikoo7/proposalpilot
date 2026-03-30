@@ -16,8 +16,11 @@ import { calculateCost, logAICall } from "@/lib/ai/cost-tracker";
 import { runGuards } from "@/lib/ai/guards/hallucination";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { env } from "@/lib/config";
+import { checkRateLimit } from "@/lib/middleware/rate-limit";
+import { isAppError } from "@/lib/types/errors";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
 
 const RequestSchema = z.object({
   proposalId: z.string().cuid(),
@@ -35,6 +38,18 @@ export async function POST(req: NextRequest): Promise<Response> {
       status: 401,
       headers: { "Content-Type": "application/json" },
     });
+  }
+
+  // SEC-004: 20 AI calls per minute per user
+  try {
+    checkRateLimit(`ai:${userId}`, 20, 60_000);
+  } catch (err) {
+    if (isAppError(err)) {
+      return new Response(JSON.stringify({ error: err.message }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
   }
 
   const body: unknown = await req.json();
