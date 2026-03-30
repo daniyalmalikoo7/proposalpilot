@@ -117,6 +117,15 @@ export const proposalRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Verify the authenticated user's session org matches the client-provided orgId.
+      // ctx.orgId comes from Clerk's auth() — it cannot be spoofed by the client.
+      if (!ctx.orgId || ctx.orgId !== input.orgId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have access to this organization.",
+        });
+      }
+
       // Verify org ownership before mutation
       const proposal = await ctx.db.proposal.findFirst({
         where: { id: input.proposalId, orgId: input.orgId },
