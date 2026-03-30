@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { router, protectedProcedure } from "@/server/trpc";
+import { exportProposal } from "@/lib/services/export-service";
 
 const ProposalStatusSchema = z.enum([
   "DRAFT",
@@ -153,7 +154,12 @@ export const proposalRouter = router({
     .mutation(async ({ ctx, input }) => {
       const proposal = await ctx.db.proposal.findFirst({
         where: { id: input.id, orgId: input.orgId },
-        select: { id: true, title: true },
+        include: {
+          sections: {
+            orderBy: { order: "asc" },
+            select: { order: true, title: true, content: true },
+          },
+        },
       });
 
       if (!proposal) {
@@ -163,9 +169,24 @@ export const proposalRouter = router({
         });
       }
 
-      // Export service integration — returns a signed download URL
-      // TODO: implement ExportService
-      return { downloadUrl: null as string | null, format: input.format };
+      const result = await exportProposal(
+        {
+          title: proposal.title,
+          clientName: proposal.clientName,
+          sections: proposal.sections,
+        },
+        input.format,
+      );
+
+      // Return as base64 data URL for client-side download trigger.
+      // Production path: upload to Cloudflare R2 and return signed URL.
+      const dataUrl = `data:${result.mimeType};base64,${result.buffer.toString("base64")}`;
+
+      return {
+        downloadUrl: dataUrl,
+        filename: result.filename,
+        format: input.format,
+      };
     }),
 
   /**
