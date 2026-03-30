@@ -1,4 +1,4 @@
-// GenerateSectionService — drafts a proposal section using Claude Sonnet.
+// GenerateSectionService — drafts a proposal section using Gemini 2.0 Flash.
 // Implements CLAUDE.md AI/GenAI Invariants: prompt versioning, structured output, cost tracking.
 
 import { z } from "zod";

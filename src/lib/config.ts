@@ -19,7 +19,7 @@ function optionalEnv(name: string): string | undefined {
 
 interface Env {
   readonly CLERK_SECRET_KEY: string;
-  readonly ANTHROPIC_API_KEY: string;
+  readonly GOOGLE_GEMINI_API_KEY: string;
   readonly VOYAGE_API_KEY: string | undefined;
   readonly STRIPE_SECRET_KEY: string;
   readonly STRIPE_WEBHOOK_SECRET: string;
@@ -36,7 +36,7 @@ export const env: Env = new Proxy({} as Env, {
     switch (prop) {
       // Required
       case "CLERK_SECRET_KEY":
-      case "ANTHROPIC_API_KEY":
+      case "GOOGLE_GEMINI_API_KEY":
       case "STRIPE_SECRET_KEY":
       case "STRIPE_WEBHOOK_SECRET":
         return requireEnv(prop);

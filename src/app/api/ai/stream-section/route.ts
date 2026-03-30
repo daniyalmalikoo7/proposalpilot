@@ -1,10 +1,10 @@
 // Streaming AI section generation endpoint.
-// Streams Anthropic SSE deltas → client SSE events, then fires a "complete" event
+// Streams Gemini deltas → client SSE events, then fires a "complete" event
 // with the full validated JSON so the client can update the editor and save.
 
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 import {
   loadPrompt,
@@ -20,10 +20,10 @@ import { env } from "@/lib/config";
 import { checkRateLimit } from "@/lib/middleware/rate-limit";
 import { isAppError } from "@/lib/types/errors";
 
-let _client: Anthropic | null = null;
-function getClient(): Anthropic {
-  if (!_client) _client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-  return _client;
+let _genAI: GoogleGenerativeAI | null = null;
+function getGenAI(): GoogleGenerativeAI {
+  if (!_genAI) _genAI = new GoogleGenerativeAI(env.GOOGLE_GEMINI_API_KEY);
+  return _genAI;
 }
 
 const RequestSchema = z.object({
@@ -126,6 +126,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   });
 
   const encoder = new TextEncoder();
+  const MODEL_NAME = "gemini-2.0-flash";
 
   const readable = new ReadableStream({
     async start(controller) {
@@ -133,22 +134,23 @@ export async function POST(req: NextRequest): Promise<Response> {
       let fullContent = "";
 
       try {
-        const stream = getClient().messages.stream({
-          model: "claude-sonnet-4-6",
-          system: prompt.systemMessage,
-          messages: [{ role: "user", content: userMessage }],
-          max_tokens: prompt.metadata.max_tokens,
-          temperature: prompt.metadata.temperature,
+        const model = getGenAI().getGenerativeModel({
+          model: MODEL_NAME,
+          systemInstruction: prompt.systemMessage,
+          generationConfig: {
+            maxOutputTokens: prompt.metadata.max_tokens,
+            temperature: prompt.metadata.temperature,
+          },
         });
 
-        for await (const event of stream) {
-          if (
-            event.type === "content_block_delta" &&
-            event.delta.type === "text_delta"
-          ) {
-            const delta = event.delta.text;
+        const streamResult = await model.generateContentStream({
+          contents: [{ role: "user", parts: [{ text: userMessage }] }],
+        });
+
+        for await (const chunk of streamResult.stream) {
+          const delta = chunk.text();
+          if (delta) {
             fullContent += delta;
-            // Forward raw delta to client
             controller.enqueue(
               encoder.encode(
                 `event: delta\ndata: ${JSON.stringify({ delta })}\n\n`,
@@ -157,24 +159,22 @@ export async function POST(req: NextRequest): Promise<Response> {
           }
         }
 
-        // Collect final message for usage stats
-        const finalMessage = await stream.finalMessage();
-        const usage = finalMessage.usage;
+        // Collect final response for usage stats
+        const aggregated = await streamResult.response;
+        const inputTokens = aggregated.usageMetadata?.promptTokenCount ?? 0;
+        const outputTokens =
+          aggregated.usageMetadata?.candidatesTokenCount ?? 0;
 
         logAICall(
           {
             content: fullContent,
             usage: {
-              inputTokens: usage.input_tokens,
-              outputTokens: usage.output_tokens,
-              cost: calculateCost(
-                "claude-sonnet-4-6",
-                usage.input_tokens,
-                usage.output_tokens,
-              ),
+              inputTokens,
+              outputTokens,
+              cost: calculateCost(MODEL_NAME, inputTokens, outputTokens),
             },
             latencyMs: Date.now() - t0,
-            model: "claude-sonnet-4-6",
+            model: MODEL_NAME,
             cached: false,
           },
           "section-generator",
@@ -196,9 +196,9 @@ export async function POST(req: NextRequest): Promise<Response> {
           return;
         }
 
-        let parsed: z.infer<typeof SectionGeneratorOutputSchema>;
+        let validatedOutput: z.infer<typeof SectionGeneratorOutputSchema>;
         try {
-          parsed = SectionGeneratorOutputSchema.parse(
+          validatedOutput = SectionGeneratorOutputSchema.parse(
             JSON.parse(fullContent) as unknown,
           );
         } catch (err) {
@@ -217,7 +217,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         // Emit complete event with validated output
         controller.enqueue(
           encoder.encode(
-            `event: complete\ndata: ${JSON.stringify(parsed)}\n\n`,
+            `event: complete\ndata: ${JSON.stringify(validatedOutput)}\n\n`,
           ),
         );
       } catch (err) {

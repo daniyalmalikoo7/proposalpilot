@@ -1,5 +1,5 @@
 // BrandVoiceAnalysisService — extracts brand voice profile from sample texts.
-// Uses Claude Opus per ADR-004 (reserved for complex analysis).
+// Uses Gemini 2.0 Flash via executeWithFallback.
 
 import { loadPrompt, renderPrompt } from "@/lib/ai/prompts/base";
 import { executeWithFallback } from "@/lib/ai/fallback-chain";

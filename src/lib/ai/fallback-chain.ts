@@ -1,7 +1,8 @@
-// Fallback chain — primary model → haiku → graceful error.
+// Fallback chain — primary model → lighter model → graceful error.
 // Implements CLAUDE.md AI/GenAI Invariants #5 (retry/backoff) and #8 (model fallback).
+// Provider: Google Gemini (free tier).
 
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z, type ZodSchema } from "zod";
 import type { GenerateParams, GenerateResult } from "./providers/types";
 import { calculateCost, logAICall } from "./cost-tracker";
@@ -10,17 +11,13 @@ import { AIError } from "../types/errors";
 import { logger } from "../logger";
 import { env } from "../config";
 
-let _client: Anthropic | null = null;
-function getClient(): Anthropic {
-  if (!_client) _client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-  return _client;
+let _genAI: GoogleGenerativeAI | null = null;
+function getGenAI(): GoogleGenerativeAI {
+  if (!_genAI) _genAI = new GoogleGenerativeAI(env.GOOGLE_GEMINI_API_KEY);
+  return _genAI;
 }
 
-// ADR-004: Sonnet for generation, Haiku for extraction/classification
-const FALLBACK_CHAIN = [
-  "claude-sonnet-4-6",
-  "claude-haiku-4-5-20251001",
-] as const;
+const FALLBACK_CHAIN = ["gemini-2.0-flash", "gemini-2.0-flash-lite"] as const;
 
 const MAX_RETRIES = 2;
 const BASE_DELAY_MS = 500;
@@ -36,25 +33,29 @@ async function callWithExponentialBackoff(
 ): Promise<GenerateResult> {
   const t0 = Date.now();
 
-  const response = await getClient().messages.create({
+  const genModel = getGenAI().getGenerativeModel({
     model,
-    system: params.systemMessage,
-    messages: [{ role: "user", content: params.userMessage }],
-    max_tokens: params.maxTokens,
-    temperature: params.temperature,
+    systemInstruction: params.systemMessage,
+    generationConfig: {
+      maxOutputTokens: params.maxTokens,
+      temperature: params.temperature,
+    },
   });
 
-  const content =
-    response.content[0]?.type === "text" ? response.content[0].text : "";
+  const result = await genModel.generateContent({
+    contents: [{ role: "user", parts: [{ text: params.userMessage }] }],
+  });
+
+  const response = result.response;
+  const content = response.text();
+
+  const inputTokens = response.usageMetadata?.promptTokenCount ?? 0;
+  const outputTokens = response.usageMetadata?.candidatesTokenCount ?? 0;
 
   const usage: GenerateResult["usage"] = {
-    inputTokens: response.usage.input_tokens,
-    outputTokens: response.usage.output_tokens,
-    cost: calculateCost(
-      model,
-      response.usage.input_tokens,
-      response.usage.output_tokens,
-    ),
+    inputTokens,
+    outputTokens,
+    cost: calculateCost(model, inputTokens, outputTokens),
   };
 
   void attempt; // used only for logging context
@@ -77,15 +78,8 @@ export async function executeWithFallback<T>(
   schema: ZodSchema<T>,
   context = "",
 ): Promise<{ data: T; metadata: GenerateResult }> {
-  const modelForPrompt = params.promptVersion
-    ? FALLBACK_CHAIN[0]
-    : FALLBACK_CHAIN[0];
-
-  // Determine which model to try first based on promptId convention:
-  // prompts prefixed with "requirement-extractor" use Haiku; others use Sonnet.
-  const primaryModel = params.promptId.includes("extractor")
-    ? "claude-haiku-4-5-20251001"
-    : modelForPrompt;
+  // Gemini 2.0 Flash for all prompts; lighter model as fallback.
+  const primaryModel = FALLBACK_CHAIN[0];
 
   const chain = [
     primaryModel,

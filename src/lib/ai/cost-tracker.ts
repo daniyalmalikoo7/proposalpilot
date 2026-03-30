@@ -4,19 +4,15 @@
 import type { GenerateResult } from "./providers/types";
 import { logger } from "../logger";
 
-// Per-token costs in USD as of 2025-03 — update when pricing changes
+// Per-token costs in USD — Gemini free tier (update when switching to paid)
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
-  "claude-haiku-4-5-20251001": {
-    input: 0.8 / 1_000_000,
-    output: 4.0 / 1_000_000,
+  "gemini-2.0-flash": {
+    input: 0,
+    output: 0,
   },
-  "claude-sonnet-4-6": {
-    input: 3.0 / 1_000_000,
-    output: 15.0 / 1_000_000,
-  },
-  "claude-opus-4-6": {
-    input: 15.0 / 1_000_000,
-    output: 75.0 / 1_000_000,
+  "gemini-2.0-flash-lite": {
+    input: 0,
+    output: 0,
   },
 };
 

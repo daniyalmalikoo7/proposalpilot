@@ -1,5 +1,5 @@
 // AI provider abstraction — all model calls go through this interface.
-// Concrete implementations: AnthropicProvider (primary), CacheProvider (fallback).
+// Concrete implementations: GeminiProvider (primary), CacheProvider (fallback).
 
 import type { ZodTypeAny } from "zod";
 
@@ -43,9 +43,8 @@ export interface AIProvider {
 
 // Model IDs — keep in sync with cost-tracker.ts
 export const MODEL_IDS = {
-  HAIKU: "claude-haiku-4-5-20251001",
-  SONNET: "claude-sonnet-4-6",
-  OPUS: "claude-opus-4-6",
+  FLASH: "gemini-2.0-flash",
+  FLASH_LITE: "gemini-2.0-flash-lite",
 } as const;
 
 export type ModelId = (typeof MODEL_IDS)[keyof typeof MODEL_IDS];
