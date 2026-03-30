@@ -9,9 +9,7 @@ const nextConfig: NextConfig = {
     "@react-pdf/renderer",
   ],
   poweredByHeader: false,
-  experimental: {
-    typedRoutes: true,
-  },
+  typedRoutes: true,
   async headers() {
     return [
       {

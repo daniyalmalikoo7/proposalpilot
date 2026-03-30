@@ -10,7 +10,11 @@ import { AIError } from "../types/errors";
 import { logger } from "../logger";
 import { env } from "../config";
 
-const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+let _client: Anthropic | null = null;
+function getClient(): Anthropic {
+  if (!_client) _client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  return _client;
+}
 
 // ADR-004: Sonnet for generation, Haiku for extraction/classification
 const FALLBACK_CHAIN = [
@@ -32,7 +36,7 @@ async function callWithExponentialBackoff(
 ): Promise<GenerateResult> {
   const t0 = Date.now();
 
-  const response = await client.messages.create({
+  const response = await getClient().messages.create({
     model,
     system: params.systemMessage,
     messages: [{ role: "user", content: params.userMessage }],

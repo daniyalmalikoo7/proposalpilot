@@ -20,7 +20,11 @@ import { env } from "@/lib/config";
 import { checkRateLimit } from "@/lib/middleware/rate-limit";
 import { isAppError } from "@/lib/types/errors";
 
-const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+let _client: Anthropic | null = null;
+function getClient(): Anthropic {
+  if (!_client) _client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  return _client;
+}
 
 const RequestSchema = z.object({
   proposalId: z.string().cuid(),
@@ -129,7 +133,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       let fullContent = "";
 
       try {
-        const stream = client.messages.stream({
+        const stream = getClient().messages.stream({
           model: "claude-sonnet-4-6",
           system: prompt.systemMessage,
           messages: [{ role: "user", content: userMessage }],

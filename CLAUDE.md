@@ -14,12 +14,11 @@ Every decision is deliberate. Every line earns its place.
 
 ## Project Context
 
-<!-- CUSTOMIZE: Replace with your actual project details -->
-
-- **Project**: [PROJECT_NAME]
-- **Stack**: [e.g., Next.js 15 / TypeScript / Tailwind / Postgres / Redis]
-- **Deployment**: [e.g., Vercel / AWS / GCP]
+- **Project**: ProposalPilot
+- **Stack**: Next.js 15 / TypeScript / Tailwind / shadcn/ui / tRPC / PostgreSQL (Supabase) / Prisma / pgvector / Tiptap / Cloudflare R2
+- **Deployment**: Vercel (frontend) + Supabase (DB/auth) + Cloudflare R2 (files)
 - **AI Provider**: Anthropic Claude API (primary), with fallback support
+- **Description**: AI-powered proposal and SOW engine for professional services companies. Ingests RFPs, extracts requirements, matches past wins from a knowledge base, and generates tailored brand-consistent proposals.
 
 ## Critical Commands
 
