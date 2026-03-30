@@ -2,6 +2,14 @@ import { TRPCError } from "@trpc/server";
 import { type Prisma } from "@prisma/client";
 import { z } from "zod";
 import { router, protectedProcedure } from "@/server/trpc";
+import {
+  VoyageEmbeddingProvider,
+  upsertEmbedding,
+  searchSimilar,
+} from "@/lib/services/embeddings";
+import { logger } from "@/lib/logger";
+
+const voyageProvider = new VoyageEmbeddingProvider();
 
 const KnowledgeBaseItemTypeSchema = z.enum([
   "CASE_STUDY",
@@ -16,8 +24,7 @@ const KnowledgeBaseItemTypeSchema = z.enum([
 export const kbRouter = router({
   /**
    * Upload and index a knowledge base item.
-   * File upload is handled by a separate multipart endpoint;
-   * this procedure creates the DB record after storage.
+   * Creates the DB record then asynchronously generates and stores the embedding.
    */
   create: protectedProcedure
     .input(
@@ -31,7 +38,7 @@ export const kbRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.knowledgeBaseItem.create({
+      const item = await ctx.db.knowledgeBaseItem.create({
         data: {
           orgId: input.orgId,
           type: input.type,
@@ -42,6 +49,22 @@ export const kbRouter = router({
           metadata: input.metadata as Prisma.InputJsonValue,
         },
       });
+
+      // Generate and persist embedding — non-fatal: item is usable without it
+      const embeddingText = `${input.title}\n\n${input.content}`;
+      upsertEmbedding(ctx.db, item.id, embeddingText, voyageProvider).catch(
+        (err: unknown) => {
+          logger.warn(
+            "Failed to generate KB embedding — item saved without vector",
+            {
+              itemId: item.id,
+              error: err instanceof Error ? err.message : String(err),
+            },
+          );
+        },
+      );
+
+      return item;
     }),
 
   /**
@@ -89,7 +112,7 @@ export const kbRouter = router({
 
   /**
    * Semantic search over the knowledge base using pgvector.
-   * Embedding computation is handled by the AI pipeline service.
+   * Falls back to full-text search if embedding is unavailable.
    */
   search: protectedProcedure
     .input(
@@ -101,8 +124,43 @@ export const kbRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      // TODO: compute query embedding via AI pipeline, then use pgvector cosine similarity
-      // For now, fall back to full-text search
+      // Attempt pgvector semantic search first
+      try {
+        const queryEmbedding = await voyageProvider.embed(input.query);
+        const results = await searchSimilar(
+          ctx.db,
+          input.orgId,
+          queryEmbedding,
+          { limit: input.limit },
+        );
+
+        // Filter by type if requested (searchSimilar returns all types)
+        const filtered = input.type
+          ? results.filter((r) => r.type === input.type)
+          : results;
+
+        logger.debug("KB semantic search complete", {
+          orgId: input.orgId,
+          resultCount: filtered.length,
+        });
+
+        return filtered.map((r) => ({
+          id: r.id,
+          type: r.type,
+          title: r.title,
+          content: r.content,
+          similarity: r.similarity,
+          metadata: {} as Record<string, unknown>,
+        }));
+      } catch (err) {
+        // Embedding provider unavailable — fall back to full-text search
+        logger.warn("Falling back to full-text KB search", {
+          orgId: input.orgId,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+
+      // Full-text fallback
       const items = await ctx.db.knowledgeBaseItem.findMany({
         where: {
           orgId: input.orgId,
@@ -123,7 +181,11 @@ export const kbRouter = router({
         },
       });
 
-      return items;
+      return items.map((item) => ({
+        ...item,
+        similarity: null as number | null,
+        metadata: item.metadata as Record<string, unknown>,
+      }));
     }),
 
   /**

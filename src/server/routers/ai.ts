@@ -1,11 +1,23 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { router, protectedProcedure } from "@/server/trpc";
+import { loadPrompt, renderPrompt } from "@/lib/ai/prompts/base";
+import { executeWithFallback } from "@/lib/ai/fallback-chain";
+import {
+  VoyageEmbeddingProvider,
+  searchSimilar,
+} from "@/lib/services/embeddings";
+import { RequirementExtractorOutputSchema } from "@/lib/ai/validators/requirement-extractor-output";
+import { SectionGeneratorOutputSchema } from "@/lib/ai/validators/section-generator-output";
+import { analyzeBrandVoice as analyzeBrandVoiceService } from "@/lib/ai/services/brand-voice-analysis";
+import { logger } from "@/lib/logger";
+
+const voyageProvider = new VoyageEmbeddingProvider();
 
 export const aiRouter = router({
   /**
    * Parse an RFP document into structured requirements.
-   * Uses Claude Haiku for cost-efficient extraction.
+   * Uses Claude Haiku for cost-efficient extraction (ADR-004).
    */
   extractRequirements: protectedProcedure
     .input(
@@ -28,14 +40,60 @@ export const aiRouter = router({
         });
       }
 
-      // TODO: invoke AI pipeline — ExtractRequirementsService
-      // Returns: { requirements: ExtractedRequirement[] }
-      return { requirements: [], proposalId: input.proposalId };
+      const prompt = loadPrompt("requirement-extractor");
+      const userMessage = renderPrompt(prompt.userTemplate, {
+        rfp_text: input.rfpText,
+        document_type: "RFP",
+      });
+
+      const { data } = await executeWithFallback(
+        {
+          promptId: "requirement-extractor",
+          promptVersion: prompt.metadata.version,
+          systemMessage: prompt.systemMessage,
+          userMessage,
+          maxTokens: prompt.metadata.max_tokens,
+          temperature: prompt.metadata.temperature,
+        },
+        RequirementExtractorOutputSchema,
+        input.rfpText,
+      );
+
+      // Replace existing requirements for idempotent re-extraction
+      await ctx.db.extractedRequirement.deleteMany({
+        where: { proposalId: input.proposalId },
+      });
+
+      const requirements = await ctx.db.$transaction(
+        data.requirements.map((r) =>
+          ctx.db.extractedRequirement.create({
+            data: {
+              proposalId: input.proposalId,
+              section: r.section,
+              requirement: r.requirement,
+              priority: r.priority,
+            },
+          }),
+        ),
+      );
+
+      logger.info("Requirements extracted", {
+        proposalId: input.proposalId,
+        count: requirements.length,
+        documentSummary: data.document_summary,
+      });
+
+      return {
+        requirements,
+        documentSummary: data.document_summary,
+        sectionsFound: data.sections_found,
+        proposalId: input.proposalId,
+      };
     }),
 
   /**
    * Find relevant knowledge base items for a given requirement.
-   * Uses pgvector similarity search.
+   * Embeds the requirement text and runs pgvector cosine similarity search.
    */
   matchContent: protectedProcedure
     .input(
@@ -47,7 +105,6 @@ export const aiRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      // Verify org access
       const requirement = await ctx.db.extractedRequirement.findFirst({
         where: {
           id: input.requirementId,
@@ -63,12 +120,18 @@ export const aiRouter = router({
         });
       }
 
-      // TODO: embed requirementText → pgvector cosine similarity search
-      return { matches: [], requirementId: input.requirementId };
+      const queryEmbedding = await voyageProvider.embed(input.requirementText);
+      const matches = await searchSimilar(ctx.db, input.orgId, queryEmbedding, {
+        limit: input.topK,
+        minSimilarity: 0.5,
+      });
+
+      return { matches, requirementId: input.requirementId };
     }),
 
   /**
    * Generate a draft for a proposal section using Claude Sonnet.
+   * Pulls KB context and brand voice, then invokes the section-generator prompt.
    */
   generateSection: protectedProcedure
     .input(
@@ -94,11 +157,71 @@ export const aiRouter = router({
         });
       }
 
-      // TODO: invoke GenerateSectionService (Sonnet model)
+      // Load KB items and brand voice in parallel
+      const [kbItems, brandVoice] = await Promise.all([
+        input.kbItemIds.length > 0
+          ? ctx.db.knowledgeBaseItem.findMany({
+              where: {
+                id: { in: input.kbItemIds },
+                orgId: input.orgId,
+                isActive: true,
+              },
+              select: { id: true, title: true, content: true, type: true },
+            })
+          : Promise.resolve([]),
+        ctx.db.brandVoice.findUnique({
+          where: { orgId: input.orgId },
+          select: { tone: true, style: true, terminology: true },
+        }),
+      ]);
+
+      const kbContext =
+        kbItems.length > 0
+          ? kbItems
+              .map(
+                (item) =>
+                  `[${item.id}] ${item.type}: ${item.title}\n${item.content}`,
+              )
+              .join("\n\n---\n\n")
+          : "No knowledge base context provided.";
+
+      const brandVoiceText = brandVoice
+        ? `Tone: ${brandVoice.tone}\nStyle: ${JSON.stringify(brandVoice.style)}\nPreferred terminology: ${JSON.stringify(brandVoice.terminology)}`
+        : "Professional, clear, and concise. First-person plural (we/our).";
+
+      const requirementsText = input.requirements
+        .map((r, i) => `${i + 1}. ${r}`)
+        .join("\n");
+
+      const prompt = loadPrompt("section-generator");
+      const userMessage = renderPrompt(prompt.userTemplate, {
+        proposal_title: proposal.title,
+        section_title: input.sectionTitle,
+        requirements: requirementsText,
+        brand_voice: brandVoiceText,
+        kb_context: kbContext,
+        instructions: input.instructions ?? "None.",
+      });
+
+      const { data } = await executeWithFallback(
+        {
+          promptId: "section-generator",
+          promptVersion: prompt.metadata.version,
+          systemMessage: prompt.systemMessage,
+          userMessage,
+          maxTokens: prompt.metadata.max_tokens,
+          temperature: prompt.metadata.temperature,
+        },
+        SectionGeneratorOutputSchema,
+        kbContext,
+      );
+
       return {
-        content: "",
-        confidenceScore: 0,
-        citedKbItemIds: [] as string[],
+        content: data.content,
+        confidenceScore: data.confidence_score,
+        citedKbItemIds: data.citations.map((c) => c.kb_item_id),
+        reviewNotes: data.review_notes,
+        requirementsAddressed: data.requirements_addressed,
         proposalId: input.proposalId,
       };
     }),
@@ -114,7 +237,6 @@ export const aiRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Verify org
       const org = await ctx.db.organization.findUnique({
         where: { id: input.orgId },
         select: { id: true },
@@ -124,8 +246,27 @@ export const aiRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Org not found." });
       }
 
-      // TODO: invoke BrandVoiceAnalysisService (Opus model)
-      return { brandVoiceId: null as string | null, orgId: input.orgId };
+      const result = await analyzeBrandVoiceService({
+        orgId: input.orgId,
+        sampleTexts: input.sampleTexts,
+      });
+
+      return {
+        brandVoiceId: result.brandVoiceId,
+        tone: result.output.tone,
+        orgId: input.orgId,
+      };
+    }),
+
+  /**
+   * Fetch the current brand voice profile for an organisation.
+   */
+  getBrandVoice: protectedProcedure
+    .input(z.object({ orgId: z.string().cuid() }))
+    .query(async ({ ctx, input }) => {
+      return ctx.db.brandVoice.findUnique({
+        where: { orgId: input.orgId },
+      });
     }),
 
   /**

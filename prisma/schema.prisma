@@ -24,6 +24,7 @@ model Organization {
   name                 String
   plan                 String   @default("starter") // starter | growth | scale | enterprise
   monthlyProposalLimit Int      @default(10)
+  stripeCustomerId     String?  @unique
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
