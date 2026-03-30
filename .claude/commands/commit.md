@@ -4,18 +4,22 @@ Every commit tells a story. Every PR is reviewable.
 ## Process
 
 ### Step 1: Verify Before Committing
+
 Run these in order. Stop if any fails:
+
 1. `npx tsc --noEmit` — Type safety
 2. `npm run lint` — Code quality
 3. `npm run test` — Correctness
 4. `git diff --stat` — Sanity check: are the right files changed?
 
 ### Step 2: Stage Changes
+
 - Stage related changes together. One logical change per commit.
 - Never commit unrelated changes in the same commit.
 - Review `git diff --cached` before committing.
 
 ### Step 3: Write Commit Message
+
 Follow Conventional Commits:
 
 ```
@@ -31,12 +35,14 @@ Refs: #issue-number (if applicable)
 Types: `feat`, `fix`, `refactor`, `test`, `docs`, `perf`, `security`, `chore`
 
 ### Step 4: Commit
+
 ```bash
 git add [specific files]
 git commit -m "type(scope): description"
 ```
 
 ### Rules
+
 - NEVER use `git add .` — always stage specific files
 - NEVER commit with `-n` or `--no-verify` (skips hooks)
 - NEVER force push to main/master

@@ -7,6 +7,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [2.0.0] — 2026-03-28
 
 ### Added
+
 - `/monitor` command — observability setup and health review (structured logger, Sentry, PostHog, AI metrics, cost alerts)
 - `/memory` command — persistent memory management across sessions (file-based + MCP memory server)
 - `logging-monitoring` skill — structured logger implementation, AI call logger, monitoring setup patterns, alert rules
@@ -19,20 +20,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `CONTRIBUTING.md` — contribution guidelines
 
 ### Changed
+
 - `CLAUDE.md` — IMPORTANT rules now reference specific skill files, added /memory and /monitor rules
-- `settings.json` — added Write(.github/**) and Write(CLAUDE.md) permissions, removed invalid env var
+- `settings.json` — added Write(.github/\*\*) and Write(CLAUDE.md) permissions, removed invalid env var
 - `README.md` — updated counts (14 commands, 5 skills), added /monitor and /memory to tables, fixed Quick Start
 - `orchestration-workflow.md` — added /monitor to Phase 7, /memory to maintenance workflows
 - `security-scanner.mjs` — narrowed .env pattern to only block actual read/write operations
 - `.env.example` — added monitoring env vars with descriptions, AI cost alert thresholds
 
 ### Fixed
+
 - Quick Start copy commands missing .github/ and .gitignore
 - README counts stale (said 10 commands / 3 skills, actual was 14 / 5)
 
 ## [1.0.0] — 2026-03-27
 
 ### Added
+
 - Initial release
 - 12 slash commands: /explore, /architect, /plan, /implement, /design-ui, /test, /review, /security, /prompt-engineer, /debug, /commit, /ship
 - 5 subagents: librarian, reviewer, qa, devops, performance

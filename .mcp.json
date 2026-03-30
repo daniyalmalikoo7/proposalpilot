@@ -18,11 +18,16 @@
     "filesystem": {
       "command": "npx",
       "args": [
-        "-y", "@modelcontextprotocol/server-filesystem",
-        "--allow-read", ".",
-        "--allow-write", "src",
-        "--allow-write", "docs",
-        "--allow-write", "tests"
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "--allow-read",
+        ".",
+        "--allow-write",
+        "src",
+        "--allow-write",
+        "docs",
+        "--allow-write",
+        "tests"
       ]
     }
   }

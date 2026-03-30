@@ -3,6 +3,7 @@
 Production database patterns for this project. Follow these exactly.
 
 ## Schema Design Rules
+
 1. Every table has: `id` (cuid2), `createdAt`, `updatedAt`
 2. Use soft deletes (`deletedAt` nullable timestamp) for user-facing data
 3. Normalize to 3NF, denormalize only with measured performance justification
@@ -12,6 +13,7 @@ Production database patterns for this project. Follow these exactly.
 7. Add CHECK constraints for business rules at the DB level
 
 ## Prisma Conventions
+
 ```prisma
 model User {
   id        String   @id @default(cuid())
@@ -39,6 +41,7 @@ enum UserRole {
 ```
 
 ## Query Patterns
+
 - Always use transactions for multi-table writes
 - Always use `select` to limit returned fields (never return `*`)
 - Always paginate list queries (cursor-based for large sets, offset for small)
@@ -46,6 +49,7 @@ enum UserRole {
 - Never perform DB queries inside loops — batch with `IN` clauses
 
 ## Migration Rules
+
 - Migrations are forward-only in production
 - Every migration must be reversible (test `down` migration)
 - Data migrations go in separate files from schema migrations

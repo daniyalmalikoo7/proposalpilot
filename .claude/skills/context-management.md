@@ -20,7 +20,9 @@ export function countTokens(text: string): number {
   }
 }
 
-export function countMessageTokens(messages: { role: string; content: string }[]): number {
+export function countMessageTokens(
+  messages: { role: string; content: string }[],
+): number {
   let total = 0;
   for (const msg of messages) {
     total += countTokens(msg.content) + 4; // overhead per message
@@ -34,10 +36,10 @@ export function countMessageTokens(messages: { role: string; content: string }[]
 ```typescript
 // src/lib/ai/context/budget.ts
 export interface ContextBudget {
-  maxInputTokens: number;    // Hard limit for input
-  maxOutputTokens: number;   // Hard limit for output
-  reserveTokens: number;     // Keep free for system prompt + output
-  warningThreshold: number;  // Log warning when exceeded (0.0-1.0)
+  maxInputTokens: number; // Hard limit for input
+  maxOutputTokens: number; // Hard limit for output
+  reserveTokens: number; // Keep free for system prompt + output
+  warningThreshold: number; // Log warning when exceeded (0.0-1.0)
 }
 
 export const DEFAULT_BUDGETS: Record<string, ContextBudget> = {
@@ -57,7 +59,7 @@ export const DEFAULT_BUDGETS: Record<string, ContextBudget> = {
 
 export function checkBudget(
   tokens: number,
-  budget: ContextBudget
+  budget: ContextBudget,
 ): { ok: boolean; usage: number; warning: boolean } {
   const available = budget.maxInputTokens - budget.reserveTokens;
   const usage = tokens / available;
@@ -91,7 +93,7 @@ export function truncateFIFO(items: string[], maxTokens: number): string[] {
 /** Keep highest-relevance items (search results, knowledge base) */
 export function truncateByRelevance(
   items: { content: string; score: number }[],
-  maxTokens: number
+  maxTokens: number,
 ): string[] {
   const sorted = [...items].sort((a, b) => b.score - a.score);
   const result: string[] = [];
@@ -113,7 +115,8 @@ export function buildContextWithBudget(params: {
   chatHistory: string[];
   budget: ContextBudget;
 }): { system: string; user: string; truncated: boolean } {
-  const { systemPrompt, userQuery, knowledgeBase, chatHistory, budget } = params;
+  const { systemPrompt, userQuery, knowledgeBase, chatHistory, budget } =
+    params;
   const available = budget.maxInputTokens - budget.reserveTokens;
 
   const systemTokens = countTokens(systemPrompt);
@@ -127,8 +130,9 @@ export function buildContextWithBudget(params: {
 
   const kbContext = truncateByRelevance(knowledgeBase, kbBudget);
   const historyContext = truncateFIFO(chatHistory, historyBudget);
-  const truncated = kbContext.length < knowledgeBase.length
-    || historyContext.length < chatHistory.length;
+  const truncated =
+    kbContext.length < knowledgeBase.length ||
+    historyContext.length < chatHistory.length;
 
   const user = [
     "## Relevant context",
@@ -144,6 +148,7 @@ export function buildContextWithBudget(params: {
 ```
 
 ## Rules
+
 - ALWAYS count tokens before sending to the API
 - ALWAYS set a context budget per prompt type
 - NEVER send unbounded context (like entire documents without truncation)

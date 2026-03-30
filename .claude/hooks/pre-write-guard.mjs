@@ -37,7 +37,9 @@ const MAX_FILE_LINES = 350;
 
 for (const pattern of PROTECTED_PATTERNS) {
   if (pattern.test(filePath)) {
-    process.stderr.write(`BLOCKED: Protected file "${filePath}" cannot be modified by agents.\n`);
+    process.stderr.write(
+      `BLOCKED: Protected file "${filePath}" cannot be modified by agents.\n`,
+    );
     process.exit(2);
   }
 }
@@ -45,7 +47,9 @@ for (const pattern of PROTECTED_PATTERNS) {
 if (content) {
   const lineCount = content.split("\n").length;
   if (lineCount > MAX_FILE_LINES) {
-    process.stderr.write(`BLOCKED: File exceeds ${MAX_FILE_LINES} lines (${lineCount}). Extract into smaller modules first.\n`);
+    process.stderr.write(
+      `BLOCKED: File exceeds ${MAX_FILE_LINES} lines (${lineCount}). Extract into smaller modules first.\n`,
+    );
     process.exit(2);
   }
 }
@@ -61,7 +65,9 @@ const SECRET_PATTERNS = [
 if (content) {
   for (const pattern of SECRET_PATTERNS) {
     if (pattern.test(content)) {
-      process.stderr.write("BLOCKED: Potential secret/credential detected. Use environment variables instead.\n");
+      process.stderr.write(
+        "BLOCKED: Potential secret/credential detected. Use environment variables instead.\n",
+      );
       process.exit(2);
     }
   }

@@ -17,14 +17,23 @@ interface LogEntry {
   [key: string]: unknown;
 }
 
-const LOG_LEVELS: Record<LogLevel, number> = { debug: 0, info: 1, warn: 2, error: 3 };
+const LOG_LEVELS: Record<LogLevel, number> = {
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3,
+};
 const MIN_LEVEL = (process.env.LOG_LEVEL as LogLevel) || "info";
 
 function shouldLog(level: LogLevel): boolean {
   return LOG_LEVELS[level] >= LOG_LEVELS[MIN_LEVEL];
 }
 
-function log(level: LogLevel, message: string, meta?: Record<string, unknown>): void {
+function log(
+  level: LogLevel,
+  message: string,
+  meta?: Record<string, unknown>,
+): void {
   if (!shouldLog(level)) return;
   const entry: LogEntry = {
     level,
@@ -38,10 +47,12 @@ function log(level: LogLevel, message: string, meta?: Record<string, unknown>): 
 }
 
 export const logger = {
-  debug: (msg: string, meta?: Record<string, unknown>) => log("debug", msg, meta),
+  debug: (msg: string, meta?: Record<string, unknown>) =>
+    log("debug", msg, meta),
   info: (msg: string, meta?: Record<string, unknown>) => log("info", msg, meta),
   warn: (msg: string, meta?: Record<string, unknown>) => log("warn", msg, meta),
-  error: (msg: string, meta?: Record<string, unknown>) => log("error", msg, meta),
+  error: (msg: string, meta?: Record<string, unknown>) =>
+    log("error", msg, meta),
 };
 ```
 
@@ -63,7 +74,11 @@ export function logAICall(params: {
   error?: string;
   userId?: string;
 }) {
-  const cost = calculateCost(params.model, params.inputTokens, params.outputTokens);
+  const cost = calculateCost(
+    params.model,
+    params.inputTokens,
+    params.outputTokens,
+  );
   logger.info("ai_call", {
     ...params,
     cost,
@@ -75,6 +90,7 @@ export function logAICall(params: {
 ## Monitoring Setup Checklist
 
 ### Error Tracking (Sentry)
+
 ```typescript
 // src/lib/monitoring/sentry.ts
 import * as Sentry from "@sentry/nextjs";
@@ -95,6 +111,7 @@ Sentry.init({
 ```
 
 ### Analytics (PostHog)
+
 ```typescript
 // src/lib/monitoring/posthog.ts
 import posthog from "posthog-js";
@@ -108,7 +125,10 @@ export function initAnalytics() {
   });
 }
 
-export function trackAIUsage(event: string, properties: Record<string, unknown>) {
+export function trackAIUsage(
+  event: string,
+  properties: Record<string, unknown>,
+) {
   posthog.capture(event, {
     ...properties,
     $set: { last_ai_usage: new Date().toISOString() },
@@ -117,6 +137,7 @@ export function trackAIUsage(event: string, properties: Record<string, unknown>)
 ```
 
 ### AI-Specific Metrics to Track
+
 - `ai_call_latency_ms` — p50, p95, p99 per prompt
 - `ai_call_tokens_in` / `ai_call_tokens_out` — per user, per prompt
 - `ai_call_cost_usd` — per user per day (alert if > budget)
@@ -127,6 +148,7 @@ export function trackAIUsage(event: string, properties: Record<string, unknown>)
 - `ai_fallback_trigger_rate` — per model (alert if primary fails > 1%)
 
 ### Alert Rules
+
 ```yaml
 # Define in your monitoring platform
 alerts:

@@ -12,7 +12,7 @@ export class AppError extends Error {
     public code: string,
     public statusCode: number = 500,
     public isOperational: boolean = true,
-    public context?: Record<string, unknown>
+    public context?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "AppError";
@@ -40,7 +40,7 @@ export class RateLimitError extends AppError {
 
 // API route error wrapper
 export function withErrorHandler<T>(
-  handler: (req: Request) => Promise<T>
+  handler: (req: Request) => Promise<T>,
 ): (req: Request) => Promise<Response> {
   return async (req) => {
     try {
@@ -51,7 +51,7 @@ export function withErrorHandler<T>(
         logger.warn(error.message, { code: error.code, ...error.context });
         return Response.json(
           { error: { code: error.code, message: error.message } },
-          { status: error.statusCode }
+          { status: error.statusCode },
         );
       }
       // Unexpected error — log full details, return generic message
@@ -61,7 +61,7 @@ export function withErrorHandler<T>(
       });
       return Response.json(
         { error: { code: "INTERNAL_ERROR", message: "Something went wrong" } },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };
@@ -121,7 +121,7 @@ export class ErrorBoundary extends Component<Props, State> {
 // src/lib/ai/error-recovery.ts
 export async function callWithRetry<T>(
   fn: () => Promise<T>,
-  options: { maxRetries?: number; baseDelayMs?: number } = {}
+  options: { maxRetries?: number; baseDelayMs?: number } = {},
 ): Promise<T> {
   const { maxRetries = 3, baseDelayMs = 1000 } = options;
   let lastError: Error | undefined;
@@ -153,6 +153,7 @@ export async function callWithRetry<T>(
 ```
 
 ## Rules
+
 - NEVER swallow errors silently (empty catch blocks)
 - NEVER expose stack traces or internal details to users
 - ALWAYS log the full error server-side, return a safe message client-side

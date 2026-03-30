@@ -15,6 +15,7 @@ Every decision is deliberate. Every line earns its place.
 ## Project Context
 
 <!-- CUSTOMIZE: Replace with your actual project details -->
+
 - **Project**: [PROJECT_NAME]
 - **Stack**: [e.g., Next.js 15 / TypeScript / Tailwind / Postgres / Redis]
 - **Deployment**: [e.g., Vercel / AWS / GCP]

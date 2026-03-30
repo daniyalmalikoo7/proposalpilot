@@ -33,9 +33,19 @@ const BLOCKED_PATTERNS = [
   { pattern: /wget.*\|\s*(bash|sh|zsh)/, reason: "Pipe to shell" },
   { pattern: /chmod\s+777/, reason: "World-writable permissions" },
   { pattern: /sudo\s+/, reason: "Privilege escalation" },
-  { pattern: /(?:cat|less|more|head|tail|nano|vim|vi|code|open)\s+\.env(?!\.example)/, reason: "Reading .env file directly — use environment variables" },
-  { pattern: />\s*\.env(?!\.example)/, reason: "Writing to .env file directly" },
-  { pattern: /npm publish/, reason: "Publishing packages requires manual confirmation" },
+  {
+    pattern:
+      /(?:cat|less|more|head|tail|nano|vim|vi|code|open)\s+\.env(?!\.example)/,
+    reason: "Reading .env file directly — use environment variables",
+  },
+  {
+    pattern: />\s*\.env(?!\.example)/,
+    reason: "Writing to .env file directly",
+  },
+  {
+    pattern: /npm publish/,
+    reason: "Publishing packages requires manual confirmation",
+  },
 ];
 
 for (const { pattern, reason } of BLOCKED_PATTERNS) {

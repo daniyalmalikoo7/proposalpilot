@@ -45,7 +45,10 @@ import matter from "gray-matter";
 export function loadPrompt(promptId: string, version?: string) {
   const dir = join(process.cwd(), "docs", "prompts");
   // Find latest version if not specified
-  const file = readFileSync(join(dir, `${promptId}.v${version || "latest"}.md`), "utf-8");
+  const file = readFileSync(
+    join(dir, `${promptId}.v${version || "latest"}.md`),
+    "utf-8",
+  );
   const { data: metadata, content } = matter(file);
 
   const [systemMessage, userTemplate] = content.split("<user>");
@@ -57,7 +60,10 @@ export function loadPrompt(promptId: string, version?: string) {
   };
 }
 
-export function renderPrompt(template: string, variables: Record<string, string>) {
+export function renderPrompt(
+  template: string,
+  variables: Record<string, string>,
+) {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => {
     if (!(key in variables)) throw new Error(`Missing prompt variable: ${key}`);
     return sanitizeForPrompt(variables[key]);
@@ -67,10 +73,10 @@ export function renderPrompt(template: string, variables: Record<string, string>
 function sanitizeForPrompt(input: string): string {
   // Prevent prompt injection by escaping control sequences
   return input
-    .replace(/<\/?s>/g, "")          // Remove system message tags
-    .replace(/<\/?user>/g, "")        // Remove user message tags
-    .replace(/\{\{/g, "{ {")          // Escape template syntax
-    .slice(0, 10000);                  // Hard length limit
+    .replace(/<\/?s>/g, "") // Remove system message tags
+    .replace(/<\/?user>/g, "") // Remove user message tags
+    .replace(/\{\{/g, "{ {") // Escape template syntax
+    .slice(0, 10000); // Hard length limit
 }
 ```
 
@@ -81,17 +87,21 @@ function sanitizeForPrompt(input: string): string {
 export async function executeWithFallback<T>(
   params: GenerateParams,
   schema: ZodSchema<T>,
-  options?: { maxRetries?: number }
+  options?: { maxRetries?: number },
 ): Promise<{ data: T; metadata: GenerateResult }> {
   const chain = [
     { provider: "anthropic", model: "claude-sonnet-4-20250514" },
     { provider: "anthropic", model: "claude-haiku-4-5-20251001" },
-    { provider: "cache",     model: "semantic-cache" },
+    { provider: "cache", model: "semantic-cache" },
   ];
 
   for (const step of chain) {
     try {
-      const result = await callWithRetry(step, params, options?.maxRetries ?? 2);
+      const result = await callWithRetry(
+        step,
+        params,
+        options?.maxRetries ?? 2,
+      );
       const parsed = schema.safeParse(JSON.parse(result.content));
 
       if (parsed.success) {
@@ -123,12 +133,22 @@ export async function executeWithFallback<T>(
 ```typescript
 // src/lib/ai/cost-tracker.ts
 const MODEL_COSTS = {
-  "claude-sonnet-4-20250514": { input: 3.0 / 1_000_000, output: 15.0 / 1_000_000 },
-  "claude-haiku-4-5-20251001": { input: 0.80 / 1_000_000, output: 4.0 / 1_000_000 },
+  "claude-sonnet-4-20250514": {
+    input: 3.0 / 1_000_000,
+    output: 15.0 / 1_000_000,
+  },
+  "claude-haiku-4-5-20251001": {
+    input: 0.8 / 1_000_000,
+    output: 4.0 / 1_000_000,
+  },
   "claude-opus-4-6": { input: 15.0 / 1_000_000, output: 75.0 / 1_000_000 },
 } as const;
 
-export function calculateCost(model: string, inputTokens: number, outputTokens: number): number {
+export function calculateCost(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+): number {
   const rates = MODEL_COSTS[model as keyof typeof MODEL_COSTS];
   if (!rates) return 0;
   return inputTokens * rates.input + outputTokens * rates.output;
@@ -160,7 +180,14 @@ export interface HallucinationCheck {
 export const defaultGuards: HallucinationCheck[] = [
   {
     name: "json_validity",
-    check: async (output) => { try { JSON.parse(output); return true; } catch { return false; } },
+    check: async (output) => {
+      try {
+        JSON.parse(output);
+        return true;
+      } catch {
+        return false;
+      }
+    },
     severity: "block",
   },
   {
@@ -185,7 +212,7 @@ export const defaultGuards: HallucinationCheck[] = [
 export async function runGuards(
   output: string,
   context: string,
-  guards: HallucinationCheck[] = defaultGuards
+  guards: HallucinationCheck[] = defaultGuards,
 ): Promise<{ passed: boolean; failures: string[] }> {
   const failures: string[] = [];
 
