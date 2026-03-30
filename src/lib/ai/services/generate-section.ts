@@ -2,7 +2,11 @@
 // Implements CLAUDE.md AI/GenAI Invariants: prompt versioning, structured output, cost tracking.
 
 import { z } from "zod";
-import { loadPrompt, renderPrompt } from "@/lib/ai/prompts/base";
+import {
+  loadPrompt,
+  renderPrompt,
+  sanitizeForPrompt,
+} from "@/lib/ai/prompts/base";
 import { executeWithFallback } from "@/lib/ai/fallback-chain";
 import { SectionGeneratorOutputSchema } from "@/lib/ai/validators/section-generator-output";
 import type { SectionGeneratorOutput } from "@/lib/ai/validators/section-generator-output";
@@ -73,7 +77,7 @@ export async function generateSection(
       ? kbItems
           .map(
             (item) =>
-              `[KB Item ID: ${item.id}]\nType: ${item.type}\nTitle: ${item.title}\n\n${item.content}`,
+              `[KB Item ID: ${item.id}]\nType: ${item.type}\nTitle: ${sanitizeForPrompt(item.title)}\n\n${sanitizeForPrompt(item.content)}`,
           )
           .join("\n\n---\n\n")
       : "No knowledge base context available.";
@@ -133,14 +137,16 @@ function formatBrandVoice(
   const style = bv.style as Record<string, unknown> | null;
   const terminology = bv.terminology as Record<string, unknown> | null;
 
-  const lines: string[] = [`Tone: ${bv.tone}`];
+  const lines: string[] = [`Tone: ${sanitizeForPrompt(bv.tone)}`];
 
   if (style) {
-    lines.push(`Style: ${JSON.stringify(style)}`);
+    lines.push(`Style: ${sanitizeForPrompt(JSON.stringify(style))}`);
   }
   if (terminology && typeof terminology === "object") {
     const preferred = Array.isArray(terminology.preferred_terms)
-      ? (terminology.preferred_terms as string[]).join(", ")
+      ? (terminology.preferred_terms as string[])
+          .map(sanitizeForPrompt)
+          .join(", ")
       : "";
     if (preferred) lines.push(`Preferred terminology: ${preferred}`);
   }

@@ -3,9 +3,14 @@
 // with the full validated JSON so the client can update the editor and save.
 
 import { NextRequest } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { loadPrompt, renderPrompt } from "@/lib/ai/prompts/base";
+import {
+  loadPrompt,
+  renderPrompt,
+  sanitizeForPrompt,
+} from "@/lib/ai/prompts/base";
 import { SectionGeneratorOutputSchema } from "@/lib/ai/validators/section-generator-output";
 import { calculateCost, logAICall } from "@/lib/ai/cost-tracker";
 import { runGuards } from "@/lib/ai/guards/hallucination";
@@ -16,7 +21,6 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const RequestSchema = z.object({
   proposalId: z.string().cuid(),
-  orgId: z.string().cuid(),
   sectionTitle: z.string().min(1).max(255),
   requirements: z.array(z.string()).min(1).max(20),
   kbItemIds: z.array(z.string().cuid()).max(10).default([]),
@@ -24,6 +28,15 @@ const RequestSchema = z.object({
 });
 
 export async function POST(req: NextRequest): Promise<Response> {
+  const { userId, orgId } = await auth();
+
+  if (!userId || !orgId) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const body: unknown = await req.json();
   const parsed = RequestSchema.safeParse(body);
 
@@ -38,7 +51,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   // Verify proposal + org ownership
   const proposal = await db.proposal.findFirst({
-    where: { id: input.proposalId, orgId: input.orgId },
+    where: { id: input.proposalId, orgId },
     select: { id: true, title: true, orgId: true },
   });
 
@@ -65,7 +78,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   ]);
 
   const brandVoiceText = brandVoice
-    ? `Tone: ${brandVoice.tone}`
+    ? `Tone: ${sanitizeForPrompt(brandVoice.tone)}`
     : "Professional, clear, and concise. Use active voice and first-person plural.";
 
   const kbContext =
@@ -73,7 +86,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       ? kbItems
           .map(
             (item) =>
-              `[KB Item ID: ${item.id}]\nType: ${item.type}\nTitle: ${item.title}\n\n${item.content}`,
+              `[KB Item ID: ${item.id}]\nType: ${item.type}\nTitle: ${sanitizeForPrompt(item.title)}\n\n${sanitizeForPrompt(item.content)}`,
           )
           .join("\n\n---\n\n")
       : "No knowledge base context available.";

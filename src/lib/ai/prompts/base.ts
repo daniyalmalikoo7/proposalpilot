@@ -113,7 +113,7 @@ function parseVersionFromFilename(filename: string): number {
  * This is a defence-in-depth measure; system/user message separation is the
  * primary control (see CLAUDE.md AI/GenAI Invariant #7).
  */
-function sanitizeForPrompt(input: string): string {
+export function sanitizeForPrompt(input: string): string {
   return input
     .replace(/<\/?s>/g, "") // remove system message tags
     .replace(/<\/?user>/g, "") // remove user message tags

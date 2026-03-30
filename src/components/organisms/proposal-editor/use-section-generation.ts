@@ -6,7 +6,10 @@
 import { useCallback, useRef, useState } from "react";
 import { markdownToHtml } from "./markdown-to-html";
 import type { GenerateContext } from "./types";
-import type { SectionGeneratorOutput } from "@/lib/ai/validators/section-generator-output";
+import {
+  SectionGeneratorOutputSchema,
+  type SectionGeneratorOutput,
+} from "@/lib/ai/validators/section-generator-output";
 
 export interface SectionGenerationState {
   isGenerating: boolean;
@@ -57,7 +60,6 @@ export function useSectionGeneration({
         signal: abortRef.current.signal,
         body: JSON.stringify({
           proposalId: generateContext.proposalId,
-          orgId: generateContext.orgId,
           sectionTitle,
           requirements: generateContext.requirements,
           kbItemIds: generateContext.kbItemIds,
@@ -105,8 +107,14 @@ export function useSectionGeneration({
               parsed !== null &&
               "content" in parsed
             ) {
-              const output = parsed as SectionGeneratorOutput;
-              onComplete(markdownToHtml(output.content), output);
+              const validated = SectionGeneratorOutputSchema.safeParse(parsed);
+              if (!validated.success) {
+                throw new Error("AI output failed validation");
+              }
+              onComplete(
+                markdownToHtml(validated.data.content),
+                validated.data,
+              );
             } else if (
               typeof parsed === "object" &&
               parsed !== null &&

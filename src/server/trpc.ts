@@ -1,5 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { type FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
+import { auth } from "@clerk/nextjs/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 import { db } from "@/lib/db";
@@ -15,12 +16,11 @@ export type Context = {
 export async function createContext(
   _opts: FetchCreateContextFnOptions,
 ): Promise<Context> {
-  // Auth is handled per-procedure via Clerk middleware
-  // Headers are forwarded automatically by Next.js
+  const { userId, orgId } = await auth();
   return {
     db,
-    clerkUserId: null,
-    orgId: null,
+    clerkUserId: userId,
+    orgId: orgId ?? null,
   };
 }
 

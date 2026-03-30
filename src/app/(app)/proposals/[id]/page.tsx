@@ -5,8 +5,9 @@
 //   Center: Stack of Tiptap section editors with per-section Generate buttons
 //   Right : Knowledge base search panel for selecting AI context
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 import { Download, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { RequirementsSidebar } from "@/components/organisms/requirements-sidebar";
@@ -19,54 +20,29 @@ import type {
   GenerateContext,
 } from "@/components/organisms/proposal-editor";
 import type { SectionGeneratorOutput } from "@/lib/ai/validators/section-generator-output";
+import { trpc } from "@/lib/trpc/client";
 
-// ── Hardcoded demo data (replace with tRPC queries once auth is wired) ─────
+// ── Debounce helper ───────────────────────────────────────────────────────
 
-const DEMO_SECTIONS: ProposalSection[] = [
-  { id: "s1", title: "Executive Summary", content: "", order: 1 },
-  { id: "s2", title: "Technical Approach", content: "", order: 2 },
-  { id: "s3", title: "Past Performance", content: "", order: 3 },
-  { id: "s4", title: "Staffing Plan", content: "", order: 4 },
-  { id: "s5", title: "Pricing", content: "", order: 5 },
-];
+function useDebouncedCallback<T extends (...args: Parameters<T>) => void>(
+  callback: T,
+  delayMs: number,
+): T {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const callbackRef = useRef(callback);
+  callbackRef.current = callback;
 
-const DEMO_REQUIREMENTS: Requirement[] = [
-  {
-    id: "r1",
-    section: "Technical",
-    requirement: "Demonstrate experience with cloud-native architectures",
-    priority: "high",
-    addressed: false,
-  },
-  {
-    id: "r2",
-    section: "Technical",
-    requirement: "Describe approach to data security and compliance",
-    priority: "high",
-    addressed: false,
-  },
-  {
-    id: "r3",
-    section: "Management",
-    requirement: "Provide key personnel resumes and qualifications",
-    priority: "medium",
-    addressed: false,
-  },
-  {
-    id: "r4",
-    section: "Past Performance",
-    requirement: "Include three relevant contracts from the last 5 years",
-    priority: "high",
-    addressed: false,
-  },
-  {
-    id: "r5",
-    section: "Pricing",
-    requirement: "Submit firm-fixed-price breakdown by task",
-    priority: "medium",
-    addressed: false,
-  },
-];
+  return useCallback(
+    (...args: Parameters<T>) => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(
+        () => callbackRef.current(...args),
+        delayMs,
+      );
+    },
+    [delayMs],
+  ) as T;
+}
 
 // ── Export helper ──────────────────────────────────────────────────────────
 
@@ -82,15 +58,52 @@ function downloadDataUrl(dataUrl: string, filename: string) {
 export default function ProposalEditorPage() {
   const params = useParams<{ id: string }>();
   const proposalId = params.id;
+  const { orgId } = useAuth();
 
-  // In production these come from tRPC queries; demo data used here
-  const ORG_ID = "demo-org";
-  const [sections, setSections] = useState<ProposalSection[]>(DEMO_SECTIONS);
-  const [requirements] = useState<Requirement[]>(DEMO_REQUIREMENTS);
+  // Fetch proposal data via tRPC
+  const proposalQuery = trpc.proposal.get.useQuery(
+    { id: proposalId, orgId: orgId ?? "" },
+    { enabled: Boolean(orgId) },
+  );
 
+  // Mutation for auto-saving sections
+  const updateSectionMutation = trpc.proposal.updateSection.useMutation();
+
+  // tRPC utils for imperative queries
+  const trpcUtils = trpc.useUtils();
+
+  // Local sections state (synced from server data)
+  const [sections, setSections] = useState<ProposalSection[]>([]);
   const [selectedReqIds, setSelectedReqIds] = useState<Set<string>>(new Set());
   const [selectedKbIds, setSelectedKbIds] = useState<Set<string>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
+
+  // Sync server data into local state when it loads
+  useEffect(() => {
+    if (proposalQuery.data?.sections) {
+      setSections(
+        proposalQuery.data.sections.map((s) => ({
+          id: s.id,
+          title: s.title,
+          content: s.content,
+          order: s.order,
+          confidenceScore: null,
+        })),
+      );
+    }
+  }, [proposalQuery.data?.sections]);
+
+  // Map requirements from server data
+  const requirements: Requirement[] = useMemo(() => {
+    if (!proposalQuery.data?.requirements) return [];
+    return proposalQuery.data.requirements.map((r) => ({
+      id: r.id,
+      section: r.section ?? "General",
+      requirement: r.requirement,
+      priority: (r.priority ?? "medium") as "high" | "medium" | "low",
+      addressed: r.addressed ?? false,
+    }));
+  }, [proposalQuery.data?.requirements]);
 
   // Toggle requirement selection for AI context
   const handleToggleRequirement = useCallback((id: string) => {
@@ -112,23 +125,49 @@ export default function ProposalEditorPage() {
     });
   }, []);
 
-  // KB search (calls tRPC kb.search in production)
+  // KB search
   const handleKbSearch = useCallback(
     async (query: string): Promise<KBItem[]> => {
-      // Demo: return empty — replace with trpc.kb.search.query({ orgId: ORG_ID, query })
-      void query;
-      return [];
+      if (!orgId) return [];
+      const results = await trpcUtils.kb.search.fetch({
+        orgId,
+        query,
+        limit: 5,
+      });
+      return results.map((r) => ({
+        id: r.id,
+        type: r.type,
+        title: r.title,
+        content: r.content,
+      }));
     },
-    [],
+    [orgId, trpcUtils.kb.search],
+  );
+
+  // Debounced auto-save section content
+  const debouncedSave = useDebouncedCallback(
+    (sectionId: string, content: string) => {
+      if (!orgId) return;
+      updateSectionMutation.mutate({
+        sectionId,
+        proposalId,
+        orgId,
+        content,
+      });
+    },
+    1000,
   );
 
   // Auto-save section content
-  const handleContentChange = useCallback((sectionId: string, html: string) => {
-    setSections((prev) =>
-      prev.map((s) => (s.id === sectionId ? { ...s, content: html } : s)),
-    );
-    // Production: trpc.proposal.updateSection.mutate({ sectionId, proposalId, orgId: ORG_ID, content: html })
-  }, []);
+  const handleContentChange = useCallback(
+    (sectionId: string, html: string) => {
+      setSections((prev) =>
+        prev.map((s) => (s.id === sectionId ? { ...s, content: html } : s)),
+      );
+      debouncedSave(sectionId, html);
+    },
+    [debouncedSave],
+  );
 
   // Handle generation complete — update section + confidence
   const handleGenerateComplete = useCallback(
@@ -145,30 +184,25 @@ export default function ProposalEditorPage() {
   );
 
   // Export handler
+  const exportMutation = trpc.proposal.export.useMutation();
   const handleExport = useCallback(
     async (format: "pdf" | "docx") => {
+      if (!orgId) return;
       setIsExporting(true);
       try {
-        // Production: trpc.proposal.export.mutate({ id: proposalId, orgId: ORG_ID, format })
-        // Demo: call export endpoint directly
-        const response = await fetch("/api/export", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ proposalId, orgId: ORG_ID, format }),
+        const result = await exportMutation.mutateAsync({
+          id: proposalId,
+          orgId,
+          format,
         });
-        if (!response.ok) throw new Error("Export failed");
-        const json = (await response.json()) as {
-          downloadUrl: string;
-          filename: string;
-        };
-        downloadDataUrl(json.downloadUrl, json.filename);
+        downloadDataUrl(result.downloadUrl, result.filename);
       } catch {
-        // In production show a toast; demo silently fails
+        // Toast notification would go here in production
       } finally {
         setIsExporting(false);
       }
     },
-    [proposalId],
+    [proposalId, orgId, exportMutation],
   );
 
   // Build generate context using currently selected requirements + KB items
@@ -183,12 +217,40 @@ export default function ProposalEditorPage() {
   const generateContext: GenerateContext = useMemo(
     () => ({
       proposalId,
-      orgId: ORG_ID,
+      orgId: orgId ?? "",
       requirements: selectedRequirementTexts,
       kbItemIds: Array.from(selectedKbIds),
     }),
-    [proposalId, selectedKbIds, selectedRequirementTexts],
+    [proposalId, orgId, selectedKbIds, selectedRequirementTexts],
   );
+
+  if (!orgId) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-muted-foreground">
+          Select an organization to continue.
+        </p>
+      </div>
+    );
+  }
+
+  if (proposalQuery.isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (proposalQuery.error) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-destructive">
+          Failed to load proposal. {proposalQuery.error.message}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">

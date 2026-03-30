@@ -8,6 +8,7 @@
 //   3. Queue background job for embedding generation
 
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { processUpload } from "@/lib/services/file-processor";
 import { isAppError } from "@/lib/types/errors";
@@ -57,9 +58,15 @@ type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
 export async function POST(
   request: NextRequest,
 ): Promise<NextResponse<SuccessResponse | ErrorResponse>> {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return errorResponse("UNAUTHORIZED", "Authentication required", 401);
+  }
+
   const requestId = crypto.randomUUID();
 
-  logger.info("Upload request received", { requestId });
+  logger.info("Upload request received", { requestId, userId });
 
   // 1. Parse multipart form
   let formData: FormData;
