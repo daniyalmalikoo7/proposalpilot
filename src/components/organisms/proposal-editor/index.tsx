@@ -3,13 +3,7 @@
 // ProposalEditor — Tiptap-based rich text editor for a single proposal section.
 // Streams AI-generated content from /api/ai/stream-section via SSE.
 
-import {
-  Component,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { Component, useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode, ErrorInfo } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";

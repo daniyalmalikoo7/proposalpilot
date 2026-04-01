@@ -111,7 +111,12 @@ export function useProposalEditor(proposalId: string) {
       requirementsBySection,
       kbItemIds: Array.from(selectedKbIds),
     }),
-    [proposalId, selectedRequirementTexts, requirementsBySection, selectedKbIds],
+    [
+      proposalId,
+      selectedRequirementTexts,
+      requirementsBySection,
+      selectedKbIds,
+    ],
   );
 
   // ── Mutations ────────────────────────────────────────────────────────────────
