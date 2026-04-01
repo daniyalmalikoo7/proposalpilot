@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, loggerLink } from "@trpc/client";
+import { useAuth } from "@clerk/nextjs";
 import superjson from "superjson";
 import { trpc } from "./client";
 
@@ -17,6 +18,11 @@ export function TRPCReactProvider({
 }: {
   readonly children: React.ReactNode;
 }) {
+  const { getToken } = useAuth();
+  // Ref so the closure inside httpBatchLink always reads the latest getToken.
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
+
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -40,6 +46,10 @@ export function TRPCReactProvider({
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
           transformer: superjson,
+          headers: async () => {
+            const token = await getTokenRef.current();
+            return token ? { authorization: `Bearer ${token}` } : {};
+          },
         }),
       ],
     }),

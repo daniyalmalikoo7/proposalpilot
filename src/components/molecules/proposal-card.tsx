@@ -1,3 +1,6 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import { MoreHorizontal, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/atoms/progress";
@@ -40,11 +43,15 @@ interface ProposalCardProps {
 }
 
 export function ProposalCard({ proposal }: ProposalCardProps) {
+  const router = useRouter();
   const isOverdue =
     proposal.deadline !== null && proposal.deadline < new Date();
 
   return (
-    <div className="group flex items-center gap-4 border-b border-border px-4 py-3 transition-colors last:border-0 hover:bg-accent/40">
+    <div
+      className="group flex cursor-pointer items-center gap-4 border-b border-border px-4 py-3 transition-colors last:border-0 hover:bg-accent/40"
+      onClick={() => router.push(`/proposals/${proposal.id}`)}
+    >
       {/* Title + client */}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{proposal.title}</p>
@@ -95,9 +102,14 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
         {formatRelativeTime(proposal.updatedAt)}
       </div>
 
-      {/* Actions */}
-      <div className="w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
-        <Button variant="ghost" size="icon" className="h-7 w-7">
+      {/* Actions — stopPropagation so the row click doesn't fire */}
+      <div className="relative z-10 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={(e) => e.stopPropagation()}
+        >
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </div>

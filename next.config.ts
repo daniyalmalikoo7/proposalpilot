@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.clerk.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.clerk.io https://*.clerk.accounts.dev https://api.stripe.com https://api.anthropic.com https://api.voyageai.com; frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.clerk.accounts.dev; frame-ancestors 'self'",
+              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.clerk.io https://*.clerk.accounts.dev https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: https://img.clerk.com; font-src 'self' data:; connect-src 'self' https://api.clerk.io https://*.clerk.accounts.dev https://api.clerk.com https://clerk.com https://*.clerk.com https://clerk-telemetry.com https://*.clerk.io https://api.stripe.com https://api.anthropic.com https://api.voyageai.com https://generativelanguage.googleapis.com; frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://*.clerk.accounts.dev https://challenges.cloudflare.com; worker-src 'self' blob: https://*.clerk.accounts.dev; frame-ancestors 'self'",
           },
         ],
       },

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import { TRPCReactProvider } from "@/lib/trpc/provider";
 import { ThemeProvider } from "@/lib/theme";
 import "@/app/globals.css";
@@ -18,12 +19,17 @@ export default function RootLayout({
   readonly children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <TRPCReactProvider>
-          <ThemeProvider>{children}</ThemeProvider>
-        </TRPCReactProvider>
-      </body>
-    </html>
+    <ClerkProvider
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/onboarding"
+    >
+      <html lang="en" suppressHydrationWarning>
+        <body className={inter.className}>
+          <TRPCReactProvider>
+            <ThemeProvider>{children}</ThemeProvider>
+          </TRPCReactProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

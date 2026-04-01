@@ -1,83 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Loader2, Plus, Search } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { KBItemCard } from "@/components/molecules/kb-item-card";
-import { UploadDropzone } from "@/components/organisms/upload-dropzone";
+import { KBUploadForm } from "@/components/organisms/kb-upload-form";
+import { trpc } from "@/lib/trpc/client";
 import type { KBItem, KBItemType } from "@/lib/types/proposal";
 import { cn } from "@/lib/utils";
-
-const KB = 1024;
-const MB = 1024 * 1024;
-
-const MOCK_ITEMS: KBItem[] = [
-  {
-    id: "1",
-    title: "Smart City Digital Transformation — Apex Case Study 2023",
-    type: "CASE_STUDY",
-    fileSize: 2.4 * MB,
-    uploadedAt: new Date("2024-11-12"),
-    isWin: true,
-  },
-  {
-    id: "2",
-    title: "Cloud Migration Strategy Template v3",
-    type: "METHODOLOGY",
-    fileSize: 156 * KB,
-    uploadedAt: new Date("2024-12-01"),
-    isWin: false,
-  },
-  {
-    id: "3",
-    title: "Harbor Manufacturing ERP Proposal (Won)",
-    type: "PAST_PROPOSAL",
-    fileSize: 4.1 * MB,
-    uploadedAt: new Date("2025-01-08"),
-    isWin: true,
-  },
-  {
-    id: "4",
-    title: "Executive Team Bios — Updated Q1 2025",
-    type: "TEAM_BIO",
-    fileSize: 89 * KB,
-    uploadedAt: new Date("2025-01-15"),
-    isWin: false,
-  },
-  {
-    id: "5",
-    title: "Cybersecurity Practice Capabilities Deck",
-    type: "CAPABILITY",
-    fileSize: 3.2 * MB,
-    uploadedAt: new Date("2025-02-03"),
-    isWin: false,
-  },
-  {
-    id: "6",
-    title: "Pacific Retail Portal Proposal (Lost)",
-    type: "PAST_PROPOSAL",
-    fileSize: 2.8 * MB,
-    uploadedAt: new Date("2025-02-20"),
-    isWin: false,
-  },
-  {
-    id: "7",
-    title: "Data Analytics Services Overview",
-    type: "CAPABILITY",
-    fileSize: 1.5 * MB,
-    uploadedAt: new Date("2025-03-01"),
-    isWin: false,
-  },
-  {
-    id: "8",
-    title: "Agile Delivery Methodology — Internal Guide",
-    type: "METHODOLOGY",
-    fileSize: 445 * KB,
-    uploadedAt: new Date("2025-03-10"),
-    isWin: false,
-  },
-];
 
 const TYPE_FILTERS: ReadonlyArray<{
   label: string;
@@ -91,17 +22,84 @@ const TYPE_FILTERS: ReadonlyArray<{
   { label: "Capabilities", value: "CAPABILITY" },
 ];
 
+// Map DB row to the KBItem display type.
+type DbKBItem = {
+  id: string;
+  type: string;
+  title: string;
+  isWin: boolean;
+  metadata: unknown;
+  createdAt: Date;
+};
+
+function mapDbItem(item: DbKBItem): KBItem {
+  const meta = (item.metadata ?? {}) as Record<string, unknown>;
+  const fileSize = typeof meta.fileSize === "number" ? meta.fileSize : 0;
+  return {
+    id: item.id,
+    title: item.title,
+    type: item.type as KBItemType,
+    fileSize,
+    uploadedAt: item.createdAt,
+    isWin: item.isWin,
+  };
+}
+
 export default function KnowledgeBasePage() {
   const [activeType, setActiveType] = useState<KBItemType | "ALL">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [showUpload, setShowUpload] = useState(false);
 
-  const filtered = MOCK_ITEMS.filter((item) => {
-    const matchesType = activeType === "ALL" || item.type === activeType;
-    const q = searchQuery.trim().toLowerCase();
-    const matchesSearch = q === "" || item.title.toLowerCase().includes(q);
-    return matchesType && matchesSearch;
-  });
+  // Debounce search input by 300 ms.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const isSearching = debouncedQuery.trim() !== "";
+
+  const { data: listData, isLoading: listLoading } = trpc.kb.list.useQuery(
+    {
+      type: activeType !== "ALL" ? (activeType as KBItemType) : undefined,
+      limit: 100,
+    },
+    { enabled: !isSearching },
+  );
+
+  const { data: searchData, isLoading: searchLoading } =
+    trpc.kb.search.useQuery(
+      {
+        query: debouncedQuery.trim(),
+        type: activeType !== "ALL" ? (activeType as KBItemType) : undefined,
+        limit: 20,
+      },
+      { enabled: isSearching },
+    );
+
+  const isLoading = isSearching ? searchLoading : listLoading;
+
+  const items = useMemo((): KBItem[] => {
+    if (isSearching) {
+      return (searchData ?? []).map((r) => ({
+        id: r.id,
+        title: r.title,
+        type: r.type as KBItemType,
+        fileSize: 0,
+        uploadedAt: new Date(),
+        isWin: false,
+      }));
+    }
+    return (listData?.items ?? []).map(mapDbItem);
+  }, [isSearching, listData, searchData]);
+
+  // Counts for type filter tabs (only meaningful in list mode).
+  const allItems = useMemo(
+    () => (listData?.items ?? []).map(mapDbItem),
+    [listData],
+  );
+  const getCount = (t: KBItemType | "ALL") =>
+    t === "ALL" ? allItems.length : allItems.filter((i) => i.type === t).length;
 
   return (
     <div className="space-y-5">
@@ -112,7 +110,7 @@ export default function KnowledgeBasePage() {
             Knowledge Base
           </h1>
           <p className="text-sm text-muted-foreground">
-            {MOCK_ITEMS.length} documents · powers your AI generation
+            {allItems.length} documents · powers your AI generation
           </p>
         </div>
         <Button size="sm" onClick={() => setShowUpload((v) => !v)}>
@@ -121,8 +119,13 @@ export default function KnowledgeBasePage() {
         </Button>
       </div>
 
-      {/* Upload (togglable) */}
-      {showUpload && <UploadDropzone />}
+      {/* Upload form (togglable) */}
+      {showUpload && (
+        <KBUploadForm
+          onSuccess={() => setShowUpload(false)}
+          onCancel={() => setShowUpload(false)}
+        />
+      )}
 
       {/* Search */}
       <div className="relative">
@@ -138,10 +141,7 @@ export default function KnowledgeBasePage() {
       {/* Type filter tabs */}
       <div className="flex flex-wrap gap-1.5">
         {TYPE_FILTERS.map((tab) => {
-          const count =
-            tab.value === "ALL"
-              ? MOCK_ITEMS.length
-              : MOCK_ITEMS.filter((i) => i.type === tab.value).length;
+          const count = getCount(tab.value);
           const isActive = activeType === tab.value;
           return (
             <button
@@ -155,31 +155,53 @@ export default function KnowledgeBasePage() {
               )}
             >
               {tab.label}
-              <span
-                className={cn(
-                  "rounded-full px-1.5 font-mono text-[10px]",
-                  isActive ? "bg-primary-foreground/20" : "bg-background",
-                )}
-              >
-                {count}
-              </span>
+              {!isSearching && (
+                <span
+                  className={cn(
+                    "rounded-full px-1.5 font-mono text-[10px]",
+                    isActive ? "bg-primary-foreground/20" : "bg-background",
+                  )}
+                >
+                  {count}
+                </span>
+              )}
             </button>
           );
         })}
       </div>
 
+      {/* Loading */}
+      {isLoading && (
+        <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {isSearching ? "Searching…" : "Loading…"}
+        </div>
+      )}
+
       {/* Grid */}
-      {filtered.length === 0 ? (
+      {!isLoading && items.length === 0 && (
         <div className="rounded-lg border border-border bg-card px-6 py-12 text-center">
           <p className="text-sm text-muted-foreground">
-            {searchQuery
+            {isSearching
               ? "No results match your search."
               : "No documents in this category."}
           </p>
+          {!isSearching && activeType === "ALL" && (
+            <Button
+              size="sm"
+              className="mt-4"
+              onClick={() => setShowUpload(true)}
+            >
+              <Plus className="mr-1.5 h-4 w-4" />
+              Upload your first document
+            </Button>
+          )}
         </div>
-      ) : (
+      )}
+
+      {!isLoading && items.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {filtered.map((item) => (
+          {items.map((item) => (
             <KBItemCard key={item.id} item={item} />
           ))}
         </div>

@@ -1,50 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { ExternalLink, Plus, Mail, MoreHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ExternalLink, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
+import { trpc } from "@/lib/trpc/client";
 import { cn } from "@/lib/utils";
 
 type SettingsTab = "organization" | "team" | "billing";
-
-interface TeamMember {
-  readonly id: string;
-  readonly name: string;
-  readonly email: string;
-  readonly role: "Owner" | "Admin" | "Member";
-  readonly joinedAt: string;
-}
-
-const MOCK_TEAM: ReadonlyArray<TeamMember> = [
-  {
-    id: "1",
-    name: "Alex Torres",
-    email: "alex@meridiangroup.com",
-    role: "Owner",
-    joinedAt: "Jan 2025",
-  },
-  {
-    id: "2",
-    name: "Jordan Lee",
-    email: "jordan@meridiangroup.com",
-    role: "Admin",
-    joinedAt: "Jan 2025",
-  },
-  {
-    id: "3",
-    name: "Sam Patel",
-    email: "sam@meridiangroup.com",
-    role: "Member",
-    joinedAt: "Feb 2025",
-  },
-];
-
-const ROLE_STYLES: Readonly<Record<TeamMember["role"], string>> = {
-  Owner: "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-400",
-  Admin: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
-  Member: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-};
 
 const TABS: ReadonlyArray<{ value: SettingsTab; label: string }> = [
   { value: "organization", label: "Organization" },
@@ -52,18 +15,42 @@ const TABS: ReadonlyArray<{ value: SettingsTab; label: string }> = [
   { value: "billing", label: "Billing" },
 ];
 
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("");
-}
-
 export default function SettingsPage() {
   const [tab, setTab] = useState<SettingsTab>("organization");
-  const [orgName, setOrgName] = useState("Meridian Consulting Group");
-  const [website, setWebsite] = useState("https://meridiangroup.com");
-  const [industry, setIndustry] = useState("Professional Services");
+  const [orgName, setOrgName] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const { data: org, isLoading: orgLoading } = trpc.settings.getOrg.useQuery();
+
+  // Sync fetched org name into local state once loaded.
+  useEffect(() => {
+    if (org?.name) setOrgName(org.name);
+  }, [org?.name]);
+
+  const utils = trpc.useUtils();
+
+  const updateOrg = trpc.settings.updateOrg.useMutation({
+    onSuccess: () => {
+      void utils.settings.getOrg.invalidate();
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    },
+  });
+
+  const createPortal = trpc.billing.createPortalSession.useMutation({
+    onSuccess: ({ url }) => {
+      if (url) window.location.href = url;
+    },
+  });
+
+  function handleSaveOrg() {
+    if (!orgName.trim()) return;
+    updateOrg.mutate({ name: orgName.trim() });
+  }
+
+  function handleManageBilling() {
+    createPortal.mutate({ returnUrl: window.location.href });
+  }
 
   return (
     <div className="space-y-6">
@@ -103,86 +90,59 @@ export default function SettingsPage() {
             <Input
               value={orgName}
               onChange={(e) => setOrgName(e.target.value)}
+              disabled={orgLoading || updateOrg.isPending}
+              placeholder={orgLoading ? "Loading…" : "Your organisation name"}
             />
           </div>
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium">Website</label>
-            <Input
-              value={website}
-              onChange={(e) => setWebsite(e.target.value)}
-              type="url"
-            />
+
+          {updateOrg.error && (
+            <p className="text-sm text-destructive">
+              {updateOrg.error.message}
+            </p>
+          )}
+
+          <div className="flex items-center gap-3">
+            <Button
+              size="sm"
+              onClick={handleSaveOrg}
+              disabled={
+                !orgName.trim() ||
+                orgLoading ||
+                updateOrg.isPending ||
+                orgName.trim() === (org?.name ?? "")
+              }
+            >
+              {updateOrg.isPending && (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              )}
+              Save changes
+            </Button>
+            {saveSuccess && (
+              <span className="text-sm text-emerald-600 dark:text-emerald-400">
+                Saved!
+              </span>
+            )}
           </div>
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium">Industry</label>
-            <Input
-              value={industry}
-              onChange={(e) => setIndustry(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium">Description</label>
-            <textarea
-              rows={3}
-              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="Describe what your organisation does and who your typical clients are."
-            />
-          </div>
-          <Button size="sm">Save changes</Button>
         </div>
       )}
 
-      {/* Team */}
+      {/* Team (display-only for now — Clerk manages invitations) */}
       {tab === "team" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              {MOCK_TEAM.length} members
+              Team members are managed through Clerk.
             </p>
-            <Button size="sm">
+            <Button size="sm" disabled>
               <Plus className="mr-1.5 h-4 w-4" />
               Invite member
             </Button>
           </div>
-          <div className="rounded-lg border border-border">
-            {MOCK_TEAM.map((member, i) => (
-              <div
-                key={member.id}
-                className={cn(
-                  "flex items-center gap-4 px-4 py-3",
-                  i < MOCK_TEAM.length - 1 && "border-b border-border",
-                )}
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                  {getInitials(member.name)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">{member.name}</p>
-                  <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Mail className="h-3 w-3 shrink-0" />
-                    {member.email}
-                  </p>
-                </div>
-                <span
-                  className={cn(
-                    "inline-flex shrink-0 items-center rounded-md px-2 py-0.5 text-xs font-medium",
-                    ROLE_STYLES[member.role],
-                  )}
-                >
-                  {member.role}
-                </span>
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  {member.joinedAt}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 shrink-0"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+          <div className="rounded-lg border border-border bg-card p-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Use your Clerk organisation dashboard to invite and manage team
+              members.
+            </p>
           </div>
         </div>
       )}
@@ -196,48 +156,49 @@ export default function SettingsPage() {
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Current plan
                 </p>
-                <p className="mt-1 font-mono text-2xl font-semibold tracking-tight">
-                  Pro
+                <p className="mt-1 font-mono text-2xl font-semibold capitalize tracking-tight">
+                  {orgLoading ? "—" : (org?.plan ?? "starter")}
                 </p>
                 <p className="mt-0.5 text-sm text-muted-foreground">
-                  $149 / month · billed monthly
+                  {org?.monthlyProposalLimit
+                    ? `${org.monthlyProposalLimit} proposals / month`
+                    : ""}
                 </p>
               </div>
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
-                Active
-              </span>
+              {org?.stripeCustomerId && (
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+                  Active
+                </span>
+              )}
             </div>
 
-            <div className="mt-4 space-y-2.5 border-t border-border pt-4">
-              {[
-                { label: "Proposals this month", value: "4 / 20" },
-                { label: "Knowledge base storage", value: "14.2 MB / 1 GB" },
-                { label: "Team members", value: "3 / 10" },
-              ].map((row) => (
-                <div key={row.label} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{row.label}</span>
-                  <span className="font-mono font-medium">{row.value}</span>
-                </div>
-              ))}
-            </div>
+            {createPortal.error && (
+              <p className="mt-3 text-sm text-destructive">
+                {createPortal.error.message}
+              </p>
+            )}
 
             <div className="mt-5 flex gap-3">
-              <Button size="sm">
-                <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+              <Button
+                size="sm"
+                onClick={handleManageBilling}
+                disabled={createPortal.isPending || !org?.stripeCustomerId}
+              >
+                {createPortal.isPending ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                )}
                 Manage billing
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" disabled>
                 Upgrade plan
               </Button>
             </div>
           </div>
 
           <div className="rounded-lg border border-border bg-card p-5">
-            <p className="text-sm font-medium">Next invoice</p>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              April 30, 2026 · $149.00
-            </p>
-            <p className="mt-3 text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Billing is managed through Stripe. Click &quot;Manage
               billing&quot; to update your payment method, download invoices, or
               cancel your subscription.

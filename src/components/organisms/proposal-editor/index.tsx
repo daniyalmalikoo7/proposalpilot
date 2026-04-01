@@ -3,7 +3,14 @@
 // ProposalEditor — Tiptap-based rich text editor for a single proposal section.
 // Streams AI-generated content from /api/ai/stream-section via SSE.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Component,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import type { ReactNode, ErrorInfo } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -18,6 +25,42 @@ import type { SectionGeneratorOutput } from "@/lib/ai/validators/section-generat
 
 export type { ProposalSection, GenerateContext };
 
+// ── Error boundary ──────────────────────────────────────────────────────────
+// Wraps each section editor so one bad section can't crash the whole page.
+class EditorErrorBoundary extends Component<
+  { readonly children: ReactNode; readonly title: string },
+  { readonly hasError: boolean }
+> {
+  constructor(props: { readonly children: ReactNode; readonly title: string }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(_: Error) {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error(
+      `[ProposalEditor] Section "${this.props.title}" crashed:`,
+      error,
+      info.componentStack,
+    );
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>
+            Section &ldquo;{this.props.title}&rdquo; could not be rendered.
+            Refresh to retry.
+          </span>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 interface ProposalEditorProps {
   readonly section: ProposalSection;
   readonly generateContext: GenerateContext;
@@ -27,6 +70,8 @@ interface ProposalEditorProps {
     output: SectionGeneratorOutput,
   ) => void;
   readonly autoSaveDelayMs?: number;
+  /** When true, starts generation automatically (once). Used by "Generate All". */
+  readonly autoGenerate?: boolean;
 }
 
 function ConfidenceBadge({ score }: { readonly score: number }) {
@@ -40,30 +85,41 @@ function ConfidenceBadge({ score }: { readonly score: number }) {
   );
 }
 
-export function ProposalEditor({
+function ProposalEditorInner({
   section,
   generateContext,
   onContentChange,
   onGenerateComplete,
   autoSaveDelayMs = 1500,
+  autoGenerate = false,
 }: ProposalEditorProps) {
   const [confidenceScore, setConfidenceScore] = useState<number | null>(
     section.confidenceScore ?? null,
   );
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tracks whether the auto-generate has already fired for this activation,
+  // preventing double-fires when deps change during an active generation.
+  const autoGenerateFiredRef = useRef(false);
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit,
       Placeholder.configure({
         placeholder: `Write the "${section.title}" section…`,
       }),
     ],
-    content: section.content ? markdownToHtml(section.content) : "",
+    // Detect format: DB-saved content starts with "<" (HTML from editor.getHTML()).
+    // AI-streamed content that hasn't been edited yet is markdown — convert it.
+    content: section.content
+      ? section.content.trimStart().startsWith("<")
+        ? section.content
+        : markdownToHtml(section.content)
+      : "",
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none focus:outline-none min-h-[300px] px-6 py-4",
+          "prose prose-sm max-w-none focus:outline-none min-h-[200px] h-auto px-6 py-4",
       },
     },
     onUpdate: ({ editor: ed }) => {
@@ -99,8 +155,19 @@ export function ProposalEditor({
       onComplete: handleGenerateComplete,
     });
 
+  // Drive "Generate All" queue: fire once when autoGenerate flips to true.
+  useEffect(() => {
+    if (autoGenerate && !autoGenerateFiredRef.current && !isGenerating) {
+      autoGenerateFiredRef.current = true;
+      void start();
+    }
+    if (!autoGenerate) {
+      autoGenerateFiredRef.current = false;
+    }
+  }, [autoGenerate, isGenerating, start]);
+
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card">
+    <div className="flex flex-col rounded-lg border border-border bg-card">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border bg-muted/20 px-4 py-2.5">
         <div className="flex items-center gap-3">
@@ -184,7 +251,7 @@ export function ProposalEditor({
       )}
 
       {/* Editor area */}
-      <div className="relative flex-1 overflow-y-auto">
+      <div className="relative">
         {isGenerating && !streamBuffer && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -196,5 +263,14 @@ export function ProposalEditor({
         <EditorContent editor={editor} />
       </div>
     </div>
+  );
+}
+
+/** Public export — wraps the inner editor with a per-section error boundary. */
+export function ProposalEditor(props: ProposalEditorProps) {
+  return (
+    <EditorErrorBoundary title={props.section.title}>
+      <ProposalEditorInner {...props} />
+    </EditorErrorBoundary>
   );
 }

@@ -1,87 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, TrendingUp, Clock, Target, Layers } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Plus, TrendingUp, Clock, Target, Layers, Loader2 } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { ProposalCard } from "@/components/molecules/proposal-card";
+import { NewProposalDialog } from "@/components/organisms/new-proposal-dialog";
+import { trpc } from "@/lib/trpc/client";
 import type { Proposal, ProposalStatus } from "@/lib/types/proposal";
 import { cn } from "@/lib/utils";
-
-const NOW = Date.now();
-const DAY = 86_400_000;
-
-const MOCK_PROPOSALS: Proposal[] = [
-  {
-    id: "1",
-    title: "Digital Transformation Initiative",
-    clientName: "Apex Financial Services",
-    status: "IN_PROGRESS",
-    deadline: new Date(NOW + 3 * DAY),
-    completionPct: 68,
-    updatedAt: new Date(NOW - 3_600_000),
-    createdAt: new Date(NOW - 7 * DAY),
-  },
-  {
-    id: "2",
-    title: "Cloud Migration Strategy",
-    clientName: "NovaTech Corp",
-    status: "REVIEW",
-    deadline: new Date(NOW + 8 * DAY),
-    completionPct: 91,
-    updatedAt: new Date(NOW - 7_200_000),
-    createdAt: new Date(NOW - 14 * DAY),
-  },
-  {
-    id: "3",
-    title: "Cybersecurity Assessment & Roadmap",
-    clientName: "Meridian Health",
-    status: "DRAFT",
-    deadline: new Date(NOW + 21 * DAY),
-    completionPct: 22,
-    updatedAt: new Date(NOW - DAY),
-    createdAt: new Date(NOW - 2 * DAY),
-  },
-  {
-    id: "4",
-    title: "Data Analytics Platform",
-    clientName: "Global Logistics Ltd",
-    status: "SUBMITTED",
-    deadline: new Date(NOW - 2 * DAY),
-    completionPct: 100,
-    updatedAt: new Date(NOW - 3 * DAY),
-    createdAt: new Date(NOW - 18 * DAY),
-  },
-  {
-    id: "5",
-    title: "ERP Modernisation Project",
-    clientName: "Harbor Manufacturing",
-    status: "WON",
-    deadline: null,
-    completionPct: 100,
-    updatedAt: new Date(NOW - 5 * DAY),
-    createdAt: new Date(NOW - 30 * DAY),
-  },
-  {
-    id: "6",
-    title: "Customer Portal Redesign",
-    clientName: "Pacific Retail Group",
-    status: "LOST",
-    deadline: null,
-    completionPct: 100,
-    updatedAt: new Date(NOW - 10 * DAY),
-    createdAt: new Date(NOW - 45 * DAY),
-  },
-  {
-    id: "7",
-    title: "AI Automation Strategy",
-    clientName: "Venture Capital Firm",
-    status: "DRAFT",
-    deadline: new Date(NOW + 14 * DAY),
-    completionPct: 5,
-    updatedAt: new Date(NOW - 1_800_000),
-    createdAt: new Date(NOW - DAY),
-  },
-];
 
 const PAGE_SIZE = 5;
 
@@ -98,37 +24,86 @@ const FILTER_TABS: ReadonlyArray<{
   { label: "Lost", value: "LOST" },
 ];
 
-const STATS = [
-  { label: "Active", value: "4", icon: Layers, sub: "+2 this week" },
-  { label: "Win Rate", value: "50%", icon: TrendingUp, sub: "+5% vs last mo." },
-  {
-    label: "Avg. Completion",
-    value: "69%",
-    icon: Target,
-    sub: "across active",
-  },
-  {
-    label: "Avg. Turnaround",
-    value: "6.2d",
-    icon: Clock,
-    sub: "to submission",
-  },
-] as const;
+// Map DB proposal status to a rough completion percentage.
+const STATUS_TO_PCT: Readonly<Record<string, number>> = {
+  DRAFT: 10,
+  IN_PROGRESS: 50,
+  REVIEW: 80,
+  SUBMITTED: 95,
+  WON: 100,
+  LOST: 100,
+  ARCHIVED: 100,
+};
+
+type DbProposal = {
+  id: string;
+  title: string;
+  clientName: string | null;
+  status: string;
+  deadline: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+function mapProposal(p: DbProposal): Proposal {
+  return {
+    id: p.id,
+    title: p.title,
+    clientName: p.clientName,
+    status: p.status as ProposalStatus,
+    deadline: p.deadline,
+    completionPct: STATUS_TO_PCT[p.status] ?? 0,
+    updatedAt: p.updatedAt,
+    createdAt: p.createdAt,
+  };
+}
 
 export default function DashboardPage() {
   const [activeFilter, setActiveFilter] = useState<ProposalStatus | "ALL">(
     "ALL",
   );
   const [cursor, setCursor] = useState(0);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  const filtered =
-    activeFilter === "ALL"
-      ? MOCK_PROPOSALS
-      : MOCK_PROPOSALS.filter((p) => p.status === activeFilter);
+  const { data, isLoading, error } = trpc.proposal.list.useQuery(
+    { limit: 100 },
+    { retry: 1 },
+  );
+
+  const proposals = useMemo(() => (data?.items ?? []).map(mapProposal), [data]);
+
+  const filtered = useMemo(
+    () =>
+      activeFilter === "ALL"
+        ? proposals
+        : proposals.filter((p) => p.status === activeFilter),
+    [proposals, activeFilter],
+  );
 
   const page = filtered.slice(cursor, cursor + PAGE_SIZE);
   const hasNext = cursor + PAGE_SIZE < filtered.length;
   const hasPrev = cursor > 0;
+
+  const stats = useMemo(() => {
+    const active = proposals.filter((p) =>
+      ["DRAFT", "IN_PROGRESS", "REVIEW"].includes(p.status),
+    ).length;
+    const decided = proposals.filter((p) => ["WON", "LOST"].includes(p.status));
+    const won = proposals.filter((p) => p.status === "WON").length;
+    const winRate =
+      decided.length > 0 ? Math.round((won / decided.length) * 100) : null;
+    const active2 = proposals.filter((p) =>
+      ["IN_PROGRESS", "REVIEW"].includes(p.status),
+    );
+    const avgCompletion =
+      active2.length > 0
+        ? Math.round(
+            active2.reduce((s, p) => s + p.completionPct, 0) / active2.length,
+          )
+        : null;
+
+    return { active, winRate, avgCompletion };
+  }, [proposals]);
 
   const handleFilterChange = (value: ProposalStatus | "ALL") => {
     setActiveFilter(value);
@@ -145,15 +120,46 @@ export default function DashboardPage() {
             Your proposal pipeline.
           </p>
         </div>
-        <Button size="sm">
+        <Button size="sm" onClick={() => setDialogOpen(true)}>
           <Plus className="mr-1.5 h-4 w-4" />
           New Proposal
         </Button>
       </div>
 
+      <NewProposalDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {STATS.map((s) => {
+        {[
+          {
+            label: "Active",
+            value: isLoading ? "—" : String(stats.active),
+            icon: Layers,
+            sub: "draft, in progress or review",
+          },
+          {
+            label: "Win Rate",
+            value:
+              isLoading || stats.winRate === null ? "—" : `${stats.winRate}%`,
+            icon: TrendingUp,
+            sub: "won vs decided",
+          },
+          {
+            label: "Avg. Completion",
+            value:
+              isLoading || stats.avgCompletion === null
+                ? "—"
+                : `${stats.avgCompletion}%`,
+            icon: Target,
+            sub: "across active",
+          },
+          {
+            label: "Total",
+            value: isLoading ? "—" : String(proposals.length),
+            icon: Clock,
+            sub: "proposals all time",
+          },
+        ].map((s) => {
           const Icon = s.icon;
           return (
             <div
@@ -180,8 +186,8 @@ export default function DashboardPage() {
           {FILTER_TABS.map((tab) => {
             const count =
               tab.value === "ALL"
-                ? MOCK_PROPOSALS.length
-                : MOCK_PROPOSALS.filter((p) => p.status === tab.value).length;
+                ? proposals.length
+                : proposals.filter((p) => p.status === tab.value).length;
             const isActive = activeFilter === tab.value;
             return (
               <button
@@ -218,16 +224,48 @@ export default function DashboardPage() {
           <div className="w-7 shrink-0" />
         </div>
 
-        {/* Rows */}
-        {page.length === 0 ? (
+        {/* Loading */}
+        {isLoading && (
+          <div className="flex items-center justify-center gap-2 px-4 py-10 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading proposals…
+          </div>
+        )}
+
+        {/* Error */}
+        {error && !isLoading && (
+          <p className="px-4 py-8 text-center text-sm text-destructive">
+            {error.message}
+          </p>
+        )}
+
+        {/* Empty state */}
+        {!isLoading && !error && proposals.length === 0 && (
+          <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
+            <p className="text-sm font-medium">No proposals yet</p>
+            <p className="text-sm text-muted-foreground">
+              Create your first proposal to start winning bids.
+            </p>
+            <Button size="sm" onClick={() => setDialogOpen(true)}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              New Proposal
+            </Button>
+          </div>
+        )}
+
+        {/* Filter empty state */}
+        {!isLoading && !error && proposals.length > 0 && page.length === 0 && (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground">
             No proposals in this category.
           </p>
-        ) : (
+        )}
+
+        {/* Rows */}
+        {!isLoading &&
+          !error &&
           page.map((proposal) => (
             <ProposalCard key={proposal.id} proposal={proposal} />
-          ))
-        )}
+          ))}
 
         {/* Pagination */}
         {filtered.length > PAGE_SIZE && (

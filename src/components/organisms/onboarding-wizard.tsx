@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronRight, Sparkles } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  ChevronRight,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { UploadDropzone } from "@/components/organisms/upload-dropzone";
+import { trpc } from "@/lib/trpc/client";
 
 const STEPS = [
   { id: 1, label: "Upload Proposals" },
@@ -20,9 +27,11 @@ const LENGTH_OPTIONS = ["Concise", "Balanced", "Detailed"] as const;
 type ToneOption = (typeof TONE_OPTIONS)[number];
 type LengthOption = (typeof LENGTH_OPTIONS)[number];
 
-const DEMO_TEXT = `Our team has delivered comparable digital transformation initiatives for organisations in the financial services and government sectors. Based on the requirements outlined in your RFP, we propose a phased approach that prioritises risk mitigation while maintaining delivery velocity.
-
-Phase 1 (Weeks 1–4) covers discovery and architecture: stakeholder interviews, systems audit, and a signed-off technical roadmap before any engineering work begins. This ensures complete alignment before we build.`;
+interface UploadApiResponse {
+  ok: boolean;
+  data?: { chunks: { text: string }[]; fileName: string };
+  error?: { message: string };
+}
 
 export function OnboardingWizard() {
   const router = useRouter();
@@ -30,16 +39,123 @@ export function OnboardingWizard() {
   const [tone, setTone] = useState<ToneOption>("Professional");
   const [length, setLength] = useState<LengthOption>("Balanced");
   const [keywords, setKeywords] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [showDemo, setShowDemo] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [uploadedTexts, setUploadedTexts] = useState<string[]>([]);
+  const [kbItemIds, setKbItemIds] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<string | null>(null);
 
-  const handleGenerateDemo = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      setIsGenerating(false);
-      setShowDemo(true);
-    }, 1800);
-  };
+  const kbCreate = trpc.kb.create.useMutation();
+  const analyzeBrandVoice = trpc.ai.analyzeBrandVoice.useMutation();
+  const createProposal = trpc.proposal.create.useMutation();
+  const generateSection = trpc.ai.generateSection.useMutation();
+
+  const handleFilesReady = useCallback((files: File[]) => {
+    setPendingFiles((prev) => [...prev, ...files]);
+  }, []);
+
+  const handleContinueStep1 = useCallback(async () => {
+    if (pendingFiles.length === 0) {
+      setStep(2);
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMsg(null);
+
+    const texts: string[] = [];
+    const ids: string[] = [];
+
+    try {
+      for (const file of pendingFiles) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const json = (await res.json()) as UploadApiResponse;
+
+        if (!json.ok || !json.data) {
+          throw new Error(
+            json.error?.message ?? `Failed to upload ${file.name}`,
+          );
+        }
+
+        const fullText = json.data.chunks.map((c) => c.text).join("\n\n");
+        texts.push(fullText);
+
+        const baseName = file.name.replace(/\.[^/.]+$/, "");
+        const item = await kbCreate.mutateAsync({
+          type: "PAST_PROPOSAL",
+          title: baseName,
+          content: fullText,
+          metadata: { source: "onboarding", originalFileName: file.name },
+        });
+        ids.push(item.id);
+      }
+
+      setUploadedTexts(texts);
+      setKbItemIds(ids);
+      setStep(2);
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error ? err.message : "Upload failed. Please try again.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pendingFiles, kbCreate]);
+
+  const handleContinueStep2 = useCallback(async () => {
+    // Require at least 100 chars for analyzeBrandVoice schema validation
+    const validTexts = uploadedTexts.filter((t) => t.length >= 100).slice(0, 5);
+
+    if (validTexts.length > 0) {
+      setIsLoading(true);
+      try {
+        await analyzeBrandVoice.mutateAsync({ sampleTexts: validTexts });
+      } catch {
+        // Non-fatal — continue even if brand voice analysis fails
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    setStep(3);
+  }, [uploadedTexts, analyzeBrandVoice]);
+
+  const handleGenerateDemo = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMsg(null);
+    try {
+      const proposal = await createProposal.mutateAsync({
+        title: "Onboarding Demo",
+      });
+
+      const result = await generateSection.mutateAsync({
+        proposalId: proposal.id,
+        sectionTitle: "Executive Summary",
+        requirements: [
+          "Demonstrate our capability and differentiators",
+          "Highlight team expertise and past successes",
+        ],
+        kbItemIds: kbItemIds.slice(0, 3),
+        instructions: `Tone: ${tone}. Length preference: ${length}.${keywords ? ` Keywords: ${keywords}.` : ""}`,
+      });
+
+      setGeneratedContent(result.content);
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error
+          ? err.message
+          : "Generation failed. Please try again.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [createProposal, generateSection, kbItemIds, tone, length, keywords]);
 
   return (
     <div>
@@ -88,10 +204,28 @@ export function OnboardingWizard() {
               proposals you&apos;re proud of.
             </p>
           </div>
-          <UploadDropzone />
+          <UploadDropzone onFilesReady={handleFilesReady} />
+          {errorMsg && (
+            <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {errorMsg}
+            </div>
+          )}
           <div className="flex justify-end">
-            <Button onClick={() => setStep(2)}>
-              Continue <ChevronRight className="ml-1.5 h-4 w-4" />
+            <Button
+              onClick={() => void handleContinueStep1()}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading…
+                </>
+              ) : (
+                <>
+                  Continue <ChevronRight className="ml-1.5 h-4 w-4" />
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -174,8 +308,20 @@ export function OnboardingWizard() {
             <Button variant="ghost" onClick={() => setStep(1)}>
               Back
             </Button>
-            <Button onClick={() => setStep(3)}>
-              Continue <ChevronRight className="ml-1.5 h-4 w-4" />
+            <Button
+              onClick={() => void handleContinueStep2()}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Analysing…
+                </>
+              ) : (
+                <>
+                  Continue <ChevronRight className="ml-1.5 h-4 w-4" />
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -195,22 +341,32 @@ export function OnboardingWizard() {
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Executive Summary — Sample
             </p>
-            {!showDemo && !isGenerating && (
-              <Button variant="outline" onClick={handleGenerateDemo}>
+            {!generatedContent && !isLoading && (
+              <Button
+                variant="outline"
+                onClick={() => void handleGenerateDemo()}
+                disabled={isLoading}
+              >
                 <Sparkles className="mr-2 h-4 w-4" />
                 Generate demo section
               </Button>
             )}
-            {isGenerating && (
+            {isLoading && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Sparkles className="h-4 w-4 animate-pulse text-primary" />
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
                 Generating with your brand voice…
               </div>
             )}
-            {showDemo && (
+            {generatedContent && !isLoading && (
               <p className="whitespace-pre-line text-sm leading-relaxed">
-                {DEMO_TEXT}
+                {generatedContent}
               </p>
+            )}
+            {errorMsg && !isLoading && (
+              <div className="flex items-center gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {errorMsg}
+              </div>
             )}
           </div>
 

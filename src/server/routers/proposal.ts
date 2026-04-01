@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { router, orgProtectedProcedure } from "@/server/trpc";
+import { clerkClient } from "@clerk/nextjs/server";
 import { exportProposal } from "@/lib/services/export-service";
 
 const ProposalStatusSchema = z.enum([
@@ -15,7 +16,7 @@ const ProposalStatusSchema = z.enum([
 
 export const proposalRouter = router({
   /**
-   * Create a new proposal (without RFP — file upload handled separately).
+   * Create a new proposal. The org is derived from the Clerk session (ctx.internalOrgId).
    */
   create: orgProtectedProcedure
     .input(
@@ -23,30 +24,41 @@ export const proposalRouter = router({
         title: z.string().min(1).max(255),
         clientName: z.string().max(255).optional(),
         deadline: z.string().datetime().optional(),
-        orgId: z.string().cuid(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const proposal = await ctx.db.proposal.create({
+      // Upsert User record — auto-provisions on first request after Clerk sign-up.
+      const client = await clerkClient();
+      const clerkUser = await client.users.getUser(ctx.clerkUserId);
+      const email =
+        clerkUser.emailAddresses[0]?.emailAddress ??
+        `${ctx.clerkUserId}@placeholder.local`;
+
+      const user = await ctx.db.user.upsert({
+        where: { clerkId: ctx.clerkUserId },
+        create: { clerkId: ctx.clerkUserId, email, orgId: ctx.internalOrgId },
+        update: {},
+        select: { id: true },
+      });
+
+      return ctx.db.proposal.create({
         data: {
           title: input.title,
           clientName: input.clientName,
           deadline: input.deadline ? new Date(input.deadline) : null,
-          orgId: input.orgId,
-          userId: ctx.clerkUserId,
+          orgId: ctx.internalOrgId,
+          userId: user.id,
           status: "DRAFT",
         },
       });
-      return proposal;
     }),
 
   /**
-   * List proposals for the organization — pipeline view.
+   * List proposals for the authenticated org — pipeline view.
    */
   list: orgProtectedProcedure
     .input(
       z.object({
-        orgId: z.string().cuid(),
         status: ProposalStatusSchema.optional(),
         limit: z.number().int().min(1).max(100).default(20),
         cursor: z.string().cuid().optional(),
@@ -55,7 +67,7 @@ export const proposalRouter = router({
     .query(async ({ ctx, input }) => {
       const items = await ctx.db.proposal.findMany({
         where: {
-          orgId: input.orgId,
+          orgId: ctx.internalOrgId,
           ...(input.status ? { status: input.status } : {}),
         },
         orderBy: { updatedAt: "desc" },
@@ -80,10 +92,10 @@ export const proposalRouter = router({
    * Fetch a single proposal with all relations.
    */
   get: orgProtectedProcedure
-    .input(z.object({ id: z.string().cuid(), orgId: z.string().cuid() }))
+    .input(z.object({ id: z.string().cuid() }))
     .query(async ({ ctx, input }) => {
       const proposal = await ctx.db.proposal.findFirst({
-        where: { id: input.id, orgId: input.orgId },
+        where: { id: input.id, orgId: ctx.internalOrgId },
         include: {
           rfpSource: true,
           requirements: { orderBy: { id: "asc" } },
@@ -104,6 +116,42 @@ export const proposalRouter = router({
     }),
 
   /**
+   * Create a new blank section for a proposal.
+   * Called before AI generation when no sections exist yet.
+   */
+  createSection: orgProtectedProcedure
+    .input(
+      z.object({
+        proposalId: z.string().cuid(),
+        title: z.string().min(1).max(255),
+        order: z.number().int().min(0),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const proposal = await ctx.db.proposal.findFirst({
+        where: { id: input.proposalId, orgId: ctx.internalOrgId },
+        select: { id: true },
+      });
+
+      if (!proposal) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Proposal not found.",
+        });
+      }
+
+      return ctx.db.proposalSection.create({
+        data: {
+          proposalId: input.proposalId,
+          title: input.title,
+          content: "",
+          order: input.order,
+          confidenceScore: 0,
+        },
+      });
+    }),
+
+  /**
    * Update a proposal section's content.
    */
   updateSection: orgProtectedProcedure
@@ -111,15 +159,13 @@ export const proposalRouter = router({
       z.object({
         sectionId: z.string().cuid(),
         proposalId: z.string().cuid(),
-        orgId: z.string().cuid(),
         content: z.string(),
         title: z.string().min(1).max(255).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Verify org ownership before mutation
       const proposal = await ctx.db.proposal.findFirst({
-        where: { id: input.proposalId, orgId: input.orgId },
+        where: { id: input.proposalId, orgId: ctx.internalOrgId },
         select: { id: true },
       });
 
@@ -141,19 +187,18 @@ export const proposalRouter = router({
     }),
 
   /**
-   * Export a proposal as PDF or DOCX (returns a signed URL).
+   * Export a proposal as PDF or DOCX (returns a base64 data URL).
    */
   export: orgProtectedProcedure
     .input(
       z.object({
         id: z.string().cuid(),
-        orgId: z.string().cuid(),
         format: z.enum(["pdf", "docx"]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const proposal = await ctx.db.proposal.findFirst({
-        where: { id: input.id, orgId: input.orgId },
+        where: { id: input.id, orgId: ctx.internalOrgId },
         include: {
           sections: {
             orderBy: { order: "asc" },
@@ -178,8 +223,6 @@ export const proposalRouter = router({
         input.format,
       );
 
-      // Return as base64 data URL for client-side download trigger.
-      // Production path: upload to Cloudflare R2 and return signed URL.
       const dataUrl = `data:${result.mimeType};base64,${result.buffer.toString("base64")}`;
 
       return {
@@ -196,7 +239,6 @@ export const proposalRouter = router({
     .input(
       z.object({
         id: z.string().cuid(),
-        orgId: z.string().cuid(),
         outcome: z.enum(["WON", "LOST"]),
         feedback: z.string().optional(),
         dealValue: z.number().positive().optional(),
@@ -205,7 +247,7 @@ export const proposalRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const proposal = await ctx.db.proposal.findFirst({
-        where: { id: input.id, orgId: input.orgId },
+        where: { id: input.id, orgId: ctx.internalOrgId },
         select: { id: true },
       });
 

@@ -61,7 +61,11 @@ export function useSectionGeneration({
         body: JSON.stringify({
           proposalId: generateContext.proposalId,
           sectionTitle,
-          requirements: generateContext.requirements,
+          // Send only requirements belonging to this section. Falls back to
+          // all selected requirements if the section has no exact match.
+          requirements:
+            generateContext.requirementsBySection[sectionTitle] ??
+            generateContext.requirements,
           kbItemIds: generateContext.kbItemIds,
           instructions: generateContext.instructions ?? "",
         }),

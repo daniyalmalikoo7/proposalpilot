@@ -6,11 +6,11 @@ import { logger } from "../logger";
 
 // Per-token costs in USD — Gemini free tier (update when switching to paid)
 const MODEL_COSTS: Record<string, { input: number; output: number }> = {
-  "gemini-2.0-flash": {
+  "gemini-2.5-flash": {
     input: 0,
     output: 0,
   },
-  "gemini-2.0-flash-lite": {
+  "gemini-2.5-flash-lite": {
     input: 0,
     output: 0,
   },

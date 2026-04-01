@@ -17,13 +17,25 @@ function getGenAI(): GoogleGenerativeAI {
   return _genAI;
 }
 
-const FALLBACK_CHAIN = ["gemini-2.0-flash", "gemini-2.0-flash-lite"] as const;
+// gemini-2.5-flash: primary — confirmed working on this API key
+// gemini-2.5-flash-lite: fallback — lighter, also confirmed working
+const FALLBACK_CHAIN = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
 
 const MAX_RETRIES = 2;
 const BASE_DELAY_MS = 500;
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Strip markdown code fences that Gemini sometimes wraps around JSON output.
+ * Handles ```json ... ``` and ``` ... ``` variants.
+ */
+function extractJSON(raw: string): string {
+  const fenced = /```(?:json)?\s*([\s\S]*?)```/.exec(raw.trim());
+  if (fenced?.[1]) return fenced[1].trim();
+  return raw.trim();
 }
 
 async function callWithExponentialBackoff(
@@ -86,6 +98,10 @@ export async function executeWithFallback<T>(
     ...FALLBACK_CHAIN.filter((m) => m !== primaryModel),
   ] as const;
 
+  console.log(
+    `[fallback-chain] executeWithFallback start — promptId=${params.promptId} chain=${JSON.stringify([...chain])}`,
+  );
+
   for (const model of chain) {
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
@@ -94,12 +110,26 @@ export async function executeWithFallback<T>(
           await sleep(delay + Math.random() * 100); // jitter
         }
 
+        console.log(
+          `[fallback-chain] Trying model="${model}" attempt=${attempt} promptId=${params.promptId}`,
+        );
+
         const result = await callWithExponentialBackoff(model, params, attempt);
         logAICall(result, params.promptId);
 
-        // Hallucination guards
-        const guardResult = await runGuards(result.content, context);
+        console.log(
+          `[fallback-chain] Model="${model}" responded — preview: ${result.content.slice(0, 120).replace(/\n/g, " ")}`,
+        );
+
+        // Strip markdown fences BEFORE guards so json_validity sees clean JSON
+        const jsonText = extractJSON(result.content);
+
+        // Hallucination guards (run on fence-stripped content)
+        const guardResult = await runGuards(jsonText, context);
         if (guardResult.blocked) {
+          console.log(
+            `[fallback-chain] Guard blocked model="${model}" failures=${JSON.stringify(guardResult.failures)}`,
+          );
           logger.warn("Trying next model after guard block", {
             model,
             failures: guardResult.failures,
@@ -110,28 +140,41 @@ export async function executeWithFallback<T>(
         // Schema validation
         let parsed: unknown;
         try {
-          const raw = JSON.parse(result.content) as unknown;
+          const raw = JSON.parse(jsonText) as unknown;
           const validated = schema.safeParse(raw);
           if (!validated.success) {
+            console.log(
+              `[fallback-chain] Schema validation FAILED model="${model}" errors=${JSON.stringify(validated.error.issues.map((i) => i.message))}`,
+            );
             logger.warn("AI output failed schema validation", {
               model,
               promptId: params.promptId,
               errors: validated.error.issues.map((i) => i.message),
             });
-            break; // move to next model
+            break; // move to next model in chain
           }
           parsed = validated.data;
-        } catch {
+        } catch (parseErr) {
+          console.log(
+            `[fallback-chain] JSON parse FAILED model="${model}" error=${parseErr instanceof Error ? parseErr.message : String(parseErr)} preview=${result.content.slice(0, 200)}`,
+          );
           logger.warn("AI output is not valid JSON", {
             model,
             promptId: params.promptId,
+            preview: result.content.slice(0, 200),
           });
-          break; // move to next model
+          break; // move to next model in chain
         }
 
+        console.log(
+          `[fallback-chain] SUCCESS model="${model}" promptId=${params.promptId}`,
+        );
         return { data: parsed as T, metadata: result };
       } catch (err) {
         const isLastAttempt = attempt === MAX_RETRIES;
+        console.log(
+          `[fallback-chain] API call FAILED model="${model}" attempt=${attempt} isLastAttempt=${isLastAttempt} error=${err instanceof Error ? err.message.slice(0, 200) : String(err)}`,
+        );
         logger.error("AI call failed", {
           model,
           attempt,

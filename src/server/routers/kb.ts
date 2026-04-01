@@ -16,6 +16,7 @@ const KnowledgeBaseItemTypeSchema = z.enum([
   "PAST_PROPOSAL",
   "METHODOLOGY",
   "TEAM_BIO",
+  "CAPABILITY",
   "PRICING",
   "CERTIFICATE",
   "OTHER",
@@ -29,7 +30,6 @@ export const kbRouter = router({
   create: orgProtectedProcedure
     .input(
       z.object({
-        orgId: z.string().cuid(),
         type: KnowledgeBaseItemTypeSchema,
         title: z.string().min(1).max(255),
         content: z.string().min(1),
@@ -40,12 +40,11 @@ export const kbRouter = router({
     .mutation(async ({ ctx, input }) => {
       const item = await ctx.db.knowledgeBaseItem.create({
         data: {
-          orgId: input.orgId,
+          orgId: ctx.internalOrgId,
           type: input.type,
           title: input.title,
           content: input.content,
           fileUrl: input.fileUrl,
-          // Zod validates input structure; cast is safe validated narrowing
           metadata: input.metadata as Prisma.InputJsonValue,
         },
       });
@@ -68,12 +67,11 @@ export const kbRouter = router({
     }),
 
   /**
-   * List knowledge base items for an organization.
+   * List knowledge base items for the authenticated org.
    */
   list: orgProtectedProcedure
     .input(
       z.object({
-        orgId: z.string().cuid(),
         type: KnowledgeBaseItemTypeSchema.optional(),
         limit: z.number().int().min(1).max(100).default(20),
         cursor: z.string().cuid().optional(),
@@ -82,7 +80,7 @@ export const kbRouter = router({
     .query(async ({ ctx, input }) => {
       const items = await ctx.db.knowledgeBaseItem.findMany({
         where: {
-          orgId: input.orgId,
+          orgId: ctx.internalOrgId,
           isActive: true,
           ...(input.type ? { type: input.type } : {}),
         },
@@ -94,10 +92,10 @@ export const kbRouter = router({
           type: true,
           title: true,
           fileUrl: true,
+          isWin: true,
           metadata: true,
           createdAt: true,
           updatedAt: true,
-          // Omit content and embedding from list view for performance
         },
       });
 
@@ -117,30 +115,27 @@ export const kbRouter = router({
   search: orgProtectedProcedure
     .input(
       z.object({
-        orgId: z.string().cuid(),
         query: z.string().min(1).max(1000),
         type: KnowledgeBaseItemTypeSchema.optional(),
         limit: z.number().int().min(1).max(20).default(5),
       }),
     )
     .query(async ({ ctx, input }) => {
-      // Attempt pgvector semantic search first
       try {
         const queryEmbedding = await voyageProvider.embed(input.query);
         const results = await searchSimilar(
           ctx.db,
-          input.orgId,
+          ctx.internalOrgId,
           queryEmbedding,
           { limit: input.limit },
         );
 
-        // Filter by type if requested (searchSimilar returns all types)
         const filtered = input.type
           ? results.filter((r) => r.type === input.type)
           : results;
 
         logger.debug("KB semantic search complete", {
-          orgId: input.orgId,
+          orgId: ctx.internalOrgId,
           resultCount: filtered.length,
         });
 
@@ -153,9 +148,8 @@ export const kbRouter = router({
           metadata: {} as Record<string, unknown>,
         }));
       } catch (err) {
-        // Embedding provider unavailable — fall back to full-text search
         logger.warn("Falling back to full-text KB search", {
-          orgId: input.orgId,
+          orgId: ctx.internalOrgId,
           error: err instanceof Error ? err.message : String(err),
         });
       }
@@ -163,7 +157,7 @@ export const kbRouter = router({
       // Full-text fallback
       const items = await ctx.db.knowledgeBaseItem.findMany({
         where: {
-          orgId: input.orgId,
+          orgId: ctx.internalOrgId,
           isActive: true,
           ...(input.type ? { type: input.type } : {}),
           OR: [
@@ -192,10 +186,10 @@ export const kbRouter = router({
    * Soft-delete a knowledge base item.
    */
   delete: orgProtectedProcedure
-    .input(z.object({ id: z.string().cuid(), orgId: z.string().cuid() }))
+    .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const item = await ctx.db.knowledgeBaseItem.findFirst({
-        where: { id: input.id, orgId: input.orgId },
+        where: { id: input.id, orgId: ctx.internalOrgId },
         select: { id: true },
       });
 

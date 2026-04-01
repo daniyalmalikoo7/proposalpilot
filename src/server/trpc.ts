@@ -1,8 +1,8 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { type FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import superjson from "superjson";
-import { z, ZodError } from "zod";
+import { ZodError } from "zod";
 import { db } from "@/lib/db";
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -10,7 +10,7 @@ import { db } from "@/lib/db";
 export type Context = {
   db: typeof db;
   clerkUserId: string | null;
-  orgId: string | null;
+  orgId: string | null; // Clerk org ID (e.g. "org_xxx")
 };
 
 export async function createContext(
@@ -47,7 +47,6 @@ export const publicProcedure = t.procedure;
 
 /**
  * Protected procedure — requires a valid Clerk session.
- * The orgId is injected from the Clerk session claims.
  */
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.clerkUserId) {
@@ -65,19 +64,40 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 });
 
 /**
- * Organization-scoped procedure — requires auth AND enforces that
- * ctx.orgId (from Clerk session) matches input.orgId.
- * SEC-003: Prevents IDOR by never trusting client-provided orgId.
+ * Organization-scoped procedure — requires an active Clerk org in the session,
+ * looks up the internal Organization record by clerkOrgId, and injects
+ * internalOrgId (the DB primary key CUID) into ctx.
+ *
+ * SEC-003: Org access is derived entirely from the Clerk session JWT — never
+ * from client-supplied input — to prevent IDOR attacks. Individual procedures
+ * must use ctx.internalOrgId for all DB queries; they must NOT trust input.orgId.
  */
-export const orgProtectedProcedure = protectedProcedure
-  .input(z.object({ orgId: z.string() }).passthrough())
-  .use(async ({ ctx, input, next }) => {
-    const { orgId } = input as { orgId: string };
-    if (!ctx.orgId || ctx.orgId !== orgId) {
+export const orgProtectedProcedure = protectedProcedure.use(
+  async ({ ctx, next }) => {
+    if (!ctx.orgId) {
       throw new TRPCError({
         code: "FORBIDDEN",
-        message: "Organization access denied.",
+        message: "No active organization in session.",
       });
     }
-    return next({ ctx: { ...ctx, orgId: ctx.orgId } });
-  });
+
+    let org = await ctx.db.organization.findUnique({
+      where: { clerkOrgId: ctx.orgId },
+      select: { id: true },
+    });
+
+    if (!org) {
+      // Auto-provision: first request after org creation in Clerk
+      const client = await clerkClient();
+      const clerkOrg = await client.organizations.getOrganization({
+        organizationId: ctx.orgId,
+      });
+      org = await ctx.db.organization.create({
+        data: { clerkOrgId: ctx.orgId, name: clerkOrg.name },
+        select: { id: true },
+      });
+    }
+
+    return next({ ctx: { ...ctx, internalOrgId: org.id } });
+  },
+);

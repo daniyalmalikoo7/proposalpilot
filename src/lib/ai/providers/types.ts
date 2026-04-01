@@ -42,9 +42,10 @@ export interface AIProvider {
 }
 
 // Model IDs — keep in sync with cost-tracker.ts
+// gemini-2.5-flash/lite confirmed available on this API key
 export const MODEL_IDS = {
-  FLASH: "gemini-2.0-flash",
-  FLASH_LITE: "gemini-2.0-flash-lite",
+  FLASH: "gemini-2.5-flash",
+  FLASH_LITE: "gemini-2.5-flash-lite",
 } as const;
 
 export type ModelId = (typeof MODEL_IDS)[keyof typeof MODEL_IDS];

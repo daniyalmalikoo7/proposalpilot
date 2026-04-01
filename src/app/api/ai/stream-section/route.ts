@@ -29,7 +29,7 @@ function getGenAI(): GoogleGenerativeAI {
 const RequestSchema = z.object({
   proposalId: z.string().cuid(),
   sectionTitle: z.string().min(1).max(255),
-  requirements: z.array(z.string()).min(1).max(20),
+  requirements: z.array(z.string()).min(1).max(50),
   kbItemIds: z.array(z.string().cuid()).max(10).default([]),
   instructions: z.string().max(2000).default(""),
 });
@@ -68,9 +68,28 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const input = parsed.data;
 
-  // Verify proposal + org ownership
+  // Resolve internal org CUID from Clerk org ID.
+  // Proposal.orgId stores the internal DB primary key, not the Clerk "org_xxx" ID.
+  // This mirrors the orgProtectedProcedure lookup in src/server/trpc.ts.
+  const org = await db.organization.findUnique({
+    where: { clerkOrgId: orgId },
+    select: { id: true },
+  });
+
+  if (!org) {
+    return new Response(JSON.stringify({ error: "Organization not found" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  console.log(
+    `[stream-section] proposalId=${input.proposalId} clerkOrgId=${orgId} internalOrgId=${org.id}`,
+  );
+
+  // Verify proposal + org ownership using the internal org ID
   const proposal = await db.proposal.findFirst({
-    where: { id: input.proposalId, orgId },
+    where: { id: input.proposalId, orgId: org.id },
     select: { id: true, title: true, orgId: true },
   });
 
@@ -126,7 +145,8 @@ export async function POST(req: NextRequest): Promise<Response> {
   });
 
   const encoder = new TextEncoder();
-  const MODEL_NAME = "gemini-2.0-flash";
+  // Keep in sync with src/lib/ai/fallback-chain.ts FALLBACK_CHAIN[0]
+  const MODEL_NAME = "gemini-2.5-flash";
 
   const readable = new ReadableStream({
     async start(controller) {
@@ -180,8 +200,14 @@ export async function POST(req: NextRequest): Promise<Response> {
           "section-generator",
         );
 
-        // Validate and guard the full JSON output
-        const guardResult = await runGuards(fullContent, kbContext);
+        // Strip markdown fences BEFORE guards so json_validity sees clean JSON
+        const jsonText = fullContent
+          .replace(/^```(?:json)?\s*/m, "")
+          .replace(/\s*```\s*$/m, "")
+          .trim();
+
+        // Validate and guard the full JSON output (on fence-stripped content)
+        const guardResult = await runGuards(jsonText, kbContext);
 
         if (guardResult.blocked) {
           logger.warn("stream-section guard blocked output", {
@@ -198,8 +224,9 @@ export async function POST(req: NextRequest): Promise<Response> {
 
         let validatedOutput: z.infer<typeof SectionGeneratorOutputSchema>;
         try {
+          // jsonText already has fences stripped above
           validatedOutput = SectionGeneratorOutputSchema.parse(
-            JSON.parse(fullContent) as unknown,
+            JSON.parse(jsonText) as unknown,
           );
         } catch (err) {
           logger.error("stream-section JSON parse failed", {

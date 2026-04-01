@@ -46,12 +46,10 @@ function getPriceId(plan: Plan): string {
 export const billingRouter = router({
   /**
    * Create a Stripe Checkout session for upgrading/subscribing to a plan.
-   * Reuses an existing Stripe customer if the org has one.
    */
   createCheckout: orgProtectedProcedure
     .input(
       z.object({
-        orgId: z.string().cuid(),
         plan: z.enum(["starter", "growth", "scale", "enterprise"]),
         successUrl: z.string().url(),
         cancelUrl: z.string().url(),
@@ -59,7 +57,7 @@ export const billingRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const org = await ctx.db.organization.findUnique({
-        where: { id: input.orgId },
+        where: { id: ctx.internalOrgId },
         select: {
           id: true,
           name: true,
@@ -78,7 +76,6 @@ export const billingRouter = router({
       const stripe = getStripe();
       const priceId = getPriceId(input.plan);
 
-      // Reuse existing Stripe customer or create one
       let customerId = org.stripeCustomerId;
       if (!customerId) {
         const customer = await stripe.customers.create({
@@ -122,13 +119,12 @@ export const billingRouter = router({
   createPortalSession: orgProtectedProcedure
     .input(
       z.object({
-        orgId: z.string().cuid(),
         returnUrl: z.string().url(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const org = await ctx.db.organization.findUnique({
-        where: { id: input.orgId },
+        where: { id: ctx.internalOrgId },
         select: { id: true, stripeCustomerId: true },
       });
 
