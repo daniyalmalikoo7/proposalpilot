@@ -39,6 +39,7 @@ interface EditorCenterPanelProps {
   readonly onGenerateComplete: (
     sectionId: string,
     output: SectionGeneratorOutput,
+    html: string,
   ) => void;
   readonly onSelectAllRequirements: () => void;
 }

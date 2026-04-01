@@ -153,7 +153,7 @@ export function useProposalEditor(proposalId: string) {
   );
 
   const handleGenerateComplete = useCallback(
-    (sectionId: string, output: SectionGeneratorOutput) => {
+    (sectionId: string, output: SectionGeneratorOutput, html: string) => {
       setSections((prev) =>
         prev.map((s) =>
           s.id === sectionId
@@ -162,8 +162,16 @@ export function useProposalEditor(proposalId: string) {
         ),
       );
       setPendingGenQueue((prev) => prev.filter((id) => id !== sectionId));
+      // Persist confidence to DB. debouncedSave (triggered by onContentChange)
+      // only carries content — it omits confidenceScore so it won't overwrite this.
+      updateSectionMutation.mutate({
+        sectionId,
+        proposalId,
+        content: html,
+        confidenceScore: output.confidence_score,
+      });
     },
-    [],
+    [proposalId, updateSectionMutation],
   );
 
   const handleToggleRequirement = useCallback((id: string) => {

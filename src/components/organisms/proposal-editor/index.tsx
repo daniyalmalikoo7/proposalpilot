@@ -11,6 +11,12 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { Loader2, Sparkles, RotateCcw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Badge } from "@/components/atoms/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/atoms/tooltip";
 import { EditorToolbar } from "./editor-toolbar";
 import { useSectionGeneration } from "./use-section-generation";
 import { markdownToHtml } from "./markdown-to-html";
@@ -62,6 +68,7 @@ interface ProposalEditorProps {
   readonly onGenerateComplete?: (
     sectionId: string,
     output: SectionGeneratorOutput,
+    html: string,
   ) => void;
   readonly autoSaveDelayMs?: number;
   /** When true, starts generation automatically (once). Used by "Generate All". */
@@ -136,7 +143,7 @@ function ProposalEditorInner({
       editor?.commands.setContent(html);
       onContentChange(section.id, html);
       setConfidenceScore(output.confidence_score);
-      onGenerateComplete?.(section.id, output);
+      onGenerateComplete?.(section.id, output, html);
     },
     [editor, onContentChange, onGenerateComplete, section.id],
   );
@@ -198,20 +205,29 @@ function ProposalEditorInner({
                   Regenerate
                 </Button>
               )}
-              <Button
-                size="sm"
-                onClick={() => void start()}
-                className="h-7 gap-1.5 text-xs"
-                disabled={generateContext.requirements.length === 0}
-                title={
-                  generateContext.requirements.length === 0
-                    ? "Select requirements from the sidebar first"
-                    : "Generate this section with AI"
-                }
-              >
-                <Sparkles className="h-3 w-3" />
-                Generate
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    {/* span wrapper required — disabled buttons suppress mouse events needed for tooltip hover */}
+                    <span className="inline-flex">
+                      <Button
+                        size="sm"
+                        onClick={() => void start()}
+                        className="h-7 gap-1.5 text-xs"
+                        disabled={generateContext.requirements.length === 0}
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        Generate
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {generateContext.requirements.length === 0 && (
+                    <TooltipContent side="bottom">
+                      Upload an RFP or add requirements to generate content
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             </>
           )}
         </div>

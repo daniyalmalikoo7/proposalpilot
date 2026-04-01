@@ -161,6 +161,9 @@ export const proposalRouter = router({
         proposalId: z.string().cuid(),
         content: z.string(),
         title: z.string().min(1).max(255).optional(),
+        // Written only when generation completes; omitted on plain content edits
+        // so manual edits never reset the AI-assigned confidence value.
+        confidenceScore: z.number().min(0).max(1).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -181,6 +184,9 @@ export const proposalRouter = router({
         data: {
           content: input.content,
           ...(input.title ? { title: input.title } : {}),
+          ...(input.confidenceScore !== undefined
+            ? { confidenceScore: input.confidenceScore }
+            : {}),
           updatedAt: new Date(),
         },
       });

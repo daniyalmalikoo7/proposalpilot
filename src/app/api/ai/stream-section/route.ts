@@ -29,7 +29,7 @@ function getGenAI(): GoogleGenerativeAI {
 const RequestSchema = z.object({
   proposalId: z.string().cuid(),
   sectionTitle: z.string().min(1).max(255),
-  requirements: z.array(z.string()).min(1).max(50),
+  requirements: z.array(z.string()).min(0).max(50),
   kbItemIds: z.array(z.string().cuid()).max(10).default([]),
   instructions: z.string().max(2000).default(""),
 });
