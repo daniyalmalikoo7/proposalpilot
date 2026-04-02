@@ -74,3 +74,23 @@
 ### Key Decision
 
 `voyage-large-2` was the original embedding model — treat it as **never use this model name again**. Always use `voyage-3` or later.
+
+---
+
+## S004 — Week 1 close: B002 + B003 verified (2026-04-02)
+
+**Date**: 2026-04-02
+**Status**: Completed — Week 1 fully resolved
+
+### Verified in Browser
+
+- **B002 — Confidence scores**: Auto-RAG retrieved 1 KB item (terminal: `resultCount:1, itemCount:1`). Confidence score hit 100% on Scope of Work (up from 40% without KB). Persistence + display path confirmed end-to-end.
+- **B003 — Regenerate HTTP 400**: Root cause identified — Regenerate button had no requirements guard, so `start()` fired with an empty requirements array. Fix: wrapped Regenerate in same `TooltipProvider/Tooltip` pattern as Generate, added `disabled={generateContext.requirements.length === 0}`. Verified end-to-end in browser, no HTTP 400.
+
+### Week 1 Status
+
+All three Week 1 blockers resolved: B001 (KB pipeline), B002 (confidence scores), B003 (Regenerate).
+
+### Next Sprint
+
+**Week 2 — Playwright E2E tests (B004) + Vercel deployment (B005)**
