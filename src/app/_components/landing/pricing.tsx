@@ -56,7 +56,7 @@ export function Pricing() {
               ))}
             </ul>
             <Link
-              href="/sign-up"
+              href={"/sign-up" as any}
               className="block w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:border-slate-600 hover:bg-slate-700"
             >
               Get started free
@@ -93,7 +93,7 @@ export function Pricing() {
               ))}
             </ul>
             <Link
-              href="/sign-up"
+              href={"/sign-up" as any}
               className="block w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:bg-indigo-500"
             >
               Start Pro trial

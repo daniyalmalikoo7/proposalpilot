@@ -20,7 +20,7 @@ export function LandingFooter() {
           <a href="#pricing" className="hover:text-white transition">
             Pricing
           </a>
-          <Link href="/sign-in" className="hover:text-white transition">
+          <Link href={"/sign-in" as any} className="hover:text-white transition">
             Sign in
           </Link>
         </nav>

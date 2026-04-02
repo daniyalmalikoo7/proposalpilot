@@ -24,13 +24,13 @@ export function LandingNav() {
 
         <div className="flex items-center gap-3">
           <Link
-            href="/sign-in"
+            href={"/sign-in" as any}
             className="text-sm text-slate-400 hover:text-white transition"
           >
             Sign in
           </Link>
           <Link
-            href="/sign-up"
+            href={"/sign-up" as any}
             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500"
           >
             Get started
