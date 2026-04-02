@@ -2,6 +2,10 @@
 // Streams Gemini deltas → client SSE events, then fires a "complete" event
 // with the full validated JSON so the client can update the editor and save.
 
+// Vercel Pro: allow up to 60 s for SSE streaming responses.
+// Edge runtime is not viable here because this route uses Prisma (Node.js runtime required).
+export const maxDuration = 60;
+
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
