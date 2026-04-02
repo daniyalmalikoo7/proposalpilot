@@ -4,6 +4,7 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 import { db } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
@@ -40,15 +41,29 @@ const t = initTRPC.context<Context>().create({
   },
 });
 
+// ─── Timing Middleware ────────────────────────────────────────────────────────
+
+const timingMiddleware = t.middleware(async (opts) => {
+  const start = performance.now();
+  const result = await opts.next();
+  const durationMs = Math.round(performance.now() - start);
+  logger.info(`[PERF] ${opts.path}: ${durationMs}ms`, {
+    procedure: opts.path,
+    type: opts.type,
+    durationMs,
+  });
+  return result;
+});
+
 // ─── Router & Procedure Builders ──────────────────────────────────────────────
 
 export const router = t.router;
-export const publicProcedure = t.procedure;
+export const publicProcedure = t.procedure.use(timingMiddleware);
 
 /**
  * Protected procedure — requires a valid Clerk session.
  */
-export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
+export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
   if (!ctx.clerkUserId) {
     throw new TRPCError({
       code: "UNAUTHORIZED",

@@ -73,9 +73,14 @@ export const proposalRouter = router({
         orderBy: { updatedAt: "desc" },
         take: input.limit + 1,
         ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
-        include: {
-          user: { select: { id: true, email: true } },
-          _count: { select: { sections: true, requirements: true } },
+        select: {
+          id: true,
+          title: true,
+          clientName: true,
+          status: true,
+          deadline: true,
+          createdAt: true,
+          updatedAt: true,
         },
       });
 
