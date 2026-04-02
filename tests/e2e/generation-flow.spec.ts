@@ -24,9 +24,11 @@ test.describe("Generation flow (real AI)", () => {
   }) => {
     // --- Setup: find a proposal with sections ---
     await page.goto("/proposals");
-    await page.waitForSelector('ul li, text="No proposals yet"', {
-      timeout: 15_000,
-    });
+    await page
+      .locator("ul li")
+      .or(page.getByText(/no proposals yet/i))
+      .first()
+      .waitFor({ timeout: 15_000 });
 
     const isEmpty = await page.getByText(/no proposals yet/i).isVisible();
     if (isEmpty) {

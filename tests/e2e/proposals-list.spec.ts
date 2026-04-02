@@ -11,10 +11,11 @@ test.describe("Proposals list", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/proposals");
     // Wait for the tRPC query to resolve — skeleton disappears, list or empty state appears.
-    await page.waitForSelector(
-      '[class*="divide-y"] li, [class*="flex-col"] p, text="No proposals yet"',
-      { timeout: 15_000 },
-    );
+    await page
+      .locator('[class*="divide-y"] li, [class*="flex-col"] p')
+      .or(page.getByText(/no proposals yet/i))
+      .first()
+      .waitFor({ timeout: 15_000 });
   });
 
   test("renders the page heading and New Proposal button", async ({ page }) => {

@@ -14,10 +14,12 @@ test.describe("Knowledge base", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/knowledge-base");
     // Wait for the list query to resolve.
-    await page.waitForSelector(
-      '[class*="grid"] [class*="rounded-lg"], text="Your knowledge base is empty", text="Upload your first document"',
-      { timeout: 15_000 },
-    );
+    await page
+      .locator('[class*="grid"] [class*="rounded-lg"]')
+      .or(page.getByText(/your knowledge base is empty/i))
+      .or(page.getByText(/upload your first document/i))
+      .first()
+      .waitFor({ timeout: 15_000 });
   });
 
   test("renders page heading and Upload Document button", async ({ page }) => {

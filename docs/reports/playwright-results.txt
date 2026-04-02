@@ -1,0 +1,1600 @@
+
+Running 22 tests using 1 worker
+
+  ✘   1 [chromium] › tests/e2e/generation-flow.spec.ts:22:7 › Generation flow (real AI) › regenerates a section and shows updated content + confidence badge (18.0s)
+  ✘   2 [chromium] › tests/e2e/generation-flow.spec.ts:22:7 › Generation flow (real AI) › regenerates a section and shows updated content + confidence badge (retry #1) (17.1s)
+  ✘   3 [chromium] › tests/e2e/knowledge-base.spec.ts:25:7 › Knowledge base › renders page heading and Upload Document button (16.5s)
+  ✘   4 [chromium] › tests/e2e/knowledge-base.spec.ts:25:7 › Knowledge base › renders page heading and Upload Document button (retry #1) (16.4s)
+  ✘   5 [chromium] › tests/e2e/knowledge-base.spec.ts:34:7 › Knowledge base › search input is visible and accepts text (16.5s)
+  ✘   6 [chromium] › tests/e2e/knowledge-base.spec.ts:34:7 › Knowledge base › search input is visible and accepts text (retry #1) (16.4s)
+  ✘   7 [chromium] › tests/e2e/knowledge-base.spec.ts:41:7 › Knowledge base › type filter tabs are all present (16.5s)
+  ✘   8 [chromium] › tests/e2e/knowledge-base.spec.ts:41:7 › Knowledge base › type filter tabs are all present (retry #1) (17.4s)
+  ✘   9 [chromium] › tests/e2e/knowledge-base.spec.ts:57:7 › Knowledge base › clicking a filter tab activates it (16.5s)
+  ✘  10 [chromium] › tests/e2e/knowledge-base.spec.ts:57:7 › Knowledge base › clicking a filter tab activates it (retry #1) (16.5s)
+  ✘  11 [chromium] › tests/e2e/knowledge-base.spec.ts:68:7 › Knowledge base › KB document grid or empty state is visible (16.8s)
+  ✘  12 [chromium] › tests/e2e/knowledge-base.spec.ts:68:7 › Knowledge base › KB document grid or empty state is visible (retry #1) (16.9s)
+  ✘  13 [chromium] › tests/e2e/knowledge-base.spec.ts:84:7 › Knowledge base › Upload Document button reveals the upload form (16.8s)
+  ✘  14 [chromium] › tests/e2e/knowledge-base.spec.ts:84:7 › Knowledge base › Upload Document button reveals the upload form (retry #1) (16.4s)
+  ✘  15 [chromium] › tests/e2e/navigation.spec.ts:13:7 › Navigation › sidebar highlights Proposals when on /proposals (30.8s)
+  ✘  16 [chromium] › tests/e2e/navigation.spec.ts:13:7 › Navigation › sidebar highlights Proposals when on /proposals (retry #1) (30.8s)
+  ✘  17 [chromium] › tests/e2e/navigation.spec.ts:22:7 › Navigation › sidebar highlights Knowledge Base when on /knowledge-base (30.8s)
+  ✘  18 [chromium] › tests/e2e/navigation.spec.ts:22:7 › Navigation › sidebar highlights Knowledge Base when on /knowledge-base (retry #1) (30.8s)
+  ✘  19 [chromium] › tests/e2e/navigation.spec.ts:33:7 › Navigation › sidebar highlights Dashboard when on /dashboard (30.8s)
+  ✘  20 [chromium] › tests/e2e/navigation.spec.ts:33:7 › Navigation › sidebar highlights Dashboard when on /dashboard (retry #1) (30.8s)
+  ✘  21 [chromium] › tests/e2e/navigation.spec.ts:42:7 › Navigation › sidebar Proposals link is NOT active when on /knowledge-base (31.0s)
+  ✘  22 [chromium] › tests/e2e/navigation.spec.ts:42:7 › Navigation › sidebar Proposals link is NOT active when on /knowledge-base (retry #1) (30.8s)
+  ✘  23 [chromium] › tests/e2e/navigation.spec.ts:53:7 › Navigation › navigating via sidebar links changes the active item (30.8s)
+  ✘  24 [chromium] › tests/e2e/navigation.spec.ts:53:7 › Navigation › navigating via sidebar links changes the active item (retry #1) (30.8s)
+  ✘  25 [chromium] › tests/e2e/navigation.spec.ts:73:7 › Navigation › editor breadcrumb navigates back to dashboard (16.5s)
+  ✘  26 [chromium] › tests/e2e/navigation.spec.ts:73:7 › Navigation › editor breadcrumb navigates back to dashboard (retry #1) (16.3s)
+  ✘  27 [chromium] › tests/e2e/proposal-editor.spec.ts:51:7 › Proposal editor › loads an existing proposal and shows header breadcrumb (16.8s)
+  ✘  28 [chromium] › tests/e2e/proposal-editor.spec.ts:51:7 › Proposal editor › loads an existing proposal and shows header breadcrumb (retry #1) (17.0s)
+  ✘  29 [chromium] › tests/e2e/proposal-editor.spec.ts:70:7 › Proposal editor › renders section editors when sections exist (16.7s)
+  ✘  30 [chromium] › tests/e2e/proposal-editor.spec.ts:70:7 › Proposal editor › renders section editors when sections exist (retry #1) (16.6s)
+  ✘  31 [chromium] › tests/e2e/proposal-editor.spec.ts:91:7 › Proposal editor › confidence badges are visible and color-coded when sections have scores (16.6s)
+  ✘  32 [chromium] › tests/e2e/proposal-editor.spec.ts:91:7 › Proposal editor › confidence badges are visible and color-coded when sections have scores (retry #1) (16.6s)
+  ✘  33 [chromium] › tests/e2e/proposal-editor.spec.ts:115:7 › Proposal editor › requirements sidebar is visible with items or empty state (16.4s)
+  ✘  34 [chromium] › tests/e2e/proposal-editor.spec.ts:115:7 › Proposal editor › requirements sidebar is visible with items or empty state (retry #1) (16.4s)
+  ✘  35 [chromium] › tests/e2e/proposal-editor.spec.ts:130:7 › Proposal editor › Select all requirements button selects all and disappears (16.7s)
+  ✘  36 [chromium] › tests/e2e/proposal-editor.spec.ts:130:7 › Proposal editor › Select all requirements button selects all and disappears (retry #1) (16.6s)
+  ✘  37 [chromium] › tests/e2e/proposal-editor.spec.ts:156:7 › Proposal editor › KB panel toggle shows and hides the KB panel (16.4s)
+  ✘  38 [chromium] › tests/e2e/proposal-editor.spec.ts:156:7 › Proposal editor › KB panel toggle shows and hides the KB panel (retry #1) (16.6s)
+  ✘  39 [chromium] › tests/e2e/proposals-list.spec.ts:21:7 › Proposals list › renders the page heading and New Proposal button (16.9s)
+  ✘  40 [chromium] › tests/e2e/proposals-list.spec.ts:21:7 › Proposals list › renders the page heading and New Proposal button (retry #1) (16.7s)
+  ✘  41 [chromium] › tests/e2e/proposals-list.spec.ts:30:7 › Proposals list › renders at least one proposal with title, status, and date (16.6s)
+  ✘  42 [chromium] › tests/e2e/proposals-list.spec.ts:30:7 › Proposals list › renders at least one proposal with title, status, and date (retry #1) (16.5s)
+  ✘  43 [chromium] › tests/e2e/proposals-list.spec.ts:65:7 › Proposals list › clicking a proposal navigates to /proposals/[id] (16.6s)
+  ✘  44 [chromium] › tests/e2e/proposals-list.spec.ts:65:7 › Proposals list › clicking a proposal navigates to /proposals/[id] (retry #1) (16.3s)
+
+
+  1) [chromium] › tests/e2e/generation-flow.spec.ts:22:7 › Generation flow (real AI) › regenerates a section and shows updated content + confidence badge 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      29 |       .or(page.getByText(/no proposals yet/i))
+      30 |       .first()
+    > 31 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      32 |
+      33 |     const isEmpty = await page.getByText(/no proposals yet/i).isVisible();
+      34 |     if (isEmpty) {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/generation-flow.spec.ts:31:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/generation-flow-Generation-6eaf9-ed-content-confidence-badge-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/generation-flow-Generation-6eaf9-ed-content-confidence-badge-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/generation-flow-Generation-6eaf9-ed-content-confidence-badge-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/generation-flow-Generation-6eaf9-ed-content-confidence-badge-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/generation-flow-Generation-6eaf9-ed-content-confidence-badge-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      29 |       .or(page.getByText(/no proposals yet/i))
+      30 |       .first()
+    > 31 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      32 |
+      33 |     const isEmpty = await page.getByText(/no proposals yet/i).isVisible();
+      34 |     if (isEmpty) {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/generation-flow.spec.ts:31:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/generation-flow-Generation-6eaf9-ed-content-confidence-badge-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/generation-flow-Generation-6eaf9-ed-content-confidence-badge-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/generation-flow-Generation-6eaf9-ed-content-confidence-badge-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/generation-flow-Generation-6eaf9-ed-content-confidence-badge-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/generation-flow-Generation-6eaf9-ed-content-confidence-badge-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › tests/e2e/knowledge-base.spec.ts:25:7 › Knowledge base › renders page heading and Upload Document button 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="grid"] [class*="rounded-lg"]').or(getByText(/your knowledge base is empty/i)).or(getByText(/upload your first document/i)).first() to be visible[22m
+
+
+      20 |       .or(page.getByText(/upload your first document/i))
+      21 |       .first()
+    > 22 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      23 |   });
+      24 |
+      25 |   test("renders page heading and Upload Document button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/knowledge-base.spec.ts:22:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-3d10f--and-Upload-Document-button-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-3d10f--and-Upload-Document-button-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/knowledge-base-Knowledge-b-3d10f--and-Upload-Document-button-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-3d10f--and-Upload-Document-button-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/knowledge-base-Knowledge-b-3d10f--and-Upload-Document-button-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="grid"] [class*="rounded-lg"]').or(getByText(/your knowledge base is empty/i)).or(getByText(/upload your first document/i)).first() to be visible[22m
+
+
+      20 |       .or(page.getByText(/upload your first document/i))
+      21 |       .first()
+    > 22 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      23 |   });
+      24 |
+      25 |   test("renders page heading and Upload Document button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/knowledge-base.spec.ts:22:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-3d10f--and-Upload-Document-button-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-3d10f--and-Upload-Document-button-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/knowledge-base-Knowledge-b-3d10f--and-Upload-Document-button-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-3d10f--and-Upload-Document-button-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/knowledge-base-Knowledge-b-3d10f--and-Upload-Document-button-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [chromium] › tests/e2e/knowledge-base.spec.ts:34:7 › Knowledge base › search input is visible and accepts text 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="grid"] [class*="rounded-lg"]').or(getByText(/your knowledge base is empty/i)).or(getByText(/upload your first document/i)).first() to be visible[22m
+
+
+      20 |       .or(page.getByText(/upload your first document/i))
+      21 |       .first()
+    > 22 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      23 |   });
+      24 |
+      25 |   test("renders page heading and Upload Document button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/knowledge-base.spec.ts:22:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-4f848-is-visible-and-accepts-text-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-4f848-is-visible-and-accepts-text-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/knowledge-base-Knowledge-b-4f848-is-visible-and-accepts-text-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-4f848-is-visible-and-accepts-text-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/knowledge-base-Knowledge-b-4f848-is-visible-and-accepts-text-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="grid"] [class*="rounded-lg"]').or(getByText(/your knowledge base is empty/i)).or(getByText(/upload your first document/i)).first() to be visible[22m
+
+
+      20 |       .or(page.getByText(/upload your first document/i))
+      21 |       .first()
+    > 22 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      23 |   });
+      24 |
+      25 |   test("renders page heading and Upload Document button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/knowledge-base.spec.ts:22:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-4f848-is-visible-and-accepts-text-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-4f848-is-visible-and-accepts-text-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/knowledge-base-Knowledge-b-4f848-is-visible-and-accepts-text-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-4f848-is-visible-and-accepts-text-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/knowledge-base-Knowledge-b-4f848-is-visible-and-accepts-text-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [chromium] › tests/e2e/knowledge-base.spec.ts:41:7 › Knowledge base › type filter tabs are all present 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="grid"] [class*="rounded-lg"]').or(getByText(/your knowledge base is empty/i)).or(getByText(/upload your first document/i)).first() to be visible[22m
+
+
+      20 |       .or(page.getByText(/upload your first document/i))
+      21 |       .first()
+    > 22 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      23 |   });
+      24 |
+      25 |   test("renders page heading and Upload Document button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/knowledge-base.spec.ts:22:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-e49fa-filter-tabs-are-all-present-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-e49fa-filter-tabs-are-all-present-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/knowledge-base-Knowledge-b-e49fa-filter-tabs-are-all-present-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-e49fa-filter-tabs-are-all-present-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/knowledge-base-Knowledge-b-e49fa-filter-tabs-are-all-present-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="grid"] [class*="rounded-lg"]').or(getByText(/your knowledge base is empty/i)).or(getByText(/upload your first document/i)).first() to be visible[22m
+
+
+      20 |       .or(page.getByText(/upload your first document/i))
+      21 |       .first()
+    > 22 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      23 |   });
+      24 |
+      25 |   test("renders page heading and Upload Document button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/knowledge-base.spec.ts:22:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-e49fa-filter-tabs-are-all-present-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-e49fa-filter-tabs-are-all-present-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/knowledge-base-Knowledge-b-e49fa-filter-tabs-are-all-present-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-e49fa-filter-tabs-are-all-present-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/knowledge-base-Knowledge-b-e49fa-filter-tabs-are-all-present-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [chromium] › tests/e2e/knowledge-base.spec.ts:57:7 › Knowledge base › clicking a filter tab activates it 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="grid"] [class*="rounded-lg"]').or(getByText(/your knowledge base is empty/i)).or(getByText(/upload your first document/i)).first() to be visible[22m
+
+
+      20 |       .or(page.getByText(/upload your first document/i))
+      21 |       .first()
+    > 22 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      23 |   });
+      24 |
+      25 |   test("renders page heading and Upload Document button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/knowledge-base.spec.ts:22:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-50a85-g-a-filter-tab-activates-it-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-50a85-g-a-filter-tab-activates-it-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/knowledge-base-Knowledge-b-50a85-g-a-filter-tab-activates-it-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-50a85-g-a-filter-tab-activates-it-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/knowledge-base-Knowledge-b-50a85-g-a-filter-tab-activates-it-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="grid"] [class*="rounded-lg"]').or(getByText(/your knowledge base is empty/i)).or(getByText(/upload your first document/i)).first() to be visible[22m
+
+
+      20 |       .or(page.getByText(/upload your first document/i))
+      21 |       .first()
+    > 22 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      23 |   });
+      24 |
+      25 |   test("renders page heading and Upload Document button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/knowledge-base.spec.ts:22:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-50a85-g-a-filter-tab-activates-it-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-50a85-g-a-filter-tab-activates-it-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/knowledge-base-Knowledge-b-50a85-g-a-filter-tab-activates-it-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-50a85-g-a-filter-tab-activates-it-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/knowledge-base-Knowledge-b-50a85-g-a-filter-tab-activates-it-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [chromium] › tests/e2e/knowledge-base.spec.ts:68:7 › Knowledge base › KB document grid or empty state is visible 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="grid"] [class*="rounded-lg"]').or(getByText(/your knowledge base is empty/i)).or(getByText(/upload your first document/i)).first() to be visible[22m
+
+
+      20 |       .or(page.getByText(/upload your first document/i))
+      21 |       .first()
+    > 22 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      23 |   });
+      24 |
+      25 |   test("renders page heading and Upload Document button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/knowledge-base.spec.ts:22:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-d9a70-d-or-empty-state-is-visible-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-d9a70-d-or-empty-state-is-visible-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/knowledge-base-Knowledge-b-d9a70-d-or-empty-state-is-visible-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-d9a70-d-or-empty-state-is-visible-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/knowledge-base-Knowledge-b-d9a70-d-or-empty-state-is-visible-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="grid"] [class*="rounded-lg"]').or(getByText(/your knowledge base is empty/i)).or(getByText(/upload your first document/i)).first() to be visible[22m
+
+
+      20 |       .or(page.getByText(/upload your first document/i))
+      21 |       .first()
+    > 22 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      23 |   });
+      24 |
+      25 |   test("renders page heading and Upload Document button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/knowledge-base.spec.ts:22:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-d9a70-d-or-empty-state-is-visible-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-d9a70-d-or-empty-state-is-visible-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/knowledge-base-Knowledge-b-d9a70-d-or-empty-state-is-visible-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-d9a70-d-or-empty-state-is-visible-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/knowledge-base-Knowledge-b-d9a70-d-or-empty-state-is-visible-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [chromium] › tests/e2e/knowledge-base.spec.ts:84:7 › Knowledge base › Upload Document button reveals the upload form 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="grid"] [class*="rounded-lg"]').or(getByText(/your knowledge base is empty/i)).or(getByText(/upload your first document/i)).first() to be visible[22m
+
+
+      20 |       .or(page.getByText(/upload your first document/i))
+      21 |       .first()
+    > 22 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      23 |   });
+      24 |
+      25 |   test("renders page heading and Upload Document button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/knowledge-base.spec.ts:22:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-9ef83-ton-reveals-the-upload-form-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-9ef83-ton-reveals-the-upload-form-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/knowledge-base-Knowledge-b-9ef83-ton-reveals-the-upload-form-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-9ef83-ton-reveals-the-upload-form-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/knowledge-base-Knowledge-b-9ef83-ton-reveals-the-upload-form-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="grid"] [class*="rounded-lg"]').or(getByText(/your knowledge base is empty/i)).or(getByText(/upload your first document/i)).first() to be visible[22m
+
+
+      20 |       .or(page.getByText(/upload your first document/i))
+      21 |       .first()
+    > 22 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      23 |   });
+      24 |
+      25 |   test("renders page heading and Upload Document button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/knowledge-base.spec.ts:22:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-9ef83-ton-reveals-the-upload-form-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-9ef83-ton-reveals-the-upload-form-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/knowledge-base-Knowledge-b-9ef83-ton-reveals-the-upload-form-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/knowledge-base-Knowledge-b-9ef83-ton-reveals-the-upload-form-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/knowledge-base-Knowledge-b-9ef83-ton-reveals-the-upload-form-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) [chromium] › tests/e2e/navigation.spec.ts:13:7 › Navigation › sidebar highlights Proposals when on /proposals 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.getAttribute: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: /^proposals$/i })[22m
+
+
+      16 |
+      17 |     const proposalsLink = page.getByRole("link", { name: /^proposals$/i });
+    > 18 |     const cls = await proposalsLink.getAttribute("class");
+         |                                     ^
+      19 |     expect(cls).toMatch(/bg-primary/);
+      20 |   });
+      21 |
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/navigation.spec.ts:18:37
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-5f947-Proposals-when-on-proposals-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-5f947-Proposals-when-on-proposals-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-Navigation-side-5f947-Proposals-when-on-proposals-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-5f947-Proposals-when-on-proposals-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-Navigation-side-5f947-Proposals-when-on-proposals-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.getAttribute: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: /^proposals$/i })[22m
+
+
+      16 |
+      17 |     const proposalsLink = page.getByRole("link", { name: /^proposals$/i });
+    > 18 |     const cls = await proposalsLink.getAttribute("class");
+         |                                     ^
+      19 |     expect(cls).toMatch(/bg-primary/);
+      20 |   });
+      21 |
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/navigation.spec.ts:18:37
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-5f947-Proposals-when-on-proposals-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-5f947-Proposals-when-on-proposals-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-Navigation-side-5f947-Proposals-when-on-proposals-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-5f947-Proposals-when-on-proposals-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-Navigation-side-5f947-Proposals-when-on-proposals-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  9) [chromium] › tests/e2e/navigation.spec.ts:22:7 › Navigation › sidebar highlights Knowledge Base when on /knowledge-base 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.getAttribute: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: /knowledge base/i })[22m
+
+
+      27 |
+      28 |     const kbLink = page.getByRole("link", { name: /knowledge base/i });
+    > 29 |     const cls = await kbLink.getAttribute("class");
+         |                              ^
+      30 |     expect(cls).toMatch(/bg-primary/);
+      31 |   });
+      32 |
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/navigation.spec.ts:29:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-bd06f-Base-when-on-knowledge-base-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-bd06f-Base-when-on-knowledge-base-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-Navigation-side-bd06f-Base-when-on-knowledge-base-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-bd06f-Base-when-on-knowledge-base-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-Navigation-side-bd06f-Base-when-on-knowledge-base-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.getAttribute: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: /knowledge base/i })[22m
+
+
+      27 |
+      28 |     const kbLink = page.getByRole("link", { name: /knowledge base/i });
+    > 29 |     const cls = await kbLink.getAttribute("class");
+         |                              ^
+      30 |     expect(cls).toMatch(/bg-primary/);
+      31 |   });
+      32 |
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/navigation.spec.ts:29:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-bd06f-Base-when-on-knowledge-base-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-bd06f-Base-when-on-knowledge-base-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-Navigation-side-bd06f-Base-when-on-knowledge-base-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-bd06f-Base-when-on-knowledge-base-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-Navigation-side-bd06f-Base-when-on-knowledge-base-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10) [chromium] › tests/e2e/navigation.spec.ts:33:7 › Navigation › sidebar highlights Dashboard when on /dashboard 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.getAttribute: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: /dashboard/i }).first()[22m
+
+
+      36 |
+      37 |     const dashLink = page.getByRole("link", { name: /dashboard/i }).first();
+    > 38 |     const cls = await dashLink.getAttribute("class");
+         |                                ^
+      39 |     expect(cls).toMatch(/bg-primary/);
+      40 |   });
+      41 |
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/navigation.spec.ts:38:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-ab0a3-Dashboard-when-on-dashboard-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-ab0a3-Dashboard-when-on-dashboard-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-Navigation-side-ab0a3-Dashboard-when-on-dashboard-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-ab0a3-Dashboard-when-on-dashboard-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-Navigation-side-ab0a3-Dashboard-when-on-dashboard-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.getAttribute: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: /dashboard/i }).first()[22m
+
+
+      36 |
+      37 |     const dashLink = page.getByRole("link", { name: /dashboard/i }).first();
+    > 38 |     const cls = await dashLink.getAttribute("class");
+         |                                ^
+      39 |     expect(cls).toMatch(/bg-primary/);
+      40 |   });
+      41 |
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/navigation.spec.ts:38:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-ab0a3-Dashboard-when-on-dashboard-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-ab0a3-Dashboard-when-on-dashboard-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-Navigation-side-ab0a3-Dashboard-when-on-dashboard-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-ab0a3-Dashboard-when-on-dashboard-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-Navigation-side-ab0a3-Dashboard-when-on-dashboard-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  11) [chromium] › tests/e2e/navigation.spec.ts:42:7 › Navigation › sidebar Proposals link is NOT active when on /knowledge-base 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.getAttribute: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: /^proposals$/i })[22m
+
+
+      47 |
+      48 |     const proposalsLink = page.getByRole("link", { name: /^proposals$/i });
+    > 49 |     const cls = await proposalsLink.getAttribute("class");
+         |                                     ^
+      50 |     expect(cls).not.toMatch(/bg-primary/);
+      51 |   });
+      52 |
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/navigation.spec.ts:49:37
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-3709d-tive-when-on-knowledge-base-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-3709d-tive-when-on-knowledge-base-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-Navigation-side-3709d-tive-when-on-knowledge-base-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-3709d-tive-when-on-knowledge-base-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-Navigation-side-3709d-tive-when-on-knowledge-base-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.getAttribute: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: /^proposals$/i })[22m
+
+
+      47 |
+      48 |     const proposalsLink = page.getByRole("link", { name: /^proposals$/i });
+    > 49 |     const cls = await proposalsLink.getAttribute("class");
+         |                                     ^
+      50 |     expect(cls).not.toMatch(/bg-primary/);
+      51 |   });
+      52 |
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/navigation.spec.ts:49:37
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-3709d-tive-when-on-knowledge-base-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-3709d-tive-when-on-knowledge-base-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-Navigation-side-3709d-tive-when-on-knowledge-base-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-side-3709d-tive-when-on-knowledge-base-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-Navigation-side-3709d-tive-when-on-knowledge-base-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  12) [chromium] › tests/e2e/navigation.spec.ts:53:7 › Navigation › navigating via sidebar links changes the active item 
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: /knowledge base/i })[22m
+
+
+      58 |
+      59 |     // Click Knowledge Base in sidebar.
+    > 60 |     await page.getByRole("link", { name: /knowledge base/i }).click();
+         |                                                               ^
+      61 |     await expect(page).toHaveURL("/knowledge-base");
+      62 |
+      63 |     const kbLink = page.getByRole("link", { name: /knowledge base/i });
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/navigation.spec.ts:60:63
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-navi-64092-nks-changes-the-active-item-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-navi-64092-nks-changes-the-active-item-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-Navigation-navi-64092-nks-changes-the-active-item-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-navi-64092-nks-changes-the-active-item-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-Navigation-navi-64092-nks-changes-the-active-item-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('link', { name: /knowledge base/i })[22m
+
+
+      58 |
+      59 |     // Click Knowledge Base in sidebar.
+    > 60 |     await page.getByRole("link", { name: /knowledge base/i }).click();
+         |                                                               ^
+      61 |     await expect(page).toHaveURL("/knowledge-base");
+      62 |
+      63 |     const kbLink = page.getByRole("link", { name: /knowledge base/i });
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/navigation.spec.ts:60:63
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-navi-64092-nks-changes-the-active-item-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-navi-64092-nks-changes-the-active-item-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-Navigation-navi-64092-nks-changes-the-active-item-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-navi-64092-nks-changes-the-active-item-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-Navigation-navi-64092-nks-changes-the-active-item-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  13) [chromium] › tests/e2e/navigation.spec.ts:73:7 › Navigation › editor breadcrumb navigates back to dashboard 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      78 |       .or(page.getByText(/no proposals yet/i))
+      79 |       .first()
+    > 80 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      81 |
+      82 |     const isEmpty = await page.getByText(/no proposals yet/i).isVisible();
+      83 |     if (isEmpty) {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/navigation.spec.ts:80:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-edit-465ee-navigates-back-to-dashboard-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-edit-465ee-navigates-back-to-dashboard-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-Navigation-edit-465ee-navigates-back-to-dashboard-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-edit-465ee-navigates-back-to-dashboard-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-Navigation-edit-465ee-navigates-back-to-dashboard-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      78 |       .or(page.getByText(/no proposals yet/i))
+      79 |       .first()
+    > 80 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      81 |
+      82 |     const isEmpty = await page.getByText(/no proposals yet/i).isVisible();
+      83 |     if (isEmpty) {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/navigation.spec.ts:80:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-edit-465ee-navigates-back-to-dashboard-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-edit-465ee-navigates-back-to-dashboard-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/navigation-Navigation-edit-465ee-navigates-back-to-dashboard-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/navigation-Navigation-edit-465ee-navigates-back-to-dashboard-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/navigation-Navigation-edit-465ee-navigates-back-to-dashboard-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  14) [chromium] › tests/e2e/proposal-editor.spec.ts:51:7 › Proposal editor › loads an existing proposal and shows header breadcrumb 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      28 |     .or(page.getByText(/no proposals yet/i))
+      29 |     .first()
+    > 30 |     .waitFor({ timeout: 15_000 });
+         |      ^
+      31 |
+      32 |   const empty = await page.getByText(/no proposals yet/i).isVisible();
+      33 |   if (empty) return false;
+        at goToFirstProposalWithSections (/Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:30:6)
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:54:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-b4ce3-and-shows-header-breadcrumb-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-b4ce3-and-shows-header-breadcrumb-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposal-editor-Proposal-e-b4ce3-and-shows-header-breadcrumb-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-b4ce3-and-shows-header-breadcrumb-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposal-editor-Proposal-e-b4ce3-and-shows-header-breadcrumb-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      28 |     .or(page.getByText(/no proposals yet/i))
+      29 |     .first()
+    > 30 |     .waitFor({ timeout: 15_000 });
+         |      ^
+      31 |
+      32 |   const empty = await page.getByText(/no proposals yet/i).isVisible();
+      33 |   if (empty) return false;
+        at goToFirstProposalWithSections (/Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:30:6)
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:54:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-b4ce3-and-shows-header-breadcrumb-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-b4ce3-and-shows-header-breadcrumb-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposal-editor-Proposal-e-b4ce3-and-shows-header-breadcrumb-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-b4ce3-and-shows-header-breadcrumb-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposal-editor-Proposal-e-b4ce3-and-shows-header-breadcrumb-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  15) [chromium] › tests/e2e/proposal-editor.spec.ts:70:7 › Proposal editor › renders section editors when sections exist 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      28 |     .or(page.getByText(/no proposals yet/i))
+      29 |     .first()
+    > 30 |     .waitFor({ timeout: 15_000 });
+         |      ^
+      31 |
+      32 |   const empty = await page.getByText(/no proposals yet/i).isVisible();
+      33 |   if (empty) return false;
+        at goToFirstProposalWithSections (/Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:30:6)
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:71:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-15e93-editors-when-sections-exist-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-15e93-editors-when-sections-exist-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposal-editor-Proposal-e-15e93-editors-when-sections-exist-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-15e93-editors-when-sections-exist-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposal-editor-Proposal-e-15e93-editors-when-sections-exist-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      28 |     .or(page.getByText(/no proposals yet/i))
+      29 |     .first()
+    > 30 |     .waitFor({ timeout: 15_000 });
+         |      ^
+      31 |
+      32 |   const empty = await page.getByText(/no proposals yet/i).isVisible();
+      33 |   if (empty) return false;
+        at goToFirstProposalWithSections (/Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:30:6)
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:71:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-15e93-editors-when-sections-exist-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-15e93-editors-when-sections-exist-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposal-editor-Proposal-e-15e93-editors-when-sections-exist-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-15e93-editors-when-sections-exist-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposal-editor-Proposal-e-15e93-editors-when-sections-exist-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  16) [chromium] › tests/e2e/proposal-editor.spec.ts:91:7 › Proposal editor › confidence badges are visible and color-coded when sections have scores 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      28 |     .or(page.getByText(/no proposals yet/i))
+      29 |     .first()
+    > 30 |     .waitFor({ timeout: 15_000 });
+         |      ^
+      31 |
+      32 |   const empty = await page.getByText(/no proposals yet/i).isVisible();
+      33 |   if (empty) return false;
+        at goToFirstProposalWithSections (/Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:30:6)
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:94:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-c3f94-d-when-sections-have-scores-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-c3f94-d-when-sections-have-scores-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposal-editor-Proposal-e-c3f94-d-when-sections-have-scores-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-c3f94-d-when-sections-have-scores-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposal-editor-Proposal-e-c3f94-d-when-sections-have-scores-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      28 |     .or(page.getByText(/no proposals yet/i))
+      29 |     .first()
+    > 30 |     .waitFor({ timeout: 15_000 });
+         |      ^
+      31 |
+      32 |   const empty = await page.getByText(/no proposals yet/i).isVisible();
+      33 |   if (empty) return false;
+        at goToFirstProposalWithSections (/Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:30:6)
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:94:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-c3f94-d-when-sections-have-scores-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-c3f94-d-when-sections-have-scores-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposal-editor-Proposal-e-c3f94-d-when-sections-have-scores-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-c3f94-d-when-sections-have-scores-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposal-editor-Proposal-e-c3f94-d-when-sections-have-scores-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  17) [chromium] › tests/e2e/proposal-editor.spec.ts:115:7 › Proposal editor › requirements sidebar is visible with items or empty state 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      28 |     .or(page.getByText(/no proposals yet/i))
+      29 |     .first()
+    > 30 |     .waitFor({ timeout: 15_000 });
+         |      ^
+      31 |
+      32 |   const empty = await page.getByText(/no proposals yet/i).isVisible();
+      33 |   if (empty) return false;
+        at goToFirstProposalWithSections (/Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:30:6)
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:118:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-6334a-e-with-items-or-empty-state-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-6334a-e-with-items-or-empty-state-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposal-editor-Proposal-e-6334a-e-with-items-or-empty-state-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-6334a-e-with-items-or-empty-state-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposal-editor-Proposal-e-6334a-e-with-items-or-empty-state-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      28 |     .or(page.getByText(/no proposals yet/i))
+      29 |     .first()
+    > 30 |     .waitFor({ timeout: 15_000 });
+         |      ^
+      31 |
+      32 |   const empty = await page.getByText(/no proposals yet/i).isVisible();
+      33 |   if (empty) return false;
+        at goToFirstProposalWithSections (/Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:30:6)
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:118:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-6334a-e-with-items-or-empty-state-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-6334a-e-with-items-or-empty-state-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposal-editor-Proposal-e-6334a-e-with-items-or-empty-state-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-6334a-e-with-items-or-empty-state-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposal-editor-Proposal-e-6334a-e-with-items-or-empty-state-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  18) [chromium] › tests/e2e/proposal-editor.spec.ts:130:7 › Proposal editor › Select all requirements button selects all and disappears 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      28 |     .or(page.getByText(/no proposals yet/i))
+      29 |     .first()
+    > 30 |     .waitFor({ timeout: 15_000 });
+         |      ^
+      31 |
+      32 |   const empty = await page.getByText(/no proposals yet/i).isVisible();
+      33 |   if (empty) return false;
+        at goToFirstProposalWithSections (/Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:30:6)
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:133:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-34c8d--selects-all-and-disappears-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-34c8d--selects-all-and-disappears-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposal-editor-Proposal-e-34c8d--selects-all-and-disappears-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-34c8d--selects-all-and-disappears-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposal-editor-Proposal-e-34c8d--selects-all-and-disappears-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      28 |     .or(page.getByText(/no proposals yet/i))
+      29 |     .first()
+    > 30 |     .waitFor({ timeout: 15_000 });
+         |      ^
+      31 |
+      32 |   const empty = await page.getByText(/no proposals yet/i).isVisible();
+      33 |   if (empty) return false;
+        at goToFirstProposalWithSections (/Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:30:6)
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:133:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-34c8d--selects-all-and-disappears-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-34c8d--selects-all-and-disappears-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposal-editor-Proposal-e-34c8d--selects-all-and-disappears-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-34c8d--selects-all-and-disappears-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposal-editor-Proposal-e-34c8d--selects-all-and-disappears-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  19) [chromium] › tests/e2e/proposal-editor.spec.ts:156:7 › Proposal editor › KB panel toggle shows and hides the KB panel 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      28 |     .or(page.getByText(/no proposals yet/i))
+      29 |     .first()
+    > 30 |     .waitFor({ timeout: 15_000 });
+         |      ^
+      31 |
+      32 |   const empty = await page.getByText(/no proposals yet/i).isVisible();
+      33 |   if (empty) return false;
+        at goToFirstProposalWithSections (/Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:30:6)
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:157:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-ca08f-hows-and-hides-the-KB-panel-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-ca08f-hows-and-hides-the-KB-panel-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposal-editor-Proposal-e-ca08f-hows-and-hides-the-KB-panel-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-ca08f-hows-and-hides-the-KB-panel-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposal-editor-Proposal-e-ca08f-hows-and-hides-the-KB-panel-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('ul li').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      28 |     .or(page.getByText(/no proposals yet/i))
+      29 |     .first()
+    > 30 |     .waitFor({ timeout: 15_000 });
+         |      ^
+      31 |
+      32 |   const empty = await page.getByText(/no proposals yet/i).isVisible();
+      33 |   if (empty) return false;
+        at goToFirstProposalWithSections (/Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:30:6)
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposal-editor.spec.ts:157:19
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-ca08f-hows-and-hides-the-KB-panel-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-ca08f-hows-and-hides-the-KB-panel-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposal-editor-Proposal-e-ca08f-hows-and-hides-the-KB-panel-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposal-editor-Proposal-e-ca08f-hows-and-hides-the-KB-panel-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposal-editor-Proposal-e-ca08f-hows-and-hides-the-KB-panel-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  20) [chromium] › tests/e2e/proposals-list.spec.ts:21:7 › Proposals list › renders the page heading and New Proposal button 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="divide-y"] li, [class*="flex-col"] p').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      16 |       .or(page.getByText(/no proposals yet/i))
+      17 |       .first()
+    > 18 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      19 |   });
+      20 |
+      21 |   test("renders the page heading and New Proposal button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposals-list.spec.ts:18:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-cd1e9-ing-and-New-Proposal-button-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-cd1e9-ing-and-New-Proposal-button-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposals-list-Proposals-l-cd1e9-ing-and-New-Proposal-button-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-cd1e9-ing-and-New-Proposal-button-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposals-list-Proposals-l-cd1e9-ing-and-New-Proposal-button-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="divide-y"] li, [class*="flex-col"] p').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      16 |       .or(page.getByText(/no proposals yet/i))
+      17 |       .first()
+    > 18 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      19 |   });
+      20 |
+      21 |   test("renders the page heading and New Proposal button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposals-list.spec.ts:18:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-cd1e9-ing-and-New-Proposal-button-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-cd1e9-ing-and-New-Proposal-button-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposals-list-Proposals-l-cd1e9-ing-and-New-Proposal-button-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-cd1e9-ing-and-New-Proposal-button-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposals-list-Proposals-l-cd1e9-ing-and-New-Proposal-button-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  21) [chromium] › tests/e2e/proposals-list.spec.ts:30:7 › Proposals list › renders at least one proposal with title, status, and date 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="divide-y"] li, [class*="flex-col"] p').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      16 |       .or(page.getByText(/no proposals yet/i))
+      17 |       .first()
+    > 18 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      19 |   });
+      20 |
+      21 |   test("renders the page heading and New Proposal button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposals-list.spec.ts:18:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-daed4--with-title-status-and-date-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-daed4--with-title-status-and-date-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposals-list-Proposals-l-daed4--with-title-status-and-date-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-daed4--with-title-status-and-date-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposals-list-Proposals-l-daed4--with-title-status-and-date-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="divide-y"] li, [class*="flex-col"] p').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      16 |       .or(page.getByText(/no proposals yet/i))
+      17 |       .first()
+    > 18 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      19 |   });
+      20 |
+      21 |   test("renders the page heading and New Proposal button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposals-list.spec.ts:18:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-daed4--with-title-status-and-date-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-daed4--with-title-status-and-date-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposals-list-Proposals-l-daed4--with-title-status-and-date-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-daed4--with-title-status-and-date-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposals-list-Proposals-l-daed4--with-title-status-and-date-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  22) [chromium] › tests/e2e/proposals-list.spec.ts:65:7 › Proposals list › clicking a proposal navigates to /proposals/[id] 
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="divide-y"] li, [class*="flex-col"] p').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      16 |       .or(page.getByText(/no proposals yet/i))
+      17 |       .first()
+    > 18 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      19 |   });
+      20 |
+      21 |   test("renders the page heading and New Proposal button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposals-list.spec.ts:18:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-f4ea4--navigates-to-proposals-id--chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-f4ea4--navigates-to-proposals-id--chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposals-list-Proposals-l-f4ea4--navigates-to-proposals-id--chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-f4ea4--navigates-to-proposals-id--chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposals-list-Proposals-l-f4ea4--navigates-to-proposals-id--chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    TimeoutError: locator.waitFor: Timeout 15000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[class*="divide-y"] li, [class*="flex-col"] p').or(getByText(/no proposals yet/i)).first() to be visible[22m
+
+
+      16 |       .or(page.getByText(/no proposals yet/i))
+      17 |       .first()
+    > 18 |       .waitFor({ timeout: 15_000 });
+         |        ^
+      19 |   });
+      20 |
+      21 |   test("renders the page heading and New Proposal button", async ({ page }) => {
+        at /Users/daniyalmalik/Desktop/AI PROJECTS/pp-testrun/tests/e2e/proposals-list.spec.ts:18:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-f4ea4--navigates-to-proposals-id--chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-f4ea4--navigates-to-proposals-id--chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/proposals-list-Proposals-l-f4ea4--navigates-to-proposals-id--chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/proposals-list-Proposals-l-f4ea4--navigates-to-proposals-id--chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/proposals-list-Proposals-l-f4ea4--navigates-to-proposals-id--chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  22 failed
+    [chromium] › tests/e2e/generation-flow.spec.ts:22:7 › Generation flow (real AI) › regenerates a section and shows updated content + confidence badge 
+    [chromium] › tests/e2e/knowledge-base.spec.ts:25:7 › Knowledge base › renders page heading and Upload Document button 
+    [chromium] › tests/e2e/knowledge-base.spec.ts:34:7 › Knowledge base › search input is visible and accepts text 
+    [chromium] › tests/e2e/knowledge-base.spec.ts:41:7 › Knowledge base › type filter tabs are all present 
+    [chromium] › tests/e2e/knowledge-base.spec.ts:57:7 › Knowledge base › clicking a filter tab activates it 
+    [chromium] › tests/e2e/knowledge-base.spec.ts:68:7 › Knowledge base › KB document grid or empty state is visible 
+    [chromium] › tests/e2e/knowledge-base.spec.ts:84:7 › Knowledge base › Upload Document button reveals the upload form 
+    [chromium] › tests/e2e/navigation.spec.ts:13:7 › Navigation › sidebar highlights Proposals when on /proposals 
+    [chromium] › tests/e2e/navigation.spec.ts:22:7 › Navigation › sidebar highlights Knowledge Base when on /knowledge-base 
+    [chromium] › tests/e2e/navigation.spec.ts:33:7 › Navigation › sidebar highlights Dashboard when on /dashboard 
+    [chromium] › tests/e2e/navigation.spec.ts:42:7 › Navigation › sidebar Proposals link is NOT active when on /knowledge-base 
+    [chromium] › tests/e2e/navigation.spec.ts:53:7 › Navigation › navigating via sidebar links changes the active item 
+    [chromium] › tests/e2e/navigation.spec.ts:73:7 › Navigation › editor breadcrumb navigates back to dashboard 
+    [chromium] › tests/e2e/proposal-editor.spec.ts:51:7 › Proposal editor › loads an existing proposal and shows header breadcrumb 
+    [chromium] › tests/e2e/proposal-editor.spec.ts:70:7 › Proposal editor › renders section editors when sections exist 
+    [chromium] › tests/e2e/proposal-editor.spec.ts:91:7 › Proposal editor › confidence badges are visible and color-coded when sections have scores 
+    [chromium] › tests/e2e/proposal-editor.spec.ts:115:7 › Proposal editor › requirements sidebar is visible with items or empty state 
+    [chromium] › tests/e2e/proposal-editor.spec.ts:130:7 › Proposal editor › Select all requirements button selects all and disappears 
+    [chromium] › tests/e2e/proposal-editor.spec.ts:156:7 › Proposal editor › KB panel toggle shows and hides the KB panel 
+    [chromium] › tests/e2e/proposals-list.spec.ts:21:7 › Proposals list › renders the page heading and New Proposal button 
+    [chromium] › tests/e2e/proposals-list.spec.ts:30:7 › Proposals list › renders at least one proposal with title, status, and date 
+    [chromium] › tests/e2e/proposals-list.spec.ts:65:7 › Proposals list › clicking a proposal navigates to /proposals/[id] 
