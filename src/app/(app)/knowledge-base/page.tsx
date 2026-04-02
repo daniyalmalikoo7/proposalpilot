@@ -27,9 +27,11 @@ type DbKBItem = {
   id: string;
   type: string;
   title: string;
+  content: string;
   isWin: boolean;
   metadata: unknown;
   createdAt: Date;
+  _count: { chunks: number };
 };
 
 function mapDbItem(item: DbKBItem): KBItem {
@@ -42,6 +44,8 @@ function mapDbItem(item: DbKBItem): KBItem {
     fileSize,
     uploadedAt: item.createdAt,
     isWin: item.isWin,
+    contentPreview: item.content.slice(0, 200),
+    chunkCount: item._count.chunks,
   };
 }
 
@@ -50,6 +54,11 @@ export default function KnowledgeBasePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [showUpload, setShowUpload] = useState(false);
+
+  const utils = trpc.useUtils();
+  const deleteKbItem = trpc.kb.delete.useMutation({
+    onSuccess: () => void utils.kb.list.invalidate(),
+  });
 
   // Debounce search input by 300 ms.
   useEffect(() => {
@@ -202,7 +211,11 @@ export default function KnowledgeBasePage() {
       {!isLoading && items.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {items.map((item) => (
-            <KBItemCard key={item.id} item={item} />
+            <KBItemCard
+              key={item.id}
+              item={item}
+              onDelete={() => deleteKbItem.mutate({ id: item.id })}
+            />
           ))}
         </div>
       )}

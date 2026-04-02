@@ -39,6 +39,8 @@ export interface KBItem {
   readonly fileSize: number;
   readonly uploadedAt: Date;
   readonly isWin: boolean;
+  readonly contentPreview?: string;
+  readonly chunkCount?: number;
 }
 
 export const PROPOSAL_STATUS_LABELS: Readonly<Record<ProposalStatus, string>> =

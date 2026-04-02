@@ -115,11 +115,13 @@ export const kbRouter = router({
           id: true,
           type: true,
           title: true,
+          content: true,
           fileUrl: true,
           isWin: true,
           metadata: true,
           createdAt: true,
           updatedAt: true,
+          _count: { select: { chunks: true } },
         },
       });
 

@@ -1,4 +1,7 @@
-import { FileText, MoreHorizontal } from "lucide-react";
+"use client";
+
+import { useState } from "react";
+import { FileText, MoreHorizontal, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/atoms/button";
 import type { KBItem, KBItemType } from "@/lib/types/proposal";
@@ -24,11 +27,26 @@ function formatFileSize(bytes: number): string {
 
 interface KBItemCardProps {
   readonly item: KBItem;
+  readonly onDelete?: () => void;
 }
 
-export function KBItemCard({ item }: KBItemCardProps) {
+export function KBItemCard({ item, onDelete }: KBItemCardProps) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
-    <div className="group relative flex flex-col gap-3 rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-sm">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => setExpanded((v) => !v)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") setExpanded((v) => !v);
+      }}
+      className={cn(
+        "group relative flex cursor-pointer select-none flex-col gap-3 rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-sm",
+        expanded && "ring-1 ring-primary/20",
+      )}
+    >
+      {/* Type badge + icon */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
           <FileText className="h-4 w-4 text-muted-foreground" />
@@ -43,10 +61,48 @@ export function KBItemCard({ item }: KBItemCardProps) {
         </span>
       </div>
 
-      <p className="line-clamp-2 min-h-[2.5rem] text-sm font-medium leading-snug">
+      {/* Title */}
+      <p
+        className={cn(
+          "text-sm font-medium leading-snug",
+          !expanded && "line-clamp-2 min-h-[2.5rem]",
+        )}
+      >
         {item.title}
       </p>
 
+      {/* Expanded details */}
+      {expanded && (
+        <div className="space-y-2 border-t border-border pt-2">
+          {item.chunkCount !== undefined && (
+            <p className="text-xs text-muted-foreground">
+              {item.chunkCount} chunk{item.chunkCount !== 1 ? "s" : ""} indexed
+            </p>
+          )}
+          {item.contentPreview && (
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {item.contentPreview}
+              {item.contentPreview.length >= 200 ? "…" : ""}
+            </p>
+          )}
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-full gap-1.5 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Footer: meta + "..." menu placeholder (wired in fix 6) */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
           {formatFileSize(item.fileSize)} ·{" "}
@@ -59,6 +115,7 @@ export function KBItemCard({ item }: KBItemCardProps) {
           variant="ghost"
           size="icon"
           className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+          onClick={(e) => e.stopPropagation()}
         >
           <MoreHorizontal className="h-3.5 w-3.5" />
         </Button>
