@@ -70,14 +70,19 @@ export function useProposalEditor(proposalId: string) {
   // ── Derived ──────────────────────────────────────────────────────────────────
   const requirements: Requirement[] = useMemo(() => {
     if (!proposalQuery.data?.requirements) return [];
-    return proposalQuery.data.requirements.map((r) => ({
-      id: r.id,
-      section: r.section ?? "General",
-      requirement: r.requirement,
-      priority: (r.priority ?? "medium") as "high" | "medium" | "low",
-      addressed: r.addressed ?? false,
-    }));
-  }, [proposalQuery.data?.requirements]);
+    return proposalQuery.data.requirements.map((r) => {
+      const reqSection = r.section ?? "General";
+      const matchingSection = sections.find((s) => s.title === reqSection);
+      const sectionHasContent = Boolean(matchingSection?.content?.trim());
+      return {
+        id: r.id,
+        section: reqSection,
+        requirement: r.requirement,
+        priority: (r.priority ?? "medium") as "high" | "medium" | "low",
+        addressed: (r.addressed ?? false) || sectionHasContent,
+      };
+    });
+  }, [proposalQuery.data?.requirements, sections]);
 
   const hasRequirements = requirements.length > 0;
   const hasSections = sections.length > 0;
@@ -174,14 +179,27 @@ export function useProposalEditor(proposalId: string) {
     [proposalId, updateSectionMutation],
   );
 
-  const handleToggleRequirement = useCallback((id: string) => {
-    setSelectedReqIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
+  const handleToggleRequirement = useCallback(
+    (id: string) => {
+      setSelectedReqIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+      // Scroll to the matching section editor when toggling a requirement
+      const req = requirements.find((r) => r.id === id);
+      if (req) {
+        const section = sections.find((s) => s.title === req.section);
+        if (section) {
+          document
+            .getElementById(`section-${section.id}`)
+            ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      }
+    },
+    [requirements, sections],
+  );
 
   const handleToggleKbItem = useCallback((id: string) => {
     setSelectedKbIds((prev) => {

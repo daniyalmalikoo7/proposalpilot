@@ -193,6 +193,7 @@ function ProposalEditorInner({
 
   return (
     <div
+      id={`section-${section.id}`}
       className={cn(
         "flex flex-col rounded-lg border border-border bg-card transition-shadow hover:shadow-md",
         getConfidenceBorderClass(confidenceScore),
