@@ -3,7 +3,9 @@
 // RequirementsSidebar — left panel of the proposal editor.
 // Displays extracted requirements grouped by section with priority badges.
 
+import { FileSearch } from "lucide-react";
 import { Badge } from "@/components/atoms/badge";
+import { Skeleton } from "@/components/atoms/skeleton";
 import { cn } from "@/lib/utils";
 
 export interface Requirement {
@@ -57,7 +59,11 @@ export function RequirementsSidebar({
         </div>
         <div className="flex-1 space-y-2 overflow-y-auto p-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-md bg-muted" />
+            <div key={i} className="space-y-1.5 rounded-md border border-border p-3">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-4/5" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
           ))}
         </div>
       </aside>
@@ -72,9 +78,12 @@ export function RequirementsSidebar({
             Requirements
           </h2>
         </div>
-        <div className="flex flex-1 items-center justify-center p-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            No requirements extracted yet.
+        <div className="flex flex-col items-center justify-center gap-3 p-6 text-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+            <FileSearch className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <p className="text-[13px] text-muted-foreground">
+            Upload an RFP to extract requirements automatically.
           </p>
         </div>
       </aside>
@@ -109,7 +118,7 @@ export function RequirementsSidebar({
                       type="button"
                       onClick={() => onToggleRequirement(req.id)}
                       className={cn(
-                        "w-full rounded-md border px-3 py-2 text-left text-xs transition-colors",
+                        "w-full rounded-md border px-3 py-1.5 text-left text-[13px] leading-snug transition-colors",
                         isSelected
                           ? "border-primary/40 bg-primary/5 text-foreground"
                           : "border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground",
@@ -122,7 +131,7 @@ export function RequirementsSidebar({
                         </span>
                         <Badge
                           variant={PRIORITY_VARIANTS[req.priority]}
-                          className="shrink-0 capitalize"
+                          className="shrink-0 capitalize text-[11px]"
                         >
                           {req.priority}
                         </Badge>

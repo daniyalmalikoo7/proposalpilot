@@ -113,8 +113,12 @@ export function KBSearchPanel({
         )}
 
         {hasSearched && results.length === 0 && (
-          <div className="p-4 text-center">
-            <p className="text-xs text-muted-foreground">No results found.</p>
+          <div className="flex flex-col items-center justify-center gap-2 p-6 text-center">
+            <Search className="h-6 w-6 text-muted-foreground/40" />
+            <p className="text-xs font-medium text-foreground">No results found</p>
+            <p className="text-[11px] text-muted-foreground">
+              Try different keywords or upload more documents.
+            </p>
           </div>
         )}
 

@@ -165,7 +165,7 @@ export function EditorCenterPanel({
       </div>
 
       {/* Section editors */}
-      <div className="flex flex-col gap-4 overflow-y-auto p-4">
+      <div className="flex flex-col gap-6 overflow-y-auto p-4">
         {sections.map((section) => (
           <ProposalEditor
             key={section.id}

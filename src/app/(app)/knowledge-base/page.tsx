@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Plus, Search } from "lucide-react";
+import { BookOpen, Plus, Search } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
+import { Skeleton } from "@/components/atoms/skeleton";
 import { KBItemCard } from "@/components/molecules/kb-item-card";
 import { KBUploadForm } from "@/components/organisms/kb-upload-form";
 import { trpc } from "@/lib/trpc/client";
@@ -170,28 +171,41 @@ export default function KnowledgeBasePage() {
         })}
       </div>
 
-      {/* Loading */}
+      {/* Loading — shimmer skeleton grid */}
       {isLoading && (
-        <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          {isSearching ? "Searching…" : "Loading…"}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4"
+            >
+              <Skeleton className="h-4 w-16 rounded-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-3 w-3/4" />
+              <Skeleton className="mt-1 h-3 w-1/2" />
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Grid */}
+      {/* Empty state */}
       {!isLoading && items.length === 0 && (
-        <div className="rounded-lg border border-border bg-card px-6 py-12 text-center">
-          <p className="text-sm text-muted-foreground">
-            {isSearching
-              ? "No results match your search."
-              : "No documents in this category."}
-          </p>
+        <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-border bg-card px-6 py-16 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+            <BookOpen className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <div>
+            <p className="text-base font-semibold text-foreground">
+              {isSearching ? "No results found" : "Your knowledge base is empty"}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {isSearching
+                ? "Try a different search term or browse all documents."
+                : "Upload past proposals, case studies, and methodologies to boost AI generation accuracy."}
+            </p>
+          </div>
           {!isSearching && activeType === "ALL" && (
-            <Button
-              size="sm"
-              className="mt-4"
-              onClick={() => setShowUpload(true)}
-            >
+            <Button size="sm" onClick={() => setShowUpload(true)}>
               <Plus className="mr-1.5 h-4 w-4" />
               Upload your first document
             </Button>

@@ -10,13 +10,15 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import {
   BookOpen,
-  Loader2,
   Sparkles,
   RotateCcw,
   AlertTriangle,
+  Zap,
 } from "lucide-react";
+import { Skeleton } from "@/components/atoms/skeleton";
 import { Button } from "@/components/atoms/button";
 import { Badge } from "@/components/atoms/badge";
+import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -83,13 +85,29 @@ interface ProposalEditorProps {
 
 function ConfidenceBadge({ score }: { readonly score: number }) {
   const pct = Math.round(score * 100);
-  const variant: "default" | "secondary" | "outline" =
-    score >= 0.9 ? "default" : score >= 0.7 ? "secondary" : "outline";
+  const colorClass =
+    score > 0.7
+      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+      : score >= 0.4
+        ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+        : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
   return (
-    <Badge variant={variant} className="text-xs">
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+        colorClass,
+      )}
+    >
       {pct}% confidence
-    </Badge>
+    </span>
   );
+}
+
+function getConfidenceBorderClass(score: number | null): string {
+  if (score === null) return "border-l-4 border-l-transparent";
+  if (score > 0.7) return "border-l-4 border-l-green-500";
+  if (score >= 0.4) return "border-l-4 border-l-amber-500";
+  return "border-l-4 border-l-red-500";
 }
 
 function ProposalEditorInner({
@@ -126,7 +144,7 @@ function ProposalEditorInner({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none focus:outline-none min-h-[200px] h-auto px-6 py-4",
+          "prose prose-sm max-w-none focus:outline-none min-h-[200px] h-auto px-6 py-4 text-[15px] leading-[1.7]",
       },
     },
     onUpdate: ({ editor: ed }) => {
@@ -174,11 +192,16 @@ function ProposalEditorInner({
   }, [autoGenerate, isGenerating, start]);
 
   return (
-    <div className="flex flex-col rounded-lg border border-border bg-card">
+    <div
+      className={cn(
+        "flex flex-col rounded-lg border border-border bg-card transition-shadow hover:shadow-md",
+        getConfidenceBorderClass(confidenceScore),
+      )}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border bg-muted/20 px-4 py-2.5">
+      <div className="flex items-center justify-between border-b border-border bg-muted/20 px-4 py-3">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-semibold text-foreground">
+          <h3 className="text-lg font-semibold text-foreground">
             {section.title}
           </h3>
           {confidenceScore !== null && (
@@ -194,15 +217,27 @@ function ProposalEditorInner({
 
         <div className="flex items-center gap-2">
           {isGenerating ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={cancel}
-              className="h-7 gap-1.5 text-xs"
-            >
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Generating…
-            </Button>
+            <>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled
+                className="h-7 gap-1.5 text-xs opacity-40"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Regenerate
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={cancel}
+                className="relative h-7 gap-1.5 overflow-hidden text-xs"
+              >
+                <span className="absolute inset-0 animate-pulse bg-primary/10" />
+                <Zap className="relative h-3 w-3 text-primary" />
+                <span className="relative">Generating…</span>
+              </Button>
+            </>
           ) : (
             <>
               {section.content && (
@@ -289,14 +324,20 @@ function ProposalEditorInner({
       {/* Editor area */}
       <div className="relative">
         {isGenerating && !streamBuffer && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Generating section…
-            </div>
+          <div className="space-y-3 px-6 py-4">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-11/12" />
+            <Skeleton className="h-4 w-4/5" />
+            <Skeleton className="mt-4 h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="mt-4 h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
           </div>
         )}
-        <EditorContent editor={editor} />
+        <div className={isGenerating && !streamBuffer ? "hidden" : undefined}>
+          <EditorContent editor={editor} />
+        </div>
       </div>
     </div>
   );

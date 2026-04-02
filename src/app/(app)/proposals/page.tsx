@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, FilePlus2 } from "lucide-react";
 import { Button } from "@/components/atoms/button";
+import { Skeleton } from "@/components/atoms/skeleton";
 import { NewProposalDialog } from "@/components/organisms/new-proposal-dialog";
 import { trpc } from "@/lib/trpc/client";
 
@@ -43,14 +44,35 @@ export default function ProposalsPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center px-6 py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <div className="divide-y divide-border">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-6 py-4">
+                <Skeleton className="h-4 w-4 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3.5 w-48" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            ))}
           </div>
         ) : !data?.items.length ? (
-          <div className="px-6 py-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              No proposals found. Upload an RFP to create your first proposal.
-            </p>
+          <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <FilePlus2 className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="text-base font-semibold text-foreground">
+                No proposals yet
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Upload an RFP and let AI draft your first proposal in minutes.
+              </p>
+            </div>
+            <Button onClick={() => setDialogOpen(true)}>
+              Create your first proposal
+            </Button>
           </div>
         ) : (
           <ul className="divide-y divide-border">
