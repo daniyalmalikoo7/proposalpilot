@@ -27,14 +27,8 @@ export function NewProposalDialog({
 
   const utils = trpc.useUtils();
 
-  const createProposal = trpc.proposal.create.useMutation({
-    onSuccess: (proposal) => {
-      void utils.proposal.list.invalidate();
-      onOpenChange(false);
-      resetForm();
-      router.push(`/proposals/${proposal.id}`);
-    },
-  });
+  const createProposal = trpc.proposal.create.useMutation();
+  const extractRequirements = trpc.ai.extractRequirements.useMutation();
 
   function resetForm() {
     setTitle("");
@@ -44,11 +38,24 @@ export function NewProposalDialog({
   }
 
   async function handleCreate() {
-    if (!title.trim() || createProposal.isPending) return;
+    if (!title.trim() || isPending) return;
 
     setUploadError(null);
 
-    // Upload RFP if provided — fire and store text for later use in the editor.
+    // 1. Create the proposal record first to get an ID.
+    let proposalId: string;
+    try {
+      const proposal = await createProposal.mutateAsync({
+        title: title.trim(),
+        clientName: clientName.trim() || undefined,
+      });
+      proposalId = proposal.id;
+    } catch {
+      return; // createProposal.error surfaces the message in the UI
+    }
+
+    // 2. If an RFP was attached, upload it and extract requirements now so the
+    //    editor opens with requirements already populated.
     if (rfpFile) {
       const form = new FormData();
       form.append("file", rfpFile);
@@ -56,25 +63,31 @@ export function NewProposalDialog({
         const res = await fetch("/api/upload", { method: "POST", body: form });
         const json = (await res.json()) as {
           ok: boolean;
+          data?: { chunks: { text: string }[] };
           error?: { message: string };
         };
-        if (!json.ok) {
+        if (json.ok && json.data) {
+          const rfpText = json.data.chunks.map((c) => c.text).join("\n\n");
+          // Non-fatal — if extraction fails, the user can re-upload from the editor.
+          await extractRequirements
+            .mutateAsync({ proposalId, rfpText })
+            .catch(() => undefined);
+        } else {
           setUploadError(json.error?.message ?? "File upload failed.");
-          return;
         }
       } catch {
-        setUploadError("Network error uploading file. Please try again.");
-        return;
+        // Network error — navigate anyway; user can re-upload from the editor.
       }
     }
 
-    createProposal.mutate({
-      title: title.trim(),
-      clientName: clientName.trim() || undefined,
-    });
+    // 3. Navigate regardless of extraction outcome — the proposal is created.
+    void utils.proposal.list.invalidate();
+    onOpenChange(false);
+    resetForm();
+    router.push(`/proposals/${proposalId}`);
   }
 
-  const isPending = createProposal.isPending;
+  const isPending = createProposal.isPending || extractRequirements.isPending;
 
   return (
     <Dialog.Root
