@@ -3,7 +3,7 @@ import { Sparkles, ArrowRight, ChevronRight } from "lucide-react";
 
 export function LandingHero() {
   return (
-    <section className="relative flex flex-col items-center justify-center px-6 pt-32 pb-24 text-center overflow-hidden">
+    <section className="relative flex flex-col items-center justify-center px-6 pt-32 pb-12 text-center overflow-hidden">
       {/* Radial glow */}
       <div
         aria-hidden
