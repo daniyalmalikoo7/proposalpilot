@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { FileText, MoreHorizontal, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/atoms/button";
@@ -102,7 +103,7 @@ export function KBItemCard({ item, onDelete }: KBItemCardProps) {
         </div>
       )}
 
-      {/* Footer: meta + "..." menu placeholder (wired in fix 6) */}
+      {/* Footer: meta + "..." dropdown menu */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
           {formatFileSize(item.fileSize)} ·{" "}
@@ -111,14 +112,35 @@ export function KBItemCard({ item, onDelete }: KBItemCardProps) {
             day: "numeric",
           })}
         </span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <MoreHorizontal className="h-3.5 w-3.5" />
-        </Button>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreHorizontal className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              className="z-50 min-w-[120px] rounded-md border border-border bg-card p-1 shadow-md"
+              align="end"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {onDelete && (
+                <DropdownMenu.Item
+                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs text-destructive outline-none hover:bg-destructive/10 focus:bg-destructive/10"
+                  onSelect={() => onDelete()}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Delete
+                </DropdownMenu.Item>
+              )}
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
       </div>
     </div>
   );
