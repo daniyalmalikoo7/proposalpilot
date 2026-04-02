@@ -70,14 +70,21 @@ export function useProposalEditor(proposalId: string) {
   // ── Derived ──────────────────────────────────────────────────────────────────
   const requirements: Requirement[] = useMemo(() => {
     if (!proposalQuery.data?.requirements) return [];
+    // A requirement is addressed if the DB flags it, or if the matching
+    // section has been generated (has non-empty content).
+    const sectionsWithContent = new Set(
+      sections.filter((s) => s.content.trim() !== "").map((s) => s.title),
+    );
     return proposalQuery.data.requirements.map((r) => ({
       id: r.id,
       section: r.section ?? "General",
       requirement: r.requirement,
       priority: (r.priority ?? "medium") as "high" | "medium" | "low",
-      addressed: r.addressed ?? false,
+      addressed:
+        (r.addressed ?? false) ||
+        sectionsWithContent.has(r.section ?? "General"),
     }));
-  }, [proposalQuery.data?.requirements]);
+  }, [proposalQuery.data?.requirements, sections]);
 
   const hasRequirements = requirements.length > 0;
   const hasSections = sections.length > 0;
