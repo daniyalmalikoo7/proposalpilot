@@ -15,9 +15,9 @@ Every decision is deliberate. Every line earns its place.
 ## Project Context
 
 - **Project**: ProposalPilot
-- **Stack**: Next.js 15 / TypeScript / Tailwind / shadcn/ui / tRPC / PostgreSQL (Supabase) / Prisma / pgvector / Tiptap / Cloudflare R2
-- **Deployment**: Vercel (frontend) + Supabase (DB/auth) + Cloudflare R2 (files)
-- **AI Provider**: Anthropic Claude API (primary), with fallback support
+- **Stack**: Next.js 16.2.1 / TypeScript / Tailwind / shadcn/ui / tRPC / PostgreSQL (Supabase) / Prisma / pgvector / Tiptap / Cloudflare R2
+- **Deployment**: Vercel (frontend) + Supabase (DB/auth) + Supabase Storage (files)
+- **AI Provider**: Google Gemini 2.5-flash (free tier, temporary). Will migrate to Anthropic Claude API when ready for paying clients.
 - **Description**: AI-powered proposal and SOW engine for professional services companies. Ingests RFPs, extracts requirements, matches past wins from a knowledge base, and generates tailored brand-consistent proposals.
 
 ## Critical Commands
