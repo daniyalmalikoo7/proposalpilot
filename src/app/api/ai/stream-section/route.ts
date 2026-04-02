@@ -93,9 +93,11 @@ export async function POST(req: NextRequest): Promise<Response> {
     });
   }
 
-  console.log(
-    `[stream-section] proposalId=${input.proposalId} clerkOrgId=${orgId} internalOrgId=${org.id}`,
-  );
+  logger.info("[stream-section] request received", {
+    proposalId: input.proposalId,
+    clerkOrgId: orgId,
+    internalOrgId: org.id,
+  });
 
   // Verify proposal + org ownership using the internal org ID
   const proposal = await db.proposal.findFirst({

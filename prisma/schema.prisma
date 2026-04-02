@@ -178,7 +178,7 @@ model KbChunk {
   index      Int      // ordinal position within the parent document
   text       String   @db.Text
   tokenCount Int
-  // pgvector — 1024 dims (Voyage AI voyage-large-2)
+  // pgvector — 1024 dims (Voyage AI voyage-3). IVFFlat index: prisma/manual-migrations/001_ivfflat_kbchunk_embedding.sql
   embedding  Unsupported("vector(1024)")?
   createdAt  DateTime @default(now())
 

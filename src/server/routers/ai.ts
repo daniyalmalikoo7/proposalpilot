@@ -28,9 +28,10 @@ export const aiRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      console.log(
-        `[ai.extractRequirements] called proposalId=${input.proposalId} rfpTextLen=${input.rfpText.length}`,
-      );
+      logger.info("[ai.extractRequirements] called", {
+        proposalId: input.proposalId,
+        rfpTextLen: input.rfpText.length,
+      });
 
       const proposal = await ctx.db.proposal.findFirst({
         where: { id: input.proposalId, orgId: ctx.internalOrgId },
@@ -45,9 +46,9 @@ export const aiRouter = router({
       }
 
       const prompt = loadPrompt("requirement-extractor");
-      console.log(
-        `[ai.extractRequirements] prompt loaded version=${prompt.metadata.version}`,
-      );
+      logger.info("[ai.extractRequirements] prompt loaded", {
+        version: prompt.metadata.version,
+      });
       const userMessage = renderPrompt(prompt.userTemplate, {
         rfp_text: input.rfpText,
         document_type: "RFP",

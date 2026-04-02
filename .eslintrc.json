@@ -1,0 +1,15 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "plugins": ["@typescript-eslint"],
+  "rules": {
+    "no-console": ["error", { "allow": ["error", "warn"] }]
+  },
+  "overrides": [
+    {
+      "files": ["src/lib/logger.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
+}

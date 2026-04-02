@@ -1,3 +1,8 @@
+// C1 fix: ClerkProvider requires NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY at runtime.
+// Forcing dynamic rendering on the root layout prevents static prerender from
+// running before the key is available in the build environment.
+export const dynamic = "force-dynamic";
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
