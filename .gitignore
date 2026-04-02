@@ -31,6 +31,9 @@ coverage/
 playwright-report/
 test-results/
 
+# TypeScript build cache
+tsconfig.tsbuildinfo
+
 # Database
 prisma/*.db
 prisma/*.db-journal

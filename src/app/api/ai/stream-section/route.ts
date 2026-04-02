@@ -14,6 +14,10 @@ import {
 import { SectionGeneratorOutputSchema } from "@/lib/ai/validators/section-generator-output";
 import { calculateCost, logAICall } from "@/lib/ai/cost-tracker";
 import { runGuards } from "@/lib/ai/guards/hallucination";
+import {
+  VoyageEmbeddingProvider,
+  searchSimilar,
+} from "@/lib/services/embeddings";
 import { db } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { env } from "@/lib/config";
@@ -26,11 +30,17 @@ function getGenAI(): GoogleGenerativeAI {
   return _genAI;
 }
 
+let _voyageProvider: VoyageEmbeddingProvider | null = null;
+function getVoyageProvider(): VoyageEmbeddingProvider {
+  if (!_voyageProvider) _voyageProvider = new VoyageEmbeddingProvider();
+  return _voyageProvider;
+}
+
 const RequestSchema = z.object({
   proposalId: z.string().cuid(),
   sectionTitle: z.string().min(1).max(255),
   requirements: z.array(z.string()).min(0).max(50),
-  kbItemIds: z.array(z.string().cuid()).max(10).default([]),
+  kbItemIds: z.array(z.string()).optional().default([]),
   instructions: z.string().max(2000).default(""),
 });
 
@@ -100,13 +110,56 @@ export async function POST(req: NextRequest): Promise<Response> {
     });
   }
 
-  // Fetch brand voice + KB context
+  // Resolve effective KB item IDs.
+  // Manual selection (kbItemIds provided by client) takes precedence.
+  // When none are provided, run auto-RAG: embed the section title + requirements
+  // and retrieve the top-5 most relevant KB documents via pgvector similarity.
+  let effectiveKbItemIds: string[] = input.kbItemIds;
+
+  if (effectiveKbItemIds.length === 0) {
+    // Search query: section title + first 3 requirements, capped at 200 words.
+    // This keeps the embedding focused on the section's intent rather than
+    // diluting it with a full requirements list.
+    const rawQuery = [
+      input.sectionTitle,
+      ...input.requirements.slice(0, 3),
+    ].join(" ");
+    const searchQuery = rawQuery.split(/\s+/).slice(0, 200).join(" ");
+
+    try {
+      const queryEmbedding = await getVoyageProvider().embed(searchQuery);
+      const matches = await searchSimilar(db, org.id, queryEmbedding, {
+        limit: 5,
+      });
+      effectiveKbItemIds = matches.map((m) => m.id);
+      logger.info("Auto-RAG: retrieved KB items for section", {
+        proposalId: input.proposalId,
+        sectionTitle: input.sectionTitle,
+        itemCount: effectiveKbItemIds.length,
+      });
+    } catch (err) {
+      // Non-fatal: generation continues without KB context.
+      logger.warn("Auto-RAG search failed — proceeding without KB context", {
+        proposalId: input.proposalId,
+        sectionTitle: input.sectionTitle,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  } else {
+    logger.info("Manual-RAG: user-selected KB items for section", {
+      proposalId: input.proposalId,
+      sectionTitle: input.sectionTitle,
+      itemCount: effectiveKbItemIds.length,
+    });
+  }
+
+  // Fetch brand voice + KB context in parallel using resolved IDs
   const [brandVoice, kbItems] = await Promise.all([
     db.brandVoice.findUnique({ where: { orgId: proposal.orgId } }),
-    input.kbItemIds.length > 0
+    effectiveKbItemIds.length > 0
       ? db.knowledgeBaseItem.findMany({
           where: {
-            id: { in: input.kbItemIds },
+            id: { in: effectiveKbItemIds },
             orgId: proposal.orgId,
             isActive: true,
           },

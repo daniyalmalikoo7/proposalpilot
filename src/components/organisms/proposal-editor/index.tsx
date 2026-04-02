@@ -8,7 +8,13 @@ import type { ReactNode, ErrorInfo } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import { Loader2, Sparkles, RotateCcw, AlertTriangle } from "lucide-react";
+import {
+  BookOpen,
+  Loader2,
+  Sparkles,
+  RotateCcw,
+  AlertTriangle,
+} from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Badge } from "@/components/atoms/badge";
 import {
@@ -177,6 +183,12 @@ function ProposalEditorInner({
           </h3>
           {confidenceScore !== null && (
             <ConfidenceBadge score={confidenceScore} />
+          )}
+          {generateContext.kbItemIds.length > 0 && (
+            <Badge variant="outline" className="gap-1 text-xs font-normal">
+              <BookOpen className="h-3 w-3" />
+              {generateContext.kbItemIds.length} KB
+            </Badge>
           )}
         </div>
 

@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Check, Download, Loader2 } from "lucide-react";
+import { BookOpen, Check, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { RequirementsSidebar } from "@/components/organisms/requirements-sidebar";
 import { KBSearchPanel } from "@/components/organisms/kb-search-panel";
@@ -11,6 +12,7 @@ import { useProposalEditor } from "./_components/use-proposal-editor";
 
 export default function ProposalEditorPage() {
   const { id: proposalId } = useParams<{ id: string }>();
+  const [showKbPanel, setShowKbPanel] = useState(true);
 
   const {
     proposalQuery,
@@ -103,6 +105,23 @@ export default function ProposalEditorPage() {
               Saved
             </span>
           )}
+          {/* KB panel toggle — shows selected count when items are active */}
+          <Button
+            size="sm"
+            variant={showKbPanel ? "secondary" : "ghost"}
+            onClick={() => setShowKbPanel((v) => !v)}
+            className="h-8 gap-1.5 text-xs"
+            title={
+              showKbPanel
+                ? "Hide knowledge base panel"
+                : "Show knowledge base panel"
+            }
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            {selectedKbIds.size > 0
+              ? `${selectedKbIds.size} KB selected`
+              : "KB"}
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -168,12 +187,14 @@ export default function ProposalEditorPage() {
           }
         />
 
-        {/* Right: Knowledge base search */}
-        <KBSearchPanel
-          selectedKbItemIds={selectedKbIds}
-          onToggleKbItem={handleToggleKbItem}
-          onSearch={handleKbSearch}
-        />
+        {/* Right: Knowledge base search (collapsible via top-bar toggle) */}
+        {showKbPanel && (
+          <KBSearchPanel
+            selectedKbItemIds={selectedKbIds}
+            onToggleKbItem={handleToggleKbItem}
+            onSearch={handleKbSearch}
+          />
+        )}
       </div>
     </div>
   );

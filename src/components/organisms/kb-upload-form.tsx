@@ -33,19 +33,8 @@ export function KBUploadForm({ onSuccess, onCancel }: KBUploadFormProps) {
 
   const utils = trpc.useUtils();
 
-  const createKB = trpc.kb.create.useMutation({
-    onSuccess: () => {
-      void utils.kb.list.invalidate();
-      onSuccess();
-    },
-    onError: (err) => {
-      setError(err.message);
-      setIsProcessing(false);
-    },
-  });
-
   async function handleSubmit() {
-    if (!file || !title.trim() || isProcessing || createKB.isPending) return;
+    if (!file || !title.trim() || isProcessing) return;
 
     setError(null);
     setIsProcessing(true);
@@ -53,44 +42,29 @@ export function KBUploadForm({ onSuccess, onCancel }: KBUploadFormProps) {
     try {
       const form = new FormData();
       form.append("file", file);
+      form.append("type", type);
+      form.append("title", title.trim());
 
-      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const res = await fetch("/api/upload/kb", { method: "POST", body: form });
       const json = (await res.json()) as {
         ok: boolean;
-        data?: {
-          chunks: Array<{ text: string }>;
-          sizeBytes: number;
-          fileName: string;
-          pageCount?: number;
-        };
-        error?: { message: string };
+        data?: { documentId: string; chunkCount: number };
+        error?: { code: string; message: string };
       };
 
-      if (!json.ok || !json.data) {
-        setError(json.error?.message ?? "File processing failed.");
+      if (!json.ok) {
+        setError(json.error?.message ?? "Upload failed.");
         return;
       }
 
-      const content = json.data.chunks.map((c) => c.text).join("\n\n");
-
-      createKB.mutate({
-        type,
-        title: title.trim(),
-        content,
-        metadata: {
-          fileSize: json.data.sizeBytes,
-          fileName: json.data.fileName,
-          pageCount: json.data.pageCount,
-        },
-      });
+      await utils.kb.list.invalidate();
+      onSuccess();
     } catch {
       setError("Network error. Please try again.");
     } finally {
       setIsProcessing(false);
     }
   }
-
-  const isPending = isProcessing || createKB.isPending;
 
   return (
     <div className="rounded-lg border border-border bg-card p-5">
@@ -101,7 +75,7 @@ export function KBUploadForm({ onSuccess, onCancel }: KBUploadFormProps) {
           size="icon"
           className="h-7 w-7"
           onClick={onCancel}
-          disabled={isPending}
+          disabled={isProcessing}
         >
           <X className="h-4 w-4" />
         </Button>
@@ -114,7 +88,7 @@ export function KBUploadForm({ onSuccess, onCancel }: KBUploadFormProps) {
             type="button"
             className="flex w-full cursor-pointer items-center gap-3 rounded-md border border-dashed border-border px-4 py-4 text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             onClick={() => fileInputRef.current?.click()}
-            disabled={isPending}
+            disabled={isProcessing}
           >
             <Upload className="h-4 w-4 shrink-0" />
             {file ? (
@@ -150,7 +124,7 @@ export function KBUploadForm({ onSuccess, onCancel }: KBUploadFormProps) {
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as KBType)}
-                disabled={isPending}
+                disabled={isProcessing}
                 className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
               >
                 {KB_TYPES.map((t) => (
@@ -170,7 +144,7 @@ export function KBUploadForm({ onSuccess, onCancel }: KBUploadFormProps) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Document title"
-                disabled={isPending}
+                disabled={isProcessing}
               />
             </div>
           </div>
@@ -184,16 +158,16 @@ export function KBUploadForm({ onSuccess, onCancel }: KBUploadFormProps) {
               variant="outline"
               size="sm"
               onClick={onCancel}
-              disabled={isPending}
+              disabled={isProcessing}
             >
               Cancel
             </Button>
             <Button
               size="sm"
               onClick={() => void handleSubmit()}
-              disabled={!title.trim() || isPending}
+              disabled={!title.trim() || isProcessing}
             >
-              {isPending && (
+              {isProcessing && (
                 <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
               )}
               {isProcessing ? "Processing…" : "Add to Knowledge Base"}

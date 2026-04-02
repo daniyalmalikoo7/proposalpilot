@@ -2,6 +2,12 @@
 // Embedding generation is delegated to an EmbeddingProvider (default: Voyage AI).
 // pgvector operations use Prisma $executeRawUnsafe / $queryRawUnsafe with
 // validated numeric inputs — there is no user-supplied data in the SQL.
+//
+// Architecture: per-chunk embeddings.
+//   - KbChunk rows hold individual vector(1024) embeddings.
+//   - searchSimilar queries KbChunk, aggregates best similarity per parent
+//     KnowledgeBaseItem, and returns document-level results.
+//   - Callers never see chunk internals — the SimilarItem shape is unchanged.
 
 import { PrismaClient } from "@prisma/client";
 import { logger } from "../logger";
@@ -19,14 +25,12 @@ export interface EmbeddingProvider {
   embedBatch(texts: string[]): Promise<number[][]>;
 }
 
-// ── Voyage AI provider (recommended for Claude-based apps) ────────────────────
-// Install voyageai: npm install voyageai
-// Set VOYAGE_API_KEY in .env
-//
-// Swap this implementation for any provider that matches the interface.
+// ── Voyage AI provider ────────────────────────────────────────────────────────
+// Uses raw fetch — no voyageai SDK dependency required.
+// Set VOYAGE_API_KEY in .env. Falls back gracefully if unset (full-text search).
 
 export class VoyageEmbeddingProvider implements EmbeddingProvider {
-  readonly dimensions = 1024; // voyage-large-2 / voyage-2
+  readonly dimensions = 1024; // voyage-large-2
 
   async embed(text: string): Promise<number[]> {
     const key = env.VOYAGE_API_KEY;
@@ -44,14 +48,15 @@ export class VoyageEmbeddingProvider implements EmbeddingProvider {
         Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
-        model: "voyage-large-2",
+        model: "voyage-3",
         input: text,
       }),
     });
 
     if (!response.ok) {
+      const body = await response.text().catch(() => "");
       throw new AppError(
-        `Voyage AI embedding request failed: ${response.statusText}`,
+        `Voyage AI embedding request failed: ${response.status} ${response.statusText} — ${body}`,
         "EMBEDDING_API_ERROR",
         { status: response.status },
       );
@@ -88,14 +93,15 @@ export class VoyageEmbeddingProvider implements EmbeddingProvider {
         Authorization: `Bearer ${key}`,
       },
       body: JSON.stringify({
-        model: "voyage-large-2",
+        model: "voyage-3",
         input: texts,
       }),
     });
 
     if (!response.ok) {
+      const body = await response.text().catch(() => "");
       throw new AppError(
-        `Voyage AI batch embedding failed: ${response.statusText}`,
+        `Voyage AI batch embedding failed: ${response.status} ${response.statusText} — ${body}`,
         "EMBEDDING_API_ERROR",
         { status: response.status },
       );
@@ -111,32 +117,59 @@ export class VoyageEmbeddingProvider implements EmbeddingProvider {
   }
 }
 
-// ── pgvector operations ────────────────────────────────────────────────────────
+// ── KbChunk vector operations ─────────────────────────────────────────────────
 
 /**
- * Upsert the embedding vector for a KnowledgeBaseItem row.
- * Uses parameterized raw SQL — the vector string is constructed from a
- * validated numeric array, not from user input.
+ * Persist a pre-computed embedding vector for a single KbChunk row.
+ * The vector string is constructed from a validated numeric array —
+ * no user-supplied data is interpolated into the SQL.
  */
-export async function upsertEmbedding(
+export async function upsertChunkEmbeddingVector(
   db: PrismaClient,
-  itemId: string,
-  text: string,
-  provider: EmbeddingProvider,
+  chunkId: string,
+  vector: number[],
 ): Promise<void> {
-  const vector = await provider.embed(text);
-  validateVector(vector, provider.dimensions);
-
+  validateVector(vector);
   const vectorLiteral = `[${vector.join(",")}]`;
 
   await db.$executeRawUnsafe(
-    `UPDATE "KnowledgeBaseItem" SET embedding = $1::vector WHERE id = $2`,
+    `UPDATE "KbChunk" SET embedding = $1::vector WHERE id = $2`,
     vectorLiteral,
-    itemId,
+    chunkId,
   );
 
-  logger.debug("Upserted embedding", { itemId, dimensions: vector.length });
+  logger.debug("Upserted chunk embedding", {
+    chunkId,
+    dimensions: vector.length,
+  });
 }
+
+/**
+ * Batch-embed an array of chunks and persist their vectors.
+ * Uses the provider's batch API — one network round-trip regardless of chunk count.
+ */
+export async function embedAndStoreChunks(
+  db: PrismaClient,
+  chunks: ReadonlyArray<{ id: string; text: string }>,
+  provider: EmbeddingProvider,
+): Promise<void> {
+  if (chunks.length === 0) return;
+
+  const texts = chunks.map((c) => c.text);
+  const vectors = await provider.embedBatch(texts);
+
+  await Promise.all(
+    vectors.map((vector, i) => {
+      const chunk = chunks[i];
+      if (!chunk) return Promise.resolve();
+      return upsertChunkEmbeddingVector(db, chunk.id, vector);
+    }),
+  );
+
+  logger.debug("Batch chunk embeddings stored", { count: chunks.length });
+}
+
+// ── Semantic search ────────────────────────────────────────────────────────────
 
 export interface SimilarItem {
   id: string;
@@ -144,13 +177,19 @@ export interface SimilarItem {
   content: string;
   type: string;
   isWin: boolean;
-  /** Cosine similarity — 1.0 is identical, 0.0 is orthogonal */
+  /** Best cosine similarity across all chunks of this document (0–1, higher = more relevant) */
   similarity: number;
 }
 
 /**
- * Semantic search within an organisation's knowledge base using pgvector
- * cosine distance (<=>).  Results are scoped to the org — tenant isolation.
+ * Semantic search within an organisation's knowledge base.
+ *
+ * Queries KbChunk vectors using pgvector cosine distance, then aggregates
+ * to document level (MIN distance = MAX similarity per KnowledgeBaseItem).
+ * Results are scoped to active items in the org — tenant isolation guaranteed.
+ *
+ * Falls back to returning [] if no chunks have embeddings yet;
+ * callers should implement a full-text fallback.
  */
 export async function searchSimilar(
   db: PrismaClient,
@@ -164,16 +203,26 @@ export async function searchSimilar(
   validateVector(queryEmbedding);
   const vectorLiteral = `[${queryEmbedding.join(",")}]`;
 
+  // $1 = query vector, $2 = orgId, $3 = minSimilarity threshold, $4 = limit
+  // MIN(distance) across chunks = MAX(similarity) for the document.
+  // The WHERE filter includes any document where at least one chunk exceeds the threshold.
   const rows = await db.$queryRawUnsafe<SimilarItem[]>(
     `
     SELECT
-      id, title, content, type, "isWin",
-      1 - (embedding <=> $1::vector) AS similarity
-    FROM "KnowledgeBaseItem"
-    WHERE "orgId" = $2
-      AND embedding IS NOT NULL
-      AND 1 - (embedding <=> $1::vector) >= $3
-    ORDER BY embedding <=> $1::vector
+      kbi.id,
+      kbi.title,
+      kbi.content,
+      kbi.type,
+      kbi."isWin",
+      1 - MIN(c.embedding <=> $1::vector) AS similarity
+    FROM "KbChunk" c
+    JOIN "KnowledgeBaseItem" kbi ON kbi.id = c."itemId"
+    WHERE kbi."orgId" = $2
+      AND kbi."isActive" = true
+      AND c.embedding IS NOT NULL
+      AND 1 - (c.embedding <=> $1::vector) >= $3
+    GROUP BY kbi.id, kbi.title, kbi.content, kbi.type, kbi."isWin"
+    ORDER BY similarity DESC
     LIMIT $4
     `,
     vectorLiteral,
@@ -182,7 +231,7 @@ export async function searchSimilar(
     limit,
   );
 
-  logger.debug("Vector search complete", {
+  logger.debug("Chunk-level vector search complete", {
     orgId,
     resultCount: rows.length,
     limit,

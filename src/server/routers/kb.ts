@@ -4,9 +4,10 @@ import { z } from "zod";
 import { router, orgProtectedProcedure } from "@/server/trpc";
 import {
   VoyageEmbeddingProvider,
-  upsertEmbedding,
   searchSimilar,
+  embedAndStoreChunks,
 } from "@/lib/services/embeddings";
+import { chunkText } from "@/lib/utils/chunker";
 import { logger } from "@/lib/logger";
 
 const voyageProvider = new VoyageEmbeddingProvider();
@@ -49,19 +50,42 @@ export const kbRouter = router({
         },
       });
 
-      // Generate and persist embedding — non-fatal: item is usable without it
-      const embeddingText = `${input.title}\n\n${input.content}`;
-      upsertEmbedding(ctx.db, item.id, embeddingText, voyageProvider).catch(
-        (err: unknown) => {
-          logger.warn(
-            "Failed to generate KB embedding — item saved without vector",
-            {
-              itemId: item.id,
-              error: err instanceof Error ? err.message : String(err),
-            },
-          );
-        },
-      );
+      // Chunk the content and persist KbChunk records.
+      // Prepend title so every chunk carries document identity context.
+      const chunks = chunkText(`${input.title}\n\n${input.content}`);
+
+      if (chunks.length > 0) {
+        await ctx.db.kbChunk.createMany({
+          data: chunks.map((c) => ({
+            itemId: item.id,
+            index: c.index,
+            text: c.text,
+            tokenCount: c.tokenCount,
+          })),
+        });
+
+        // Fetch IDs back so we can drive the batch embedding call.
+        const chunkRecords = await ctx.db.kbChunk.findMany({
+          where: { itemId: item.id },
+          select: { id: true, text: true },
+          orderBy: { index: "asc" },
+        });
+
+        // Batch-embed all chunks in one Voyage AI round-trip — non-fatal:
+        // item and chunks are usable for full-text search without vectors.
+        embedAndStoreChunks(ctx.db, chunkRecords, voyageProvider).catch(
+          (err: unknown) => {
+            logger.warn(
+              "Failed to batch-embed KB chunks — item saved without vectors",
+              {
+                itemId: item.id,
+                chunkCount: chunkRecords.length,
+                error: err instanceof Error ? err.message : String(err),
+              },
+            );
+          },
+        );
+      }
 
       return item;
     }),

@@ -20,6 +20,17 @@ Every decision is deliberate. Every line earns its place.
 - **AI Provider**: Google Gemini 2.5-flash (free tier, temporary). Will migrate to Anthropic Claude API when ready for paying clients.
 - **Description**: AI-powered proposal and SOW engine for professional services companies. Ingests RFPs, extracts requirements, matches past wins from a knowledge base, and generates tailored brand-consistent proposals.
 
+## Memory System — READ EVERY SESSION
+
+Before starting any work, read these files in order:
+
+1. @docs/memory/STATE.md — current project state
+2. @docs/memory/DECISIONS.md — architectural decisions (never contradict)
+3. @docs/memory/BLOCKERS.md — active blockers and status
+
+Before ending any session, update all three files and commit:
+git add docs/memory/ && git commit -m "docs(memory): session checkpoint"
+
 ## Critical Commands
 
 ```bash

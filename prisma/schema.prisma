@@ -158,17 +158,33 @@ model KnowledgeBaseItem {
   isActive Boolean  @default(true)
   isWin    Boolean  @default(false)
   metadata Json     @default("{}")
-  // pgvector — 1024 dims (Voyage AI voyage-large-2)
-  // Change to vector(1536) if using OpenAI text-embedding-ada-002
-  embedding Unsupported("vector(1024)")?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  org      Organization    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  org      Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
   sections ProposalSection[] @relation("SectionCitations")
+  chunks   KbChunk[]
 
   @@index([orgId, type])
   @@index([orgId, isActive])
+}
+
+// Per-chunk embeddings for precise vector retrieval.
+// Each KnowledgeBaseItem is split into overlapping chunks (≈500 tokens, 50 overlap).
+// searchSimilar queries this table, then aggregates to the parent document level.
+model KbChunk {
+  id         String   @id @default(cuid())
+  itemId     String
+  index      Int      // ordinal position within the parent document
+  text       String   @db.Text
+  tokenCount Int
+  // pgvector — 1024 dims (Voyage AI voyage-large-2)
+  embedding  Unsupported("vector(1024)")?
+  createdAt  DateTime @default(now())
+
+  item KnowledgeBaseItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([itemId])
 }
 
 model ProcessedWebhookEvent {
