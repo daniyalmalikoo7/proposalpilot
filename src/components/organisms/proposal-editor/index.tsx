@@ -206,16 +206,30 @@ function ProposalEditorInner({
           ) : (
             <>
               {section.content && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => void start()}
-                  className="h-7 gap-1.5 text-xs"
-                  title="Regenerate this section"
-                >
-                  <RotateCcw className="h-3 w-3" />
-                  Regenerate
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => void start()}
+                          className="h-7 gap-1.5 text-xs"
+                          disabled={generateContext.requirements.length === 0}
+                          title="Regenerate this section"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                          Regenerate
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    {generateContext.requirements.length === 0 && (
+                      <TooltipContent side="bottom">
+                        Upload an RFP or add requirements to regenerate content
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
               )}
               <TooltipProvider>
                 <Tooltip>
