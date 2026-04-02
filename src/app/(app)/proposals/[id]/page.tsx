@@ -73,10 +73,10 @@ export default function ProposalEditorPage() {
         {/* Breadcrumb + title */}
         <div className="flex min-w-0 items-center gap-2">
           <Link
-            href="/dashboard"
+            href="/proposals"
             className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
-            ← Dashboard
+            ← Proposals
           </Link>
           <span className="text-muted-foreground">/</span>
           <div className="min-w-0">

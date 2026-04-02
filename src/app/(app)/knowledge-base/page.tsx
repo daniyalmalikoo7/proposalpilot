@@ -52,6 +52,17 @@ export default function KnowledgeBasePage() {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [showUpload, setShowUpload] = useState(false);
 
+  const utils = trpc.useUtils();
+  const deleteMutation = trpc.kb.delete.useMutation({
+    onSuccess: () => {
+      void utils.kb.list.invalidate();
+    },
+  });
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate({ id });
+  };
+
   // Debounce search input by 300 ms.
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
@@ -196,7 +207,9 @@ export default function KnowledgeBasePage() {
           </div>
           <div>
             <p className="text-base font-semibold text-foreground">
-              {isSearching ? "No results found" : "Your knowledge base is empty"}
+              {isSearching
+                ? "No results found"
+                : "Your knowledge base is empty"}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
               {isSearching
@@ -216,7 +229,7 @@ export default function KnowledgeBasePage() {
       {!isLoading && items.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {items.map((item) => (
-            <KBItemCard key={item.id} item={item} />
+            <KBItemCard key={item.id} item={item} onDelete={handleDelete} />
           ))}
         </div>
       )}
