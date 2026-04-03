@@ -81,6 +81,7 @@ export const proposalRouter = router({
           deadline: true,
           createdAt: true,
           updatedAt: true,
+          sections: { select: { content: true } },
         },
       });
 

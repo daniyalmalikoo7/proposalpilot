@@ -24,17 +24,6 @@ const FILTER_TABS: ReadonlyArray<{
   { label: "Lost", value: "LOST" },
 ];
 
-// Map DB proposal status to a rough completion percentage.
-const STATUS_TO_PCT: Readonly<Record<string, number>> = {
-  DRAFT: 10,
-  IN_PROGRESS: 50,
-  REVIEW: 80,
-  SUBMITTED: 95,
-  WON: 100,
-  LOST: 100,
-  ARCHIVED: 100,
-};
-
 type DbProposal = {
   id: string;
   title: string;
@@ -43,16 +32,20 @@ type DbProposal = {
   deadline: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  sections: ReadonlyArray<{ content: string }>;
 };
 
 function mapProposal(p: DbProposal): Proposal {
+  const total = p.sections.length;
+  const filled = p.sections.filter((s) => s.content.trim().length > 0).length;
+  const completionPct = total > 0 ? Math.round((filled / total) * 100) : 0;
   return {
     id: p.id,
     title: p.title,
     clientName: p.clientName,
     status: p.status as ProposalStatus,
     deadline: p.deadline,
-    completionPct: STATUS_TO_PCT[p.status] ?? 0,
+    completionPct,
     updatedAt: p.updatedAt,
     createdAt: p.createdAt,
   };

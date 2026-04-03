@@ -29,7 +29,7 @@ const FEATURES = [
 
 export function Features() {
   return (
-    <section id="features" className="px-6 py-16 scroll-mt-16">
+    <section id="features" className="bg-[#060b18] px-6 py-20 scroll-mt-16">
       <div className="mx-auto max-w-5xl">
         <h2 className="text-center text-3xl font-bold text-white mb-4">
           Built for the details that win bids

@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Turbopack workspace-root fix: without this, Next.js 16 infers the wrong
+  // root when the project lives inside a directory with sibling projects,
+  // causing it to look for next/package.json from src/app instead of the repo root.
+  turbopack: {
+    root: process.cwd(),
+  },
   // pdf-parse and mammoth require Node.js native APIs — must not be bundled
   serverExternalPackages: [
     "pdf-parse",
