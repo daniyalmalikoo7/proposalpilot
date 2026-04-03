@@ -121,7 +121,7 @@ export default function KnowledgeBasePage() {
           <h1 className="text-xl font-semibold tracking-tight">
             Knowledge Base
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-pp-foreground-muted">
             {allItems.length} documents · powers your AI generation
           </p>
         </div>
@@ -141,7 +141,7 @@ export default function KnowledgeBasePage() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pp-foreground-muted" />
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -163,7 +163,7 @@ export default function KnowledgeBasePage() {
                 "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
                 isActive
                   ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                  : "bg-pp-background-elevated text-pp-foreground-muted hover:bg-pp-background-elevated",
               )}
             >
               {tab.label}
@@ -171,7 +171,7 @@ export default function KnowledgeBasePage() {
                 <span
                   className={cn(
                     "rounded-full px-1.5 font-mono text-[10px]",
-                    isActive ? "bg-primary-foreground/20" : "bg-background",
+                    isActive ? "bg-primary-foreground/20" : "bg-pp-background",
                   )}
                 >
                   {count}
@@ -188,7 +188,7 @@ export default function KnowledgeBasePage() {
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4"
+              className="flex flex-col gap-2 rounded-lg border border-pp-border bg-pp-background-card p-4"
             >
               <Skeleton className="h-4 w-16 rounded-full" />
               <Skeleton className="h-4 w-full" />
@@ -201,17 +201,17 @@ export default function KnowledgeBasePage() {
 
       {/* Empty state */}
       {!isLoading && items.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-border bg-card px-6 py-16 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-            <BookOpen className="h-7 w-7 text-muted-foreground" />
+        <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-pp-border bg-pp-background-card px-6 py-16 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-pp-background-elevated">
+            <BookOpen className="h-7 w-7 text-pp-foreground-muted" />
           </div>
           <div>
-            <p className="text-base font-semibold text-foreground">
+            <p className="text-base font-semibold text-pp-foreground">
               {isSearching
                 ? "No results found"
                 : "Your knowledge base is empty"}
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-sm text-pp-foreground-muted">
               {isSearching
                 ? "Try a different search term or browse all documents."
                 : "Upload past proposals, case studies, and methodologies to boost AI generation accuracy."}

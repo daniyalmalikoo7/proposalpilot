@@ -109,7 +109,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-pp-foreground-muted">
             Your proposal pipeline.
           </p>
         </div>
@@ -133,7 +133,9 @@ export default function DashboardPage() {
           {
             label: "Win Rate",
             value:
-              isLoading || stats.winRate === null ? "—" : `${stats.winRate}%`,
+              isLoading || stats.winRate === null
+                ? "No data yet"
+                : `${stats.winRate}%`,
             icon: TrendingUp,
             sub: "won vs decided",
           },
@@ -141,7 +143,7 @@ export default function DashboardPage() {
             label: "Avg. Completion",
             value:
               isLoading || stats.avgCompletion === null
-                ? "—"
+                ? "No data yet"
                 : `${stats.avgCompletion}%`,
             icon: Target,
             sub: "across active",
@@ -157,25 +159,32 @@ export default function DashboardPage() {
           return (
             <div
               key={s.label}
-              className="rounded-lg border border-border bg-card px-4 py-4"
+              className="rounded-lg border border-pp-border bg-pp-background-card px-4 py-4"
             >
-              <div className="flex items-center gap-1.5 text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-pp-foreground-muted">
                 <Icon className="h-3.5 w-3.5" />
                 <span className="text-xs font-medium">{s.label}</span>
               </div>
-              <p className="mt-1.5 font-mono text-2xl font-semibold tracking-tight">
+              <p
+                className={cn(
+                  "mt-1.5 tracking-tight",
+                  s.value === "No data yet"
+                    ? "text-sm text-pp-foreground-muted"
+                    : "font-mono text-2xl font-semibold",
+                )}
+              >
                 {s.value}
               </p>
-              <p className="mt-0.5 text-xs text-muted-foreground">{s.sub}</p>
+              <p className="mt-0.5 text-xs text-pp-foreground-muted">{s.sub}</p>
             </div>
           );
         })}
       </div>
 
       {/* Proposal table */}
-      <div className="rounded-lg border border-border bg-card">
+      <div className="rounded-lg border border-pp-border bg-pp-background-card">
         {/* Filter tabs */}
-        <div className="flex flex-wrap items-center gap-0.5 border-b border-border px-3 py-2">
+        <div className="flex flex-wrap items-center gap-0.5 border-b border-pp-border px-3 py-2">
           {FILTER_TABS.map((tab) => {
             const count =
               tab.value === "ALL"
@@ -190,14 +199,14 @@ export default function DashboardPage() {
                   "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
                   isActive
                     ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                    : "text-pp-foreground-muted hover:bg-pp-background-elevated",
                 )}
               >
                 {tab.label}
                 <span
                   className={cn(
                     "rounded-full px-1.5 font-mono text-[10px]",
-                    isActive ? "bg-primary-foreground/20" : "bg-muted",
+                    isActive ? "bg-primary-foreground/20" : "bg-pp-background-elevated",
                   )}
                 >
                   {count}
@@ -208,7 +217,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Column headers */}
-        <div className="flex items-center gap-4 border-b border-border px-4 py-2 text-xs font-medium text-muted-foreground">
+        <div className="flex items-center gap-4 border-b border-pp-border px-4 py-2 text-xs font-medium text-pp-foreground-muted">
           <div className="flex-1">Title</div>
           <div className="w-24 shrink-0">Status</div>
           <div className="w-20 shrink-0">Deadline</div>
@@ -219,7 +228,7 @@ export default function DashboardPage() {
 
         {/* Loading */}
         {isLoading && (
-          <div className="flex items-center justify-center gap-2 px-4 py-10 text-sm text-muted-foreground">
+          <div className="flex items-center justify-center gap-2 px-4 py-10 text-sm text-pp-foreground-muted">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading proposals…
           </div>
@@ -236,7 +245,7 @@ export default function DashboardPage() {
         {!isLoading && !error && proposals.length === 0 && (
           <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
             <p className="text-sm font-medium">No proposals yet</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-pp-foreground-muted">
               Create your first proposal to start winning bids.
             </p>
             <Button size="sm" onClick={() => setDialogOpen(true)}>
@@ -248,7 +257,7 @@ export default function DashboardPage() {
 
         {/* Filter empty state */}
         {!isLoading && !error && proposals.length > 0 && page.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+          <p className="px-4 py-8 text-center text-sm text-pp-foreground-muted">
             No proposals in this category.
           </p>
         )}
@@ -262,8 +271,8 @@ export default function DashboardPage() {
 
         {/* Pagination */}
         {filtered.length > PAGE_SIZE && (
-          <div className="flex items-center justify-between border-t border-border px-4 py-3">
-            <span className="font-mono text-xs text-muted-foreground">
+          <div className="flex items-center justify-between border-t border-pp-border px-4 py-3">
+            <span className="font-mono text-xs text-pp-foreground-muted">
               {cursor + 1}–{Math.min(cursor + PAGE_SIZE, filtered.length)} of{" "}
               {filtered.length}
             </span>

@@ -11,14 +11,14 @@ export function AppShell({ children }: { readonly children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-pp-background">
       <Sidebar
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="flex h-11 shrink-0 items-center justify-between border-b border-border px-4">
+        <header className="flex h-11 shrink-0 items-center justify-between border-b border-pp-border px-4">
           <Button
             variant="ghost"
             size="icon"

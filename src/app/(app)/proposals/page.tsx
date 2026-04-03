@@ -29,22 +29,22 @@ export default function ProposalsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Proposals</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-pp-foreground-muted">
             Manage your proposal pipeline.
           </p>
         </div>
         <Button onClick={() => setDialogOpen(true)}>New Proposal</Button>
       </div>
 
-      <div className="rounded-lg border border-border bg-card">
-        <div className="border-b border-border px-6 py-4">
-          <p className="text-sm font-medium text-muted-foreground">
+      <div className="rounded-lg border border-pp-border bg-pp-background-card">
+        <div className="border-b border-pp-border px-6 py-4">
+          <p className="text-sm font-medium text-pp-foreground-muted">
             All Proposals
           </p>
         </div>
 
         {isLoading ? (
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-pp-border">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 px-6 py-4">
                 <Skeleton className="h-4 w-4 shrink-0" />
@@ -59,14 +59,14 @@ export default function ProposalsPage() {
           </div>
         ) : !data?.items.length ? (
           <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-              <FilePlus2 className="h-7 w-7 text-muted-foreground" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-pp-background-elevated">
+              <FilePlus2 className="h-7 w-7 text-pp-foreground-muted" />
             </div>
             <div>
-              <p className="text-base font-semibold text-foreground">
+              <p className="text-base font-semibold text-pp-foreground">
                 No proposals yet
               </p>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-sm text-pp-foreground-muted">
                 Upload an RFP and let AI draft your first proposal in minutes.
               </p>
             </div>
@@ -75,29 +75,29 @@ export default function ProposalsPage() {
             </Button>
           </div>
         ) : (
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-pp-border">
             {data.items.map((proposal) => (
               <li key={proposal.id}>
                 <button
                   type="button"
-                  className="flex w-full items-center gap-4 px-6 py-4 text-left transition-colors hover:bg-muted/40"
+                  className="flex w-full items-center gap-4 px-6 py-4 text-left transition-colors hover:bg-pp-background-elevated/40"
                   onClick={() => router.push(`/proposals/${proposal.id}`)}
                 >
-                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <FileText className="h-4 w-4 shrink-0 text-pp-foreground-muted" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
                       {proposal.title}
                     </p>
                     {proposal.clientName && (
-                      <p className="truncate text-xs text-muted-foreground">
+                      <p className="truncate text-xs text-pp-foreground-muted">
                         {proposal.clientName}
                       </p>
                     )}
                   </div>
-                  <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                  <span className="shrink-0 rounded-full bg-pp-background-elevated px-2 py-0.5 text-xs text-pp-foreground-muted">
                     {STATUS_LABEL[proposal.status] ?? proposal.status}
                   </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
+                  <span className="shrink-0 text-xs text-pp-foreground-muted">
                     {new Date(proposal.updatedAt).toLocaleDateString()}
                   </span>
                 </button>

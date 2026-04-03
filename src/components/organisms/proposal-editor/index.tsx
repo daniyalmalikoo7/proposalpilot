@@ -87,10 +87,10 @@ function ConfidenceBadge({ score }: { readonly score: number }) {
   const pct = Math.round(score * 100);
   const colorClass =
     score > 0.7
-      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+      ? "bg-pp-success-bg text-pp-success-text"
       : score >= 0.4
-        ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
-        : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
+        ? "bg-pp-warning-bg text-pp-warning-text"
+        : "bg-pp-danger-bg text-pp-danger-text";
   return (
     <span
       className={cn(
@@ -105,9 +105,9 @@ function ConfidenceBadge({ score }: { readonly score: number }) {
 
 function getConfidenceBorderClass(score: number | null): string {
   if (score === null) return "border-l-4 border-l-transparent";
-  if (score > 0.7) return "border-l-4 border-l-green-500";
-  if (score >= 0.4) return "border-l-4 border-l-amber-500";
-  return "border-l-4 border-l-red-500";
+  if (score > 0.7) return "border-l-4 border-l-pp-success";
+  if (score >= 0.4) return "border-l-4 border-l-pp-warning";
+  return "border-l-4 border-l-pp-danger";
 }
 
 function ProposalEditorInner({
@@ -195,14 +195,14 @@ function ProposalEditorInner({
     <div
       id={`section-${section.id}`}
       className={cn(
-        "flex flex-col rounded-lg border border-border bg-card transition-shadow hover:shadow-md",
+        "flex flex-col rounded-lg border border-pp-border bg-pp-background-card transition-shadow hover:shadow-md",
         getConfidenceBorderClass(confidenceScore),
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border bg-muted/20 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-pp-border bg-pp-background-elevated/20 px-4 py-3">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-semibold text-foreground">
+          <h3 className="text-lg font-semibold text-pp-foreground">
             {section.title}
           </h3>
           {confidenceScore !== null && (
@@ -314,8 +314,8 @@ function ProposalEditorInner({
 
       {/* Stream preview */}
       {isGenerating && streamBuffer && (
-        <div className="border-b border-border bg-muted/50 px-6 py-2">
-          <p className="line-clamp-2 font-mono text-xs text-muted-foreground">
+        <div className="border-b border-pp-border bg-pp-background-elevated/50 px-6 py-2">
+          <p className="line-clamp-2 font-mono text-xs text-pp-foreground-muted">
             {streamBuffer.slice(-200)}
             <span className="animate-pulse">▋</span>
           </p>

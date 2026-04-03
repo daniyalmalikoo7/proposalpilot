@@ -57,13 +57,13 @@ export default function SettingsPage() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-pp-foreground-muted">
           Manage your organisation, team, and billing.
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-border">
+      <div className="flex border-b border-pp-border">
         {TABS.map((t) => (
           <button
             key={t.value}
@@ -71,8 +71,8 @@ export default function SettingsPage() {
             className={cn(
               "px-4 py-2.5 text-sm font-medium transition-colors",
               tab === t.value
-                ? "border-b-2 border-primary text-foreground"
-                : "text-muted-foreground hover:text-foreground",
+                ? "border-b-2 border-primary text-pp-foreground"
+                : "text-pp-foreground-muted hover:text-pp-foreground",
             )}
           >
             {t.label}
@@ -118,7 +118,7 @@ export default function SettingsPage() {
               Save changes
             </Button>
             {saveSuccess && (
-              <span className="text-sm text-emerald-600 dark:text-emerald-400">
+              <span className="text-sm text-pp-success-text">
                 Saved!
               </span>
             )}
@@ -130,7 +130,7 @@ export default function SettingsPage() {
       {tab === "team" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-pp-foreground-muted">
               Team members are managed through Clerk.
             </p>
             <Button size="sm" disabled>
@@ -138,8 +138,8 @@ export default function SettingsPage() {
               Invite member
             </Button>
           </div>
-          <div className="rounded-lg border border-border bg-card p-6 text-center">
-            <p className="text-sm text-muted-foreground">
+          <div className="rounded-lg border border-pp-border bg-pp-background-card p-6 text-center">
+            <p className="text-sm text-pp-foreground-muted">
               Use your Clerk organisation dashboard to invite and manage team
               members.
             </p>
@@ -150,23 +150,23 @@ export default function SettingsPage() {
       {/* Billing */}
       {tab === "billing" && (
         <div className="max-w-lg space-y-4">
-          <div className="rounded-lg border border-border bg-card p-5">
+          <div className="rounded-lg border border-pp-border bg-pp-background-card p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <p className="text-xs font-medium uppercase tracking-wider text-pp-foreground-muted">
                   Current plan
                 </p>
                 <p className="mt-1 font-mono text-2xl font-semibold capitalize tracking-tight">
                   {orgLoading ? "—" : (org?.plan ?? "starter")}
                 </p>
-                <p className="mt-0.5 text-sm text-muted-foreground">
+                <p className="mt-0.5 text-sm text-pp-foreground-muted">
                   {org?.monthlyProposalLimit
                     ? `${org.monthlyProposalLimit} proposals / month`
                     : ""}
                 </p>
               </div>
               {org?.stripeCustomerId && (
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400">
+                <span className="rounded-full bg-pp-success-bg px-3 py-1 text-xs font-medium text-pp-success-text">
                   Active
                 </span>
               )}
@@ -197,8 +197,8 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-border bg-card p-5">
-            <p className="text-sm text-muted-foreground">
+          <div className="rounded-lg border border-pp-border bg-pp-background-card p-5">
+            <p className="text-sm text-pp-foreground-muted">
               Billing is managed through Stripe. Click &quot;Manage
               billing&quot; to update your payment method, download invoices, or
               cancel your subscription.

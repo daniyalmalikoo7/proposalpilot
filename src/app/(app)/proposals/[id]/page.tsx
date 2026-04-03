@@ -50,7 +50,7 @@ export default function ProposalEditorPage() {
   if (proposalQuery.isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Loader2 className="h-6 w-6 animate-spin text-pp-foreground-muted" />
       </div>
     );
   }
@@ -69,22 +69,22 @@ export default function ProposalEditorPage() {
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       {/* ── Top bar ────────────────────────────────────────────────────────────── */}
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-6">
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-pp-border bg-pp-background-card px-6">
         {/* Breadcrumb + title */}
         <div className="flex min-w-0 items-center gap-2">
           <Link
             href="/proposals"
-            className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            className="shrink-0 text-xs text-pp-foreground-muted transition-colors hover:text-foreground"
           >
             ← Proposals
           </Link>
-          <span className="text-muted-foreground">/</span>
+          <span className="text-pp-foreground-muted">/</span>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold leading-tight">
               {proposal.title}
             </p>
             {proposal.clientName && (
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="truncate text-xs text-pp-foreground-muted">
                 {proposal.clientName}
               </p>
             )}
@@ -94,13 +94,13 @@ export default function ProposalEditorPage() {
         {/* Save indicator + export buttons */}
         <div className="flex shrink-0 items-center gap-3">
           {saveState === "saving" && (
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-xs text-pp-foreground-muted">
               <Loader2 className="h-3 w-3 animate-spin" />
               Saving…
             </span>
           )}
           {saveState === "saved" && (
-            <span className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
+            <span className="flex items-center gap-1.5 text-xs text-pp-success-text">
               <Check className="h-3 w-3" />
               Saved
             </span>

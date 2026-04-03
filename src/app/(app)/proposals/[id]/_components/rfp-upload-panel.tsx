@@ -51,7 +51,7 @@ export function RFPUploadPanel({
         <h2 className="text-xl font-semibold">
           Upload your RFP to get started
         </h2>
-        <p className="mt-1.5 text-sm text-muted-foreground">
+        <p className="mt-1.5 text-sm text-pp-foreground-muted">
           ProposalPilot will extract requirements, organise them by section, and
           generate a tailored first draft.
         </p>
@@ -69,7 +69,7 @@ export function RFPUploadPanel({
           "flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed px-8 py-12 transition-colors",
           isDragging
             ? "border-primary bg-primary/5"
-            : "border-border bg-muted/20 hover:border-primary/50 hover:bg-muted/40",
+            : "border-pp-border bg-pp-background-elevated/20 hover:border-primary/50 hover:bg-pp-background-elevated/40",
         )}
         onClick={() => fileInputRef.current?.click()}
         role="button"
@@ -77,13 +77,13 @@ export function RFPUploadPanel({
         onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
         aria-label="Upload RFP document"
       >
-        <Upload className="h-8 w-8 text-muted-foreground" />
+        <Upload className="h-8 w-8 text-pp-foreground-muted" />
         <div className="text-center">
           <p className="text-sm font-medium">
             Drop your RFP here or{" "}
             <span className="text-primary">browse files</span>
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-pp-foreground-muted">
             PDF or DOCX · up to 50 MB
           </p>
         </div>
@@ -97,7 +97,7 @@ export function RFPUploadPanel({
       </div>
 
       {/* Skip option */}
-      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center justify-center gap-2 text-xs text-pp-foreground-muted">
         <span>No RFP yet?</span>
         <Button
           variant="link"

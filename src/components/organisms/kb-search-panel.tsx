@@ -65,28 +65,28 @@ export function KBSearchPanel({
   );
 
   return (
-    <aside className="flex h-full w-64 flex-shrink-0 flex-col border-l border-border bg-card">
-      <div className="border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-foreground">
+    <aside className="flex h-full w-64 flex-shrink-0 flex-col border-l border-pp-border bg-pp-background-card">
+      <div className="border-b border-pp-border px-4 py-3">
+        <h2 className="text-sm font-semibold text-pp-foreground">
           Knowledge Base
         </h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <p className="mt-0.5 text-xs text-pp-foreground-muted">
           {selectedKbItemIds.size} selected for context
         </p>
       </div>
 
       {/* Search input */}
-      <div className="border-b border-border p-3">
+      <div className="border-b border-pp-border p-3">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-pp-foreground-muted" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search knowledge base…"
-              className="w-full rounded-md border border-input bg-background py-1.5 pl-8 pr-2 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full rounded-md border border-pp-border bg-pp-background py-1.5 pl-8 pr-2 text-xs placeholder:text-pp-foreground-muted focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
           <Button
@@ -105,8 +105,8 @@ export function KBSearchPanel({
       <div className="flex-1 overflow-y-auto">
         {!hasSearched && (
           <div className="flex flex-col items-center justify-center gap-2 p-6 text-center">
-            <BookOpen className="h-8 w-8 text-muted-foreground/40" />
-            <p className="text-xs text-muted-foreground">
+            <BookOpen className="h-8 w-8 text-pp-foreground-muted/40" />
+            <p className="text-xs text-pp-foreground-muted">
               Search past proposals, case studies, and capabilities.
             </p>
           </div>
@@ -114,9 +114,9 @@ export function KBSearchPanel({
 
         {hasSearched && results.length === 0 && (
           <div className="flex flex-col items-center justify-center gap-2 p-6 text-center">
-            <Search className="h-6 w-6 text-muted-foreground/40" />
-            <p className="text-xs font-medium text-foreground">No results found</p>
-            <p className="text-[11px] text-muted-foreground">
+            <Search className="h-6 w-6 text-pp-foreground-muted/40" />
+            <p className="text-xs font-medium text-pp-foreground">No results found</p>
+            <p className="text-[11px] text-pp-foreground-muted">
               Try different keywords or upload more documents.
             </p>
           </div>
@@ -135,7 +135,7 @@ export function KBSearchPanel({
                       "w-full rounded-md border px-3 py-2 text-left text-xs transition-colors",
                       isSelected
                         ? "border-primary/40 bg-primary/5"
-                        : "border-transparent hover:border-border hover:bg-accent",
+                        : "border-transparent hover:border-pp-border hover:bg-accent",
                     )}
                   >
                     <div className="flex items-start gap-2">
@@ -148,11 +148,11 @@ export function KBSearchPanel({
                             {KB_TYPE_LABELS[item.type] ?? item.type}
                           </Badge>
                         </div>
-                        <p className="mt-1 line-clamp-2 font-medium text-foreground">
+                        <p className="mt-1 line-clamp-2 font-medium text-pp-foreground">
                           {item.title}
                         </p>
                         {item.content && (
-                          <p className="mt-0.5 line-clamp-2 text-muted-foreground">
+                          <p className="mt-0.5 line-clamp-2 text-pp-foreground-muted">
                             {item.content.slice(0, 120)}
                           </p>
                         )}

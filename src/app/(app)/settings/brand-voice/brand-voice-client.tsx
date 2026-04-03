@@ -57,20 +57,20 @@ function SampleCard({
   onRemove: (id: string) => void;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-border bg-card p-3">
-      <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+    <div className="flex items-start gap-3 rounded-lg border border-pp-border bg-pp-background-card p-3">
+      <FileText className="mt-0.5 h-4 w-4 shrink-0 text-pp-foreground-muted" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-foreground">
+        <p className="truncate text-sm font-medium text-pp-foreground">
           {sample.filename}
         </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <p className="mt-0.5 text-xs text-pp-foreground-muted">
           {sample.charCount.toLocaleString()} characters
         </p>
       </div>
       <button
         type="button"
         onClick={() => onRemove(sample.id)}
-        className="rounded p-0.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        className="rounded p-0.5 text-pp-foreground-muted hover:bg-destructive/10 hover:text-destructive"
         aria-label={`Remove ${sample.filename}`}
       >
         <X className="h-4 w-4" />
@@ -155,7 +155,7 @@ export function BrandVoiceClient() {
     <div className="mx-auto max-w-2xl space-y-6 py-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Brand Voice</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-sm text-pp-foreground-muted">
           Upload up to {MAX_SAMPLES} past proposals. The AI will extract your
           writing style and use it to generate on-brand content.
         </p>
@@ -167,15 +167,15 @@ export function BrandVoiceClient() {
         className={cn(
           "flex flex-col items-center gap-2 rounded-lg border-2 border-dashed p-6 text-center transition-colors",
           canAddMore
-            ? "cursor-pointer border-border hover:border-primary/40 hover:bg-accent/30"
-            : "cursor-not-allowed border-border opacity-50",
+            ? "cursor-pointer border-pp-border hover:border-pp-accent/40 hover:bg-pp-background-elevated/30"
+            : "cursor-not-allowed border-pp-border opacity-50",
         )}
       >
-        <Upload className="h-8 w-8 text-muted-foreground" />
+        <Upload className="h-8 w-8 text-pp-foreground-muted" />
         <p className="text-sm font-medium">
           {canAddMore ? "Click to upload samples" : "Maximum samples reached"}
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-pp-foreground-muted">
           PDF or DOCX · {samples.length}/{MAX_SAMPLES} uploaded
         </p>
         <input
@@ -197,7 +197,7 @@ export function BrandVoiceClient() {
       )}
 
       {uploading && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-pp-foreground-muted">
           <Loader2 className="h-4 w-4 animate-spin" />
           Extracting text…
         </div>
@@ -205,7 +205,7 @@ export function BrandVoiceClient() {
 
       {samples.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-wide text-pp-foreground-muted">
             Samples
           </p>
           {samples.map((s) => (

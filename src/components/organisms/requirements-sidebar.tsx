@@ -51,15 +51,15 @@ export function RequirementsSidebar({
 
   if (isLoading) {
     return (
-      <aside className="flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-card">
-        <div className="border-b border-border px-4 py-3">
-          <h2 className="text-sm font-semibold text-foreground">
+      <aside className="flex h-full w-72 flex-shrink-0 flex-col border-r border-pp-border bg-pp-background-card">
+        <div className="border-b border-pp-border px-4 py-3">
+          <h2 className="text-sm font-semibold text-pp-foreground">
             Requirements
           </h2>
         </div>
         <div className="flex-1 space-y-2 overflow-y-auto p-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="space-y-1.5 rounded-md border border-border p-3">
+            <div key={i} className="space-y-1.5 rounded-md border border-pp-border p-3">
               <Skeleton className="h-3 w-full" />
               <Skeleton className="h-3 w-4/5" />
               <Skeleton className="h-3 w-1/2" />
@@ -72,17 +72,17 @@ export function RequirementsSidebar({
 
   if (requirements.length === 0) {
     return (
-      <aside className="flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-card">
-        <div className="border-b border-border px-4 py-3">
-          <h2 className="text-sm font-semibold text-foreground">
+      <aside className="flex h-full w-72 flex-shrink-0 flex-col border-r border-pp-border bg-pp-background-card">
+        <div className="border-b border-pp-border px-4 py-3">
+          <h2 className="text-sm font-semibold text-pp-foreground">
             Requirements
           </h2>
         </div>
         <div className="flex flex-col items-center justify-center gap-3 p-6 text-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-            <FileSearch className="h-5 w-5 text-muted-foreground" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pp-background-elevated">
+            <FileSearch className="h-5 w-5 text-pp-foreground-muted" />
           </div>
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[13px] text-pp-foreground-muted">
             Upload an RFP to extract requirements automatically.
           </p>
         </div>
@@ -93,10 +93,10 @@ export function RequirementsSidebar({
   const addressedCount = requirements.filter((r) => r.addressed).length;
 
   return (
-    <aside className="flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-card">
-      <div className="border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-foreground">Requirements</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+    <aside className="flex h-full w-72 flex-shrink-0 flex-col border-r border-pp-border bg-pp-background-card">
+      <div className="border-b border-pp-border px-4 py-3">
+        <h2 className="text-sm font-semibold text-pp-foreground">Requirements</h2>
+        <p className="mt-0.5 text-xs text-pp-foreground-muted">
           {addressedCount} / {requirements.length} addressed
         </p>
       </div>
@@ -104,8 +104,8 @@ export function RequirementsSidebar({
       <div className="flex-1 overflow-y-auto">
         {Object.entries(grouped).map(([section, reqs]) => (
           <div key={section}>
-            <div className="sticky top-0 z-10 bg-muted/60 px-4 py-2 backdrop-blur-sm">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <div className="sticky top-0 z-10 bg-pp-background-elevated/60 px-4 py-2 backdrop-blur-sm">
+              <p className="text-xs font-medium uppercase tracking-wide text-pp-foreground-muted">
                 {section}
               </p>
             </div>
@@ -120,8 +120,8 @@ export function RequirementsSidebar({
                       className={cn(
                         "w-full rounded-md border px-3 py-1.5 text-left text-[13px] leading-snug transition-colors",
                         isSelected
-                          ? "border-primary/40 bg-primary/5 text-foreground"
-                          : "border-transparent bg-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground",
+                          ? "border-primary/40 bg-primary/5 text-pp-foreground"
+                          : "border-transparent bg-transparent text-pp-foreground-muted hover:border-pp-border hover:bg-accent hover:text-pp-foreground",
                         req.addressed && "opacity-60",
                       )}
                     >
@@ -137,7 +137,7 @@ export function RequirementsSidebar({
                         </Badge>
                       </div>
                       {req.addressed && (
-                        <span className="mt-1 block text-[10px] text-green-600 dark:text-green-400">
+                        <span className="mt-1 block text-[10px] text-pp-success-text">
                           ✓ addressed
                         </span>
                       )}

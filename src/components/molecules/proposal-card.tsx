@@ -9,14 +9,13 @@ import type { Proposal, ProposalStatus } from "@/lib/types/proposal";
 import { PROPOSAL_STATUS_LABELS } from "@/lib/types/proposal";
 
 const STATUS_STYLES: Readonly<Record<ProposalStatus, string>> = {
-  DRAFT: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  IN_PROGRESS: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
-  REVIEW:
-    "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-400",
-  SUBMITTED: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
-  WON: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400",
-  LOST: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400",
-  ARCHIVED: "bg-zinc-100 text-zinc-400 dark:bg-zinc-900 dark:text-zinc-600",
+  DRAFT: "bg-pp-background-elevated text-pp-foreground-muted",
+  IN_PROGRESS: "bg-blue-950 text-blue-400", // no pp-* blue token
+  REVIEW: "bg-purple-950 text-purple-400", // no pp-* purple token
+  SUBMITTED: "bg-pp-warning-bg text-pp-warning-text",
+  WON: "bg-pp-success-bg text-pp-success-text",
+  LOST: "bg-pp-danger-bg text-pp-danger-text",
+  ARCHIVED: "bg-pp-background-elevated text-pp-foreground-dim",
 };
 
 function formatDeadline(date: Date | null): string {
@@ -49,14 +48,14 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
 
   return (
     <div
-      className="group flex cursor-pointer items-center gap-4 border-b border-border px-4 py-3 transition-colors last:border-0 hover:bg-accent/40"
+      className="group flex cursor-pointer items-center gap-4 border-b border-pp-border px-4 py-3 transition-colors last:border-0 hover:bg-pp-background-elevated"
       onClick={() => router.push(`/proposals/${proposal.id}`)}
     >
       {/* Title + client */}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{proposal.title}</p>
         {proposal.clientName && (
-          <p className="truncate text-xs text-muted-foreground">
+          <p className="truncate text-xs text-pp-foreground-muted">
             {proposal.clientName}
           </p>
         )}
@@ -79,8 +78,8 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
         className={cn(
           "flex w-20 shrink-0 items-center gap-1 text-xs",
           isOverdue
-            ? "text-red-500 dark:text-red-400"
-            : "text-muted-foreground",
+            ? "text-pp-danger-text"
+            : "text-pp-foreground-muted",
         )}
       >
         <Calendar className="h-3 w-3 shrink-0" />
@@ -91,14 +90,14 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
       <div className="w-28 shrink-0">
         <div className="flex items-center gap-2">
           <Progress value={proposal.completionPct} className="flex-1" />
-          <span className="w-8 shrink-0 text-right font-mono text-xs text-muted-foreground">
+          <span className="w-8 shrink-0 text-right font-mono text-xs text-pp-foreground-muted">
             {proposal.completionPct}%
           </span>
         </div>
       </div>
 
       {/* Last edited */}
-      <div className="w-10 shrink-0 text-right font-mono text-xs text-muted-foreground">
+      <div className="w-10 shrink-0 text-right font-mono text-xs text-pp-foreground-muted">
         {formatRelativeTime(proposal.updatedAt)}
       </div>
 

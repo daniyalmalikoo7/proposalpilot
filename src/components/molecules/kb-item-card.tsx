@@ -8,15 +8,12 @@ import type { KBItem, KBItemType } from "@/lib/types/proposal";
 import { KB_TYPE_LABELS } from "@/lib/types/proposal";
 
 const TYPE_STYLES: Readonly<Record<KBItemType, string>> = {
-  CASE_STUDY:
-    "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
-  PAST_PROPOSAL: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
-  METHODOLOGY:
-    "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-400",
-  TEAM_BIO:
-    "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400",
-  CAPABILITY: "bg-cyan-50 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400",
-  OTHER: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
+  CASE_STUDY: "bg-pp-warning-bg text-pp-warning-text",
+  PAST_PROPOSAL: "bg-blue-950 text-blue-400", // no pp-* blue token
+  METHODOLOGY: "bg-purple-950 text-purple-400", // no pp-* purple token
+  TEAM_BIO: "bg-pp-success-bg text-pp-success-text",
+  CAPABILITY: "bg-cyan-950 text-cyan-400", // no pp-* cyan token
+  OTHER: "bg-pp-background-elevated text-pp-foreground-muted",
 };
 
 function formatFileSize(bytes: number): string {
@@ -54,11 +51,11 @@ export function KBItemCard({ item, onDelete }: KBItemCardProps) {
   };
 
   return (
-    <div className="group relative flex flex-col gap-3 rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-sm">
+    <div className="group relative flex flex-col gap-3 rounded-lg border border-pp-border bg-pp-background-card p-4 transition-shadow hover:shadow-sm">
       {/* Type badge + icon row */}
       <div className="flex items-start justify-between gap-2">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
-          <FileText className="h-4 w-4 text-muted-foreground" />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-pp-background-elevated">
+          <FileText className="h-4 w-4 text-pp-foreground-muted" />
         </div>
         <span
           className={cn(
@@ -83,7 +80,7 @@ export function KBItemCard({ item, onDelete }: KBItemCardProps) {
 
       {/* Footer row */}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs text-pp-foreground-muted">
           {formatFileSize(item.fileSize)} ·{" "}
           {item.uploadedAt.toLocaleDateString("en-US", {
             month: "short",
@@ -106,7 +103,7 @@ export function KBItemCard({ item, onDelete }: KBItemCardProps) {
           </Button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full z-50 mt-1 min-w-[130px] rounded-md border border-border bg-popover py-1 shadow-md">
+            <div className="absolute right-0 top-full z-50 mt-1 min-w-[130px] rounded-md border border-pp-border bg-pp-background-card py-1 shadow-md">
               <button
                 type="button"
                 className="flex w-full items-center gap-2 px-3 py-1.5 text-xs hover:bg-accent"
@@ -138,9 +135,9 @@ export function KBItemCard({ item, onDelete }: KBItemCardProps) {
 
       {/* Expanded details panel */}
       {expanded && (
-        <div className="space-y-2 border-t border-border pt-3">
+        <div className="space-y-2 border-t border-pp-border pt-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Uploaded</span>
+            <span className="text-pp-foreground-muted">Uploaded</span>
             <span>
               {item.uploadedAt.toLocaleDateString("en-US", {
                 year: "numeric",
@@ -150,7 +147,7 @@ export function KBItemCard({ item, onDelete }: KBItemCardProps) {
             </span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">File size</span>
+            <span className="text-pp-foreground-muted">File size</span>
             <span>{formatFileSize(item.fileSize)}</span>
           </div>
           {onDelete && (
@@ -169,11 +166,11 @@ export function KBItemCard({ item, onDelete }: KBItemCardProps) {
 
       {/* Confirm delete overlay */}
       {confirmDelete && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-lg bg-card/95 p-4 backdrop-blur-sm">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-lg bg-pp-background-card/95 p-4 backdrop-blur-sm">
           <p className="text-center text-sm font-medium">
             Delete this document?
           </p>
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center text-xs text-pp-foreground-muted">
             This cannot be undone.
           </p>
           <div className="flex gap-2">
