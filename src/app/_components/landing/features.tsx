@@ -29,12 +29,12 @@ const FEATURES = [
 
 export function Features() {
   return (
-    <section id="features" className="bg-[#060b18] px-6 py-20 scroll-mt-16">
+    <section id="features" className="bg-[#060b18] px-6 py-16 scroll-mt-16">
       <div className="mx-auto max-w-5xl">
         <h2 className="text-center text-3xl font-bold text-white mb-4">
           Built for the details that win bids
         </h2>
-        <p className="text-center text-slate-400 mb-16 max-w-xl mx-auto">
+        <p className="text-center text-slate-400 mb-12 max-w-xl mx-auto">
           Not another ChatGPT wrapper. ProposalPilot is purpose-built for the
           proposal workflow — from intake to export.
         </p>

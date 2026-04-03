@@ -27,12 +27,12 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="bg-[#060b18] px-6 py-20 scroll-mt-16">
+    <section id="how-it-works" className="bg-[#060b18] px-6 py-16 scroll-mt-16">
       <div className="mx-auto max-w-5xl">
         <h2 className="text-center text-3xl font-bold text-white mb-4">
           From RFP to proposal in four steps
         </h2>
-        <p className="text-center text-slate-400 mb-16 max-w-xl mx-auto">
+        <p className="text-center text-slate-400 mb-12 max-w-xl mx-auto">
           The entire workflow lives in one place — no context switching between
           five tools.
         </p>

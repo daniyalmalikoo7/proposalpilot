@@ -20,12 +20,12 @@ const PROBLEMS = [
 
 export function ProblemSolution() {
   return (
-    <section className="bg-[#060b18] px-6 py-20">
+    <section className="bg-[#060b18] px-6 py-16">
       <div className="mx-auto max-w-5xl">
         <h2 className="text-center text-3xl font-bold text-white mb-4">
           The old way is costing you bids
         </h2>
-        <p className="text-center text-slate-400 mb-16 max-w-xl mx-auto">
+        <p className="text-center text-slate-400 mb-12 max-w-xl mx-auto">
           Proposal teams spend most of their time on copy-paste and formatting,
           not on the thinking that actually wins deals.
         </p>

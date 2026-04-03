@@ -21,12 +21,12 @@ const PRO_FEATURES = [
 
 export function Pricing() {
   return (
-    <section id="pricing" className="bg-[#060b18] px-6 py-20 scroll-mt-16">
+    <section id="pricing" className="bg-[#060b18] px-6 py-16 scroll-mt-16">
       <div className="mx-auto max-w-4xl">
         <h2 className="text-center text-3xl font-bold text-white mb-4">
           Simple, transparent pricing
         </h2>
-        <p className="text-center text-slate-400 mb-16 max-w-xl mx-auto">
+        <p className="text-center text-slate-400 mb-12 max-w-xl mx-auto">
           Start for free. Upgrade when you need it.
         </p>
 
