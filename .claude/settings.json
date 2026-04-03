@@ -71,6 +71,12 @@
             "command": "node .claude/hooks/security-scanner.mjs",
             "description": "Scan bash commands for dangerous patterns",
             "blocking": true
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/phase-gate.sh",
+            "description": "Enforce phase prerequisites before /design, /build, /validate, /ship",
+            "blocking": true
           }
         ]
       }
@@ -83,6 +89,24 @@
             "type": "command",
             "command": "npx prettier --write \"$CLAUDE_FILE_PATH\" 2>/dev/null; exit 0",
             "description": "Auto-format after every file write"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/quality-gate.sh",
+            "description": "Run tsc + lint + build on every session stop",
+            "blocking": true
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-end.sh",
+            "description": "Auto-checkpoint memory and state files",
+            "blocking": false
           }
         ]
       }
