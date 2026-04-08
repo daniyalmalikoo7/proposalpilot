@@ -1,29 +1,13 @@
-#!/usr/bin/env bash
-# Session End Hook — auto-updates STATE.md timestamp and commits memory checkpoint
+#!/bin/bash
+# Session end — auto-saves progress
+# Fires on session end / Stop events
 
-REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-STATE_FILE="$REPO_ROOT/docs/memory/STATE.md"
-
-# Update timestamp in STATE.md
-TODAY=$(date +%Y-%m-%d)
-if [ -f "$STATE_FILE" ]; then
-  sed -i '' "s/_Last updated: .*/_Last updated: $TODAY_/" "$STATE_FILE" 2>/dev/null || \
-  sed -i "s/_Last updated: .*/_Last updated: $TODAY_/" "$STATE_FILE" 2>/dev/null || true
-fi
-
-cd "$REPO_ROOT"
-
-# Only commit if there are changes to memory or state files
-CHANGED=$(git diff --name-only docs/memory/ .claude/state/ 2>/dev/null)
-UNTRACKED=$(git ls-files --others --exclude-standard docs/memory/ .claude/state/ 2>/dev/null)
-
-if [ -n "$CHANGED" ] || [ -n "$UNTRACKED" ]; then
-  git add docs/memory/ .claude/state/ 2>/dev/null
-  git commit -m "docs(memory): auto-checkpoint $(date +%Y-%m-%dT%H:%M)" 2>/dev/null && \
-    echo "Memory checkpoint committed." || \
-    echo "Memory checkpoint: nothing new to commit."
-else
-  echo "Memory checkpoint: no changes to persist."
+# Auto-stage and show what changed
+if ! git diff --quiet 2>/dev/null || ! git diff --staged --quiet 2>/dev/null; then
+  CHANGED=$(git diff --name-only HEAD 2>/dev/null; git diff --staged --name-only 2>/dev/null)
+  CHANGED_COUNT=$(echo "$CHANGED" | sort -u | wc -l | tr -d ' ')
+  echo "Session end: $CHANGED_COUNT files modified"
+  echo "$CHANGED" | sort -u | head -20
 fi
 
 exit 0

@@ -1,0 +1,14 @@
+{
+  "project": "",
+  "currentPhase": 0,
+  "phases": {
+    "0": { "status": "not-started", "startedAt": null, "completedAt": null },
+    "1": { "status": "not-started", "startedAt": null, "completedAt": null },
+    "2": { "status": "not-started", "startedAt": null, "completedAt": null },
+    "3": { "status": "not-started", "startedAt": null, "completedAt": null },
+    "4": { "status": "not-started", "startedAt": null, "completedAt": null }
+  },
+  "healthScore": null,
+  "rescueDecision": null,
+  "findingCounts": { "critical": 0, "high": 0, "medium": 0, "low": 0 }
+}

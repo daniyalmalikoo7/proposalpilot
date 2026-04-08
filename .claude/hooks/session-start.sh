@@ -1,54 +1,37 @@
-#!/usr/bin/env bash
-# Session Start Hook — prints project context at session open
+#!/bin/bash
+# Session start — reads state files to restore context
+# Fires at session start
 
-REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-STATE_FILE="$REPO_ROOT/docs/memory/STATE.md"
-BLOCKERS_FILE="$REPO_ROOT/docs/memory/BLOCKERS.md"
-PHASE_FILE="$REPO_ROOT/.claude/state/phase.json"
+echo "=== Rescue Session Started ==="
 
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  SESSION START — ProposalPilot"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-# Current phase from state machine
-if [ -f "$PHASE_FILE" ]; then
-  CURRENT_PHASE=$(python3 -c "import json; d=json.load(open('$PHASE_FILE')); print(d.get('currentPhase', 'unknown'))" 2>/dev/null || echo "unknown")
-  PHASE_STATUS=$(python3 -c "import json; d=json.load(open('$PHASE_FILE')); p=str(d.get('currentPhase','')); print(d['phases'].get(p,{}).get('status','unknown'))" 2>/dev/null || echo "unknown")
-  echo ""
-  echo "  Phase: $CURRENT_PHASE ($PHASE_STATUS)"
+# Show current phase if state exists
+if [ -f ".claude/state/phase.json" ]; then
+  echo "Phase state:"
+  cat .claude/state/phase.json
 fi
 
-# Current task and sprint from STATE.md
-if [ -f "$STATE_FILE" ]; then
-  SPRINT=$(grep -A1 "## Current Sprint" "$STATE_FILE" | tail -1 | sed 's/\*\*//g' | xargs)
-  TASK=$(grep -A1 "## Current Task" "$STATE_FILE" | tail -1 | xargs)
-  NEXT=$(grep -A1 "## Next Task" "$STATE_FILE" | tail -1 | xargs)
-  UPDATED=$(grep "_Last updated:" "$STATE_FILE" | head -1 | sed 's/_//g' | xargs)
-  echo "  Sprint: $SPRINT"
-  echo "  Current: $TASK"
-  echo "  Next: $NEXT"
-  echo "  State: $UPDATED"
+# Show rescue status
+AUDIT_COUNT=$(ls docs/audit/*.md 2>/dev/null | wc -l | tr -d ' ')
+TRIAGE_COUNT=$(ls docs/triage/*.md 2>/dev/null | wc -l | tr -d ' ')
+FIX_COUNT=$(ls docs/fix/*.md 2>/dev/null | wc -l | tr -d ' ')
+REPORT_COUNT=$(ls docs/reports/*.md 2>/dev/null | wc -l | tr -d ' ')
+
+echo "Audit reports: $AUDIT_COUNT/6"
+echo "Triage docs: $TRIAGE_COUNT/2"
+echo "Fix reports: $FIX_COUNT/4"
+echo "Validation reports: $REPORT_COUNT/5"
+
+# Compute checksum for drift detection (cross-platform)
+if command -v md5sum &>/dev/null; then
+  MD5CMD="md5sum"
+elif command -v md5 &>/dev/null; then
+  MD5CMD="md5 -q"
+else
+  MD5CMD="cksum"
 fi
 
-# Open blockers from BLOCKERS.md
-if [ -f "$BLOCKERS_FILE" ]; then
-  echo ""
-  echo "  OPEN BLOCKERS:"
-  # Extract table rows (lines starting with | B and not header/separator)
-  grep "^| B[0-9]" "$BLOCKERS_FILE" | while IFS='|' read -r _ id severity title status notes _; do
-    id=$(echo "$id" | xargs)
-    severity=$(echo "$severity" | xargs)
-    title=$(echo "$title" | xargs)
-    status=$(echo "$status" | xargs)
-    if [ "$status" != "Resolved" ] && [ "$status" != "resolved" ]; then
-      echo "  [$severity] $id — $title"
-    fi
-  done
+if [ -f "docs/audit/06-rescue-decision.md" ]; then
+  echo "Rescue decision: $(grep -m1 'RESCUE\|REWRITE\|ABANDON' docs/audit/06-rescue-decision.md 2>/dev/null || echo 'unknown')"
 fi
-
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
 
 exit 0
