@@ -34,7 +34,7 @@ if (!apiKey) {
   process.exit(1);
 }
 
-console.log(`✓  API key found (${apiKey.slice(0, 8)}...)`);
+console.error(`✓  API key found (${apiKey.slice(0, 8)}...)`);
 
 // Test both models in the fallback chain
 const MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
@@ -72,7 +72,7 @@ async function testModel(model: string): Promise<void> {
   }
 
   const text = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-  console.log(`✓  ${model}: "${text.trim()}"`);
+  console.error(`✓  ${model}: "${text.trim()}"`);
 }
 
 async function main() {
