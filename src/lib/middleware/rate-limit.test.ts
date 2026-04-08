@@ -41,18 +41,19 @@ describe("checkRateLimit", () => {
 
   it("resets after the window expires", () => {
     const k = key("e");
-    // Exhaust the limit
-    for (let i = 0; i < 2; i++) {
-      checkRateLimit(k, 2, 1); // 1ms window
-    }
-    expect(() => checkRateLimit(k, 2, 1)).toThrow(RateLimitError);
+    // Exhaust the limit with a short window
+    checkRateLimit(k, 2, 50);
+    checkRateLimit(k, 2, 50);
+    // Third call within the same 50ms window should be rejected
+    expect(() => checkRateLimit(k, 2, 50)).toThrow(RateLimitError);
 
-    // Wait for window to expire, then the counter should reset
+    // Wait for the window to expire, then the counter should reset
     return new Promise<void>((resolve) => {
       setTimeout(() => {
+        // After window expires, a new window starts — should not throw
         expect(() => checkRateLimit(k, 2, 60_000)).not.toThrow();
         resolve();
-      }, 5);
+      }, 60); // 60ms > 50ms window
     });
   });
 
