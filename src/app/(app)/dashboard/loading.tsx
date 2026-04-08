@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/atoms/skeleton";
 
 export default function DashboardLoading() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" role="status" aria-label="Loading dashboard…" aria-busy="true">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1.5">
