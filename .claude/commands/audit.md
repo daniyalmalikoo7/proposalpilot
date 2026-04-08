@@ -26,7 +26,11 @@ Before starting: create `docs/audit/` directory if it doesn't exist. Create `doc
    Produce: docs/audit/05-architecture-health.md
    Done when: dependency-cruiser ran, Prisma validated, env vars checked
 
-6. **Devil's Advocate** (@.claude/agents/phase-0/devils-advocate.md)
+6. **Stack Evaluator** (@.claude/agents/phase-0/stack-evaluator.md)
+   Produce: docs/audit/07-stack-evaluation.md
+   Done when: all technologies evaluated, scaling roadmap complete
+
+7. **Devil's Advocate** (@.claude/agents/phase-0/devils-advocate.md)
    Read ALL 5 reports above, then:
    Produce: docs/audit/06-rescue-decision.md
    Must contain: ## Decision with exactly RESCUE, REWRITE, or ABANDON
@@ -34,7 +38,7 @@ Before starting: create `docs/audit/` directory if it doesn't exist. Create `doc
 ## Phase gate check
 
 Before completing, verify:
-- [ ] All 6 audit reports exist in docs/audit/
+- [ ] All 7 audit reports exist in docs/audit/
 - [ ] Raw data files exist (tsc-raw.txt, eslint-raw.json, npm-audit-raw.json, etc.)
 - [ ] Rescue decision contains explicit Decision: RESCUE/REWRITE/ABANDON
 

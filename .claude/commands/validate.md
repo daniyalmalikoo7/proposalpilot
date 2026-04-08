@@ -16,21 +16,25 @@ Verify: npm run build succeeds AND npx tsc --noEmit = zero errors. If either fai
    Produce: docs/reports/02-performance-report.md
    Done when: Lighthouse ran, API latency measured, bundle size checked
 
-3. **Security Engineer** (@.claude/agents/phase-3/security-engineer.md)
+3. **Load Tester** (@.claude/agents/phase-3/load-tester.md)
+   Produce: docs/reports/06-load-test-report.md
+   Done when: 4 tiers tested, breaking point identified
+
+4. **Security Engineer** (@.claude/agents/phase-3/security-engineer.md)
    Produce: docs/reports/03-security-report.md
    Done when: Semgrep re-ran, auth re-verified, IDOR re-checked, zero CRITICAL/HIGH
 
-4. **Accessibility Engineer** (@.claude/agents/phase-3/accessibility-engineer.md)
+5. **Accessibility Engineer** (@.claude/agents/phase-3/accessibility-engineer.md)
    Produce: docs/reports/04-accessibility-report.md
    Done when: axe-core ran on all pages, keyboard nav tested
 
-5. **Code Reviewer** (@.claude/agents/phase-3/code-reviewer.md)
+6. **Code Reviewer** (@.claude/agents/phase-3/code-reviewer.md)
    Produce: docs/reports/05-code-review.md
    Done when: all rescue commits reviewed, engineering standard verified
 
 ## Phase gate check
 
-- [ ] All 5 reports exist in docs/reports/
+- [ ] All 6 reports exist in docs/reports/
 - [ ] Zero CRITICAL findings across all reports
 - [ ] Zero HIGH security findings
 
