@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import { config as loadEnv } from "dotenv";
+
+// Auto-load test credentials so callers don't need `source .env.test.local`
+loadEnv({ path: ".env.test.local" });
 
 export default defineConfig({
   testDir: "./tests/e2e",
