@@ -26,12 +26,11 @@ export default defineConfig({
   projects: [
     // 1. Auth setup — runs first, produces storageState.json.
     //    Must NOT have storageState set (the file doesn't exist yet).
-    //    Timeout raised to 60s — clerk.signIn makes API calls to Clerk.
     {
       name: "setup",
       testDir: "./tests",
       testMatch: /global-setup\.ts/,
-      timeout: 60_000,
+      timeout: 20_000,
       use: { ...devices["Desktop Chrome"] },
     },
 
