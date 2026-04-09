@@ -10,24 +10,30 @@ export default defineConfig({
 
   use: {
     baseURL: "http://localhost:3000",
-    storageState: "tests/fixtures/storageState.json",
+    // storageState is NOT set here — it would be inherited by the setup project
+    // before the file exists, causing ENOENT. Set it per-project below instead.
     screenshot: "only-on-failure",
     video: "retain-on-failure",
     trace: "retain-on-failure",
   },
 
   projects: [
-    // 1. Auth setup — runs first, produces storageState.json
+    // 1. Auth setup — runs first, produces storageState.json.
+    //    Must NOT have storageState set (the file doesn't exist yet).
     {
       name: "setup",
+      testDir: "./tests",
       testMatch: /global-setup\.ts/,
       use: { ...devices["Desktop Chrome"] },
     },
 
-    // 2. All spec files depend on setup completing first
+    // 2. All spec files — depend on setup completing first, then load session.
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: "tests/fixtures/storageState.json",
+      },
       dependencies: ["setup"],
     },
   ],

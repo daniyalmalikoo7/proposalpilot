@@ -12,8 +12,12 @@
 
 import { test as setup, expect } from "@playwright/test";
 import path from "path";
+import fs from "fs";
 
 const STORAGE_STATE = path.join(__dirname, "fixtures", "storageState.json");
+
+// Ensure the fixtures directory exists before Playwright tries to write to it.
+fs.mkdirSync(path.dirname(STORAGE_STATE), { recursive: true });
 
 setup("authenticate", async ({ page }) => {
   const email = process.env.E2E_TEST_EMAIL;
