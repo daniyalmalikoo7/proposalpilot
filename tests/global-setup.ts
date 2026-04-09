@@ -1,28 +1,26 @@
 /**
  * global-setup.ts — Playwright auth setup
  *
- * Logs in once via the Clerk sign-in UI and saves the browser cookies/storage
- * to tests/fixtures/storageState.json so every test can reuse the session
- * without re-authenticating.
+ * Uses @clerk/testing to authenticate programmatically, bypassing Clerk's
+ * device-verification (factor-two) and bot-detection flows that break
+ * headless browser sessions.
  *
- * Required env vars (auto-loaded from .env.test.local by playwright.config.ts):
- *   E2E_TEST_EMAIL    — email of the test user
- *   E2E_TEST_PASSWORD — password for that user
- *
- * Handles Clerk's multi-step flow:
- *   1. Enter email → click Continue (the form submit, not Google OAuth)
- *   2. If Clerk offers social/SSO options, pick "Continue with password"
- *   3. Enter password → submit
- *   4. Wait for redirect into the app
+ * Required env vars (auto-loaded by playwright.config.ts):
+ *   From .env.local:
+ *     CLERK_SECRET_KEY        — Clerk secret key (server-side)
+ *     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY — Clerk publishable key
+ *   From .env.test.local:
+ *     E2E_TEST_EMAIL          — test user email
+ *     E2E_TEST_PASSWORD       — test user password
  */
 
-import { test as setup, expect } from "@playwright/test";
+import { test as setup } from "@playwright/test";
+import { clerk, setupClerkTestingToken } from "@clerk/testing/playwright";
 import path from "path";
 import fs from "fs";
 
 const STORAGE_STATE = path.join(__dirname, "fixtures", "storageState.json");
 
-// Ensure the fixtures directory exists before Playwright tries to write to it.
 fs.mkdirSync(path.dirname(STORAGE_STATE), { recursive: true });
 
 setup("authenticate", async ({ page }) => {
@@ -31,123 +29,40 @@ setup("authenticate", async ({ page }) => {
 
   if (!email || !password) {
     throw new Error(
-      "E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set in the environment. " +
-        "Copy .env.example to .env.test.local and fill in test credentials.",
+      "E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set. " +
+        "Add them to .env.test.local.",
     );
   }
 
+  if (!process.env.CLERK_SECRET_KEY) {
+    throw new Error(
+      "CLERK_SECRET_KEY must be set. It should be present in .env.local.",
+    );
+  }
+
+  // Inject a Clerk testing token into the browser context.
+  // This bypasses device-verification (factor-two) and bot-detection —
+  // both of which break headless Playwright sessions.
+  await setupClerkTestingToken({ page });
+
+  // Navigate to sign-in so Clerk's JS is loaded
   await page.goto("/sign-in");
 
-  // ── Step 1: fill email ────────────────────────────────────────────────────
-  const emailInput = page.locator(
-    'input[name="identifier"], input[type="email"]',
-  );
-  await emailInput.waitFor({ state: "visible", timeout: 15_000 });
-  await emailInput.fill(email);
-
-  // Submit via Enter — avoids accidentally clicking a "Continue with Google"
-  // button when Clerk renders social login options alongside the email form.
-  await emailInput.press("Enter");
-
-  // ── Step 2: handle Clerk's intermediate screen (if shown) ─────────────────
-  // After email submission, Clerk may show:
-  //   (a) directly the password field, OR
-  //   (b) a screen offering social/SSO login + "Use password" / "Use another method" link
-  // We wait up to 10s for either to appear.
-  const passwordField = page.locator(
-    'input[name="password"], input[type="password"]',
-  );
-  const usePasswordLink = page.getByRole("link", {
-    name: /use your password|use password|another method/i,
-  });
-  const usePasswordBtn = page.getByRole("button", {
-    name: /use your password|use password|another method|continue with password/i,
-  });
-
-  // Race: whichever appears first
-  await Promise.race([
-    passwordField.waitFor({ state: "visible", timeout: 15_000 }),
-    usePasswordLink.waitFor({ state: "visible", timeout: 15_000 }).catch(() => {}),
-    usePasswordBtn.waitFor({ state: "visible", timeout: 15_000 }).catch(() => {}),
-  ]);
-
-  // If Clerk presented the "choose a method" screen, navigate to password
-  if (await usePasswordLink.isVisible()) {
-    await usePasswordLink.click();
-  } else if (await usePasswordBtn.isVisible()) {
-    await usePasswordBtn.click();
-  }
-
-  // ── Step 3: wait for password field to be visible AND enabled ─────────────
-  await passwordField.waitFor({ state: "visible", timeout: 10_000 });
-  // Clerk briefly disables the field while transitioning — wait for enabled
-  await page.waitForFunction(
-    () => {
-      const el = document.querySelector<HTMLInputElement>(
-        'input[name="password"], input[type="password"]',
-      );
-      return el && !el.disabled && el.offsetParent !== null;
+  // Sign in programmatically — no UI interaction needed
+  await clerk.signIn({
+    page,
+    signInParams: {
+      strategy: "password",
+      identifier: email,
+      password,
     },
-    { timeout: 10_000 },
-  );
+  });
 
-  await passwordField.fill(password);
+  // Land on a known authenticated route to ensure session cookies are set
+  await page.waitForURL(/\/(dashboard|proposals|onboarding)/, {
+    timeout: 30_000,
+  });
 
-  // ── Step 4: submit password ───────────────────────────────────────────────
-  // Prefer the primary form button; fall back to Enter key
-  const signInBtn = page
-    .locator('button.cl-formButtonPrimary, button[data-locator*="submit"]')
-    .or(page.getByRole("button", { name: /sign in|continue$/i }))
-    .first();
-
-  if (await signInBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
-    await signInBtn.click();
-  } else {
-    await passwordField.press("Enter");
-  }
-
-  // ── Step 5: handle Clerk device-verification / MFA (factor-two) ─────────
-  // When logging in from a new browser context, Clerk may redirect to
-  // /sign-in/factor-two and ask for an email OTP code.
-  // In Clerk's Development mode the magic bypass code is always "424242".
-  await page.waitForURL(
-    /\/(dashboard|proposals|onboarding|sign-in\/factor-two)/,
-    { timeout: 30_000 },
-  );
-
-  if (page.url().includes("factor-two")) {
-    const otpInput = page.locator(
-      'input[name="code"], input[aria-label*="digit"], [data-otp-input] input, input[autocomplete="one-time-code"]',
-    ).or(page.getByRole("textbox", { name: /verification code|enter code/i }))
-      .first();
-
-    // Fallback: any single visible text input on the factor-two page
-    const anyInput = page.locator('input[type="text"], input:not([type])').first();
-
-    await otpInput
-      .waitFor({ state: "visible", timeout: 10_000 })
-      .catch(() => anyInput.waitFor({ state: "visible", timeout: 5_000 }));
-
-    const target = (await otpInput.isVisible()) ? otpInput : anyInput;
-
-    // Clerk dev-mode bypass: "424242" is always accepted as a valid OTP
-    await target.fill("424242");
-
-    const continueBtn = page.getByRole("button", { name: /continue/i }).first();
-    if (await continueBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
-      await continueBtn.click();
-    } else {
-      await target.press("Enter");
-    }
-
-    // Now wait for the app redirect
-    await page.waitForURL(/\/(dashboard|proposals|onboarding)/, {
-      timeout: 30_000,
-    });
-  }
-
-  await expect(page).not.toHaveURL(/sign-in/);
-
-  // Persist session for all subsequent tests.
+  // Persist the authenticated session for all test specs
   await page.context().storageState({ path: STORAGE_STATE });
 });

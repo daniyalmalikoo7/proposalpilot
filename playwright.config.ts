@@ -1,8 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 import { config as loadEnv } from "dotenv";
 
-// Auto-load test credentials so callers don't need `source .env.test.local`
-loadEnv({ path: ".env.test.local" });
+// Load base secrets (CLERK_SECRET_KEY etc.) then overlay test credentials
+loadEnv({ path: ".env.local" });
+loadEnv({ path: ".env.test.local", override: true });
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -24,10 +25,12 @@ export default defineConfig({
   projects: [
     // 1. Auth setup — runs first, produces storageState.json.
     //    Must NOT have storageState set (the file doesn't exist yet).
+    //    Timeout raised to 60s — clerk.signIn makes API calls to Clerk.
     {
       name: "setup",
       testDir: "./tests",
       testMatch: /global-setup\.ts/,
+      timeout: 60_000,
       use: { ...devices["Desktop Chrome"] },
     },
 
