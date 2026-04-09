@@ -1,77 +1,135 @@
 /**
  * navigation.spec.ts
  *
- * Verifies sidebar navigation and breadcrumb behaviour:
- *  - Sidebar highlights the correct item per route
- *  - Breadcrumb on the editor page returns to /proposals (breadcrumb says "← Dashboard" in this app)
- *  - Navigating between top-level routes updates the active sidebar item
+ * Quality bar:
+ *  - Sidebar active state must reflect the current route (visual + ARIA)
+ *  - Only the current route's link is active — others must NOT be
+ *  - Clicking a sidebar link navigates AND updates active state
+ *  - Authenticated routes must not redirect to /sign-in
+ *  - Editor breadcrumb must return to /dashboard (data-dependent, skipped if empty DB)
  */
 
 import { test, expect } from "@playwright/test";
 
-test.describe("Navigation", () => {
-  test("sidebar highlights Proposals when on /proposals", async ({ page }) => {
-    await page.goto("/proposals");
-    await page.waitForLoadState("networkidle");
+// Helper: assert one link is active and all others are not
+async function assertOnlyActive(
+  page: import("@playwright/test").Page,
+  activePattern: RegExp,
+  otherPatterns: RegExp[],
+) {
+  const activeLink = page.getByRole("link", { name: activePattern }).first();
+  await expect(activeLink).toBeVisible();
+  const activeClass = await activeLink.getAttribute("class");
+  expect(activeClass, `Expected "${activePattern}" to have bg-primary`).toMatch(
+    /bg-primary/,
+  );
 
-    const proposalsLink = page.getByRole("link", { name: /^proposals$/i });
-    const cls = await proposalsLink.getAttribute("class");
-    expect(cls).toMatch(/bg-primary/);
+  for (const pattern of otherPatterns) {
+    const link = page.getByRole("link", { name: pattern }).first();
+    if (await link.isVisible()) {
+      const cls = await link.getAttribute("class");
+      expect(
+        cls,
+        `Expected "${pattern}" NOT to have bg-primary when on different route`,
+      ).not.toMatch(/bg-primary/);
+    }
+  }
+}
+
+test.describe("Navigation", () => {
+  test("authenticated routes do not redirect to /sign-in", async ({ page }) => {
+    const routes = ["/dashboard", "/proposals", "/knowledge-base"];
+    for (const route of routes) {
+      await page.goto(route);
+      await page.waitForLoadState("networkidle");
+      await expect(page, `${route} should not redirect to sign-in`).not.toHaveURL(
+        /sign-in/,
+      );
+      // Must land on the requested route (not a redirect to onboarding is OK,
+      // but must not land on an error page)
+      await expect(page).not.toHaveURL(/\/404|\/500|\/error/);
+    }
   });
 
-  test("sidebar highlights Knowledge Base when on /knowledge-base", async ({
+  test("sidebar highlights Proposals and only Proposals when on /proposals", async ({
+    page,
+  }) => {
+    await page.goto("/proposals");
+    await page.waitForLoadState("networkidle");
+    await assertOnlyActive(page, /^proposals$/i, [
+      /knowledge base/i,
+      /^dashboard$/i,
+    ]);
+  });
+
+  test("sidebar highlights Knowledge Base and only KB when on /knowledge-base", async ({
     page,
   }) => {
     await page.goto("/knowledge-base");
     await page.waitForLoadState("networkidle");
-
-    const kbLink = page.getByRole("link", { name: /knowledge base/i });
-    const cls = await kbLink.getAttribute("class");
-    expect(cls).toMatch(/bg-primary/);
+    await assertOnlyActive(page, /knowledge base/i, [
+      /^proposals$/i,
+      /^dashboard$/i,
+    ]);
   });
 
-  test("sidebar highlights Dashboard when on /dashboard", async ({ page }) => {
+  test("sidebar highlights Dashboard and only Dashboard when on /dashboard", async ({
+    page,
+  }) => {
     await page.goto("/dashboard");
     await page.waitForLoadState("networkidle");
-
-    const dashLink = page.getByRole("link", { name: /dashboard/i }).first();
-    const cls = await dashLink.getAttribute("class");
-    expect(cls).toMatch(/bg-primary/);
+    await assertOnlyActive(page, /^dashboard$/i, [
+      /^proposals$/i,
+      /knowledge base/i,
+    ]);
   });
 
-  test("sidebar Proposals link is NOT active when on /knowledge-base", async ({
-    page,
-  }) => {
-    await page.goto("/knowledge-base");
-    await page.waitForLoadState("networkidle");
-
-    const proposalsLink = page.getByRole("link", { name: /^proposals$/i });
-    const cls = await proposalsLink.getAttribute("class");
-    expect(cls).not.toMatch(/bg-primary/);
-  });
-
-  test("navigating via sidebar links changes the active item", async ({
+  test("clicking sidebar link navigates and updates active state correctly", async ({
     page,
   }) => {
     await page.goto("/proposals");
     await page.waitForLoadState("networkidle");
 
-    // Click Knowledge Base in sidebar.
-    await page.getByRole("link", { name: /knowledge base/i }).click();
-    await expect(page).toHaveURL("/knowledge-base");
-
-    const kbLink = page.getByRole("link", { name: /knowledge base/i });
-    const activeClass = await kbLink.getAttribute("class");
-    expect(activeClass).toMatch(/bg-primary/);
-
-    // Old Proposals link should no longer be active.
+    // Confirm starting state
     const proposalsLink = page.getByRole("link", { name: /^proposals$/i });
-    const proposalsClass = await proposalsLink.getAttribute("class");
-    expect(proposalsClass).not.toMatch(/bg-primary/);
+    expect(await proposalsLink.getAttribute("class")).toMatch(/bg-primary/);
+
+    // Navigate via sidebar
+    await page.getByRole("link", { name: /knowledge base/i }).click();
+    await page.waitForURL("/knowledge-base", { timeout: 10_000 });
+    await page.waitForLoadState("networkidle");
+
+    // KB is now active, Proposals is not
+    await assertOnlyActive(page, /knowledge base/i, [/^proposals$/i]);
+
+    // Navigate back
+    await page.getByRole("link", { name: /^proposals$/i }).click();
+    await page.waitForURL("/proposals", { timeout: 10_000 });
+    await page.waitForLoadState("networkidle");
+
+    // Proposals active again, KB not
+    await assertOnlyActive(page, /^proposals$/i, [/knowledge base/i]);
+  });
+
+  test("page content changes when navigating between routes", async ({
+    page,
+  }) => {
+    await page.goto("/proposals");
+    await page.waitForLoadState("networkidle");
+    // /proposals must show a proposals-specific heading
+    await expect(
+      page.getByRole("heading", { name: /proposals/i }),
+    ).toBeVisible();
+
+    await page.goto("/knowledge-base");
+    await page.waitForLoadState("networkidle");
+    // /knowledge-base must show a KB-specific heading
+    await expect(
+      page.getByRole("heading", { name: /knowledge base/i }),
+    ).toBeVisible();
   });
 
   test("editor breadcrumb navigates back to dashboard", async ({ page }) => {
-    // Navigate to proposals list first.
     await page.goto("/proposals");
     await page
       .locator("ul li")
@@ -81,16 +139,22 @@ test.describe("Navigation", () => {
 
     const isEmpty = await page.getByText(/no proposals yet/i).isVisible();
     if (isEmpty) {
-      test.skip(true, "No proposals in DB — cannot test editor breadcrumb");
+      test.skip(true, "No proposals in DB — seed data required for this test");
       return;
     }
 
-    // Open first proposal.
     await page.locator("ul li button").first().click();
     await page.waitForURL(/\/proposals\/[a-z0-9-]+/, { timeout: 10_000 });
 
-    // Click the "← Dashboard" breadcrumb.
-    await page.getByText(/← dashboard/i).click();
-    await expect(page).toHaveURL("/dashboard");
+    // Breadcrumb must exist and be clickable
+    const breadcrumb = page.getByText(/← dashboard/i);
+    await expect(breadcrumb).toBeVisible();
+    await breadcrumb.click();
+
+    await expect(page).toHaveURL("/dashboard", { timeout: 10_000 });
+    // After navigating back, Dashboard must be active in sidebar
+    const dashLink = page.getByRole("link", { name: /^dashboard$/i }).first();
+    const cls = await dashLink.getAttribute("class");
+    expect(cls).toMatch(/bg-primary/);
   });
 });

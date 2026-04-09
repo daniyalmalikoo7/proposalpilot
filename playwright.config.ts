@@ -7,6 +7,7 @@ loadEnv({ path: ".env.test.local", override: true });
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  globalSetup: require.resolve("./tests/clerk-global-setup"),
   timeout: 30_000,
   retries: 1,
   fullyParallel: false, // sequential — tests share a single auth session

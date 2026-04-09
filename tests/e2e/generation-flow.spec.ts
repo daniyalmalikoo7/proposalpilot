@@ -95,13 +95,12 @@ test.describe("Generation flow (real AI)", () => {
     const contentAfter = await editorContent.innerText();
     expect(contentAfter.trim().length).toBeGreaterThan(0);
 
-    // Assert content actually changed (regenerate should produce something different).
-    // We allow identical content in edge cases (tiny sections) but log a warning.
-    if (contentAfter.trim() === contentBefore.trim()) {
-      console.warn(
-        "[generation-flow] Content unchanged after regenerate — may be a streaming issue",
-      );
-    }
+    // Regeneration MUST produce different content — if it returned the same
+    // text, the streaming pipeline silently failed. This is a hard failure.
+    expect(
+      contentAfter.trim(),
+      "Regenerated content must differ from previous content — identical output means the AI generation pipeline failed silently",
+    ).not.toBe(contentBefore.trim());
 
     // --- Assert: confidence badge is present ---
     const confidenceBadge = firstSectionCard.locator(
