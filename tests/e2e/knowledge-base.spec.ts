@@ -65,8 +65,10 @@ test.describe("Knowledge base", () => {
       ).toBeVisible();
     }
 
-    // Initially "All" must be active
-    const allTab = page.getByRole("button", { name: /^all$/i }).first();
+    // Initially "All" must be active.
+    // Use exact:false because the button accessible name includes the count badge (e.g. "All 0").
+    const allTab = page.getByRole("button", { name: /^all/i }).first();
+    await expect(allTab).toBeVisible();
     expect(await allTab.getAttribute("class")).toMatch(/bg-primary/);
 
     // Click a different tab — it becomes active, All becomes inactive

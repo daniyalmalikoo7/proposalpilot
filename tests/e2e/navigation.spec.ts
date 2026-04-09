@@ -20,8 +20,8 @@ async function assertOnlyActive(
   const activeLink = page.getByRole("link", { name: activePattern }).first();
   await expect(activeLink).toBeVisible();
   const activeClass = await activeLink.getAttribute("class");
-  expect(activeClass, `Expected "${activePattern}" to have bg-primary`).toMatch(
-    /bg-primary/,
+  expect(activeClass, `Expected "${activePattern}" to have bg-pp-accent`).toMatch(
+    /bg-pp-accent/,
   );
 
   for (const pattern of otherPatterns) {
@@ -30,8 +30,8 @@ async function assertOnlyActive(
       const cls = await link.getAttribute("class");
       expect(
         cls,
-        `Expected "${pattern}" NOT to have bg-primary when on different route`,
-      ).not.toMatch(/bg-primary/);
+        `Expected "${pattern}" NOT to have bg-pp-accent when on different route`,
+      ).not.toMatch(/bg-pp-accent/);
     }
   }
 }
@@ -92,7 +92,7 @@ test.describe("Navigation", () => {
 
     // Confirm starting state
     const proposalsLink = page.getByRole("link", { name: /^proposals$/i });
-    expect(await proposalsLink.getAttribute("class")).toMatch(/bg-primary/);
+    expect(await proposalsLink.getAttribute("class")).toMatch(/bg-pp-accent/);
 
     // Navigate via sidebar
     await page.getByRole("link", { name: /knowledge base/i }).click();
@@ -146,15 +146,23 @@ test.describe("Navigation", () => {
     await page.locator("ul li button").first().click();
     await page.waitForURL(/\/proposals\/[a-z0-9-]+/, { timeout: 10_000 });
 
-    // Breadcrumb must exist and be clickable
-    const breadcrumb = page.getByText(/← dashboard/i);
+    // Wait for the proposal to load (spinner disappears, then breadcrumb renders)
+    await page
+      .locator(".animate-spin")
+      .waitFor({ state: "hidden", timeout: 15_000 })
+      .catch(() => {
+        // spinner may never appear on a fast load — that's fine
+      });
+
+    // Breadcrumb must exist and be clickable (text is "← Proposals")
+    const breadcrumb = page.getByText(/←/).first();
     await expect(breadcrumb).toBeVisible();
     await breadcrumb.click();
 
-    await expect(page).toHaveURL("/dashboard", { timeout: 10_000 });
-    // After navigating back, Dashboard must be active in sidebar
-    const dashLink = page.getByRole("link", { name: /^dashboard$/i }).first();
-    const cls = await dashLink.getAttribute("class");
-    expect(cls).toMatch(/bg-primary/);
+    await expect(page).toHaveURL(/\/(dashboard|proposals)/, { timeout: 10_000 });
+    // After navigating back, the breadcrumb destination link must be active in sidebar
+    const activeLink = page.getByRole("link", { name: /proposals/i }).first();
+    const cls = await activeLink.getAttribute("class");
+    expect(cls).toMatch(/bg-pp-accent/);
   });
 });

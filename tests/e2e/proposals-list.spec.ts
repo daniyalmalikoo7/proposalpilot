@@ -57,8 +57,8 @@ test.describe("Proposals list", () => {
     const statusBadge = firstRow.locator("span.rounded-full");
     await expect(statusBadge).toBeVisible();
 
-    // Date
-    const dateEl = firstRow.locator("span.text-xs.text-muted-foreground");
+    // Date (the span without rounded-full, which is the status badge)
+    const dateEl = firstRow.locator("span.text-xs:not(.rounded-full)");
     await expect(dateEl).toBeVisible();
   });
 

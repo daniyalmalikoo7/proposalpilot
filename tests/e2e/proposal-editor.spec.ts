@@ -57,8 +57,8 @@ test.describe("Proposal editor", () => {
       return;
     }
 
-    // Breadcrumb link to dashboard.
-    await expect(page.getByText(/← dashboard/i)).toBeVisible();
+    // Breadcrumb link back (text is "← Proposals").
+    await expect(page.getByText(/←/).first()).toBeVisible();
     // Proposal title in the header (the <p> next to breadcrumb).
     const titleEl = page.locator(
       'div[class*="min-w-0"] p[class*="font-semibold"]',
