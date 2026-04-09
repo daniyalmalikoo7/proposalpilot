@@ -106,10 +106,46 @@ setup("authenticate", async ({ page }) => {
     await passwordField.press("Enter");
   }
 
-  // ── Step 5: wait for redirect into the app ────────────────────────────────
-  await page.waitForURL(/\/(dashboard|proposals|onboarding)/, {
-    timeout: 30_000,
-  });
+  // ── Step 5: handle Clerk device-verification / MFA (factor-two) ─────────
+  // When logging in from a new browser context, Clerk may redirect to
+  // /sign-in/factor-two and ask for an email OTP code.
+  // In Clerk's Development mode the magic bypass code is always "424242".
+  await page.waitForURL(
+    /\/(dashboard|proposals|onboarding|sign-in\/factor-two)/,
+    { timeout: 30_000 },
+  );
+
+  if (page.url().includes("factor-two")) {
+    const otpInput = page.locator(
+      'input[name="code"], input[aria-label*="digit"], [data-otp-input] input, input[autocomplete="one-time-code"]',
+    ).or(page.getByRole("textbox", { name: /verification code|enter code/i }))
+      .first();
+
+    // Fallback: any single visible text input on the factor-two page
+    const anyInput = page.locator('input[type="text"], input:not([type])').first();
+
+    await otpInput
+      .waitFor({ state: "visible", timeout: 10_000 })
+      .catch(() => anyInput.waitFor({ state: "visible", timeout: 5_000 }));
+
+    const target = (await otpInput.isVisible()) ? otpInput : anyInput;
+
+    // Clerk dev-mode bypass: "424242" is always accepted as a valid OTP
+    await target.fill("424242");
+
+    const continueBtn = page.getByRole("button", { name: /continue/i }).first();
+    if (await continueBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      await continueBtn.click();
+    } else {
+      await target.press("Enter");
+    }
+
+    // Now wait for the app redirect
+    await page.waitForURL(/\/(dashboard|proposals|onboarding)/, {
+      timeout: 30_000,
+    });
+  }
+
   await expect(page).not.toHaveURL(/sign-in/);
 
   // Persist session for all subsequent tests.
