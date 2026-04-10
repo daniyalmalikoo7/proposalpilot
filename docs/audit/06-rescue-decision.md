@@ -1,5 +1,91 @@
 # Rescue Decision
 
+## Health Score: 60/100
+
+| Category | Raw Score | Weight | Weighted |
+|----------|-----------|--------|----------|
+| Build | 50/100 | 25% | 12.5 |
+| Security | 100/100 | 25% | 25 |
+| Runtime | 0/100 | 20% | 0 |
+| Dependencies | 51/100 | 15% | 7.65 |
+| Architecture | 100/100 | 15% | 15 |
+
+### Score calculation (auditable)
+
+**Build (25 points max):**
+- Inputs: `ts_errors=0`, `eslint_errors=115`, `build_fails=0`
+- `build_raw = 100 - (0 × 2) - min(115 × 0.5, 50) - (0 × 50)`
+- `build_raw = 100 - 0 - 50 - 0 = 50`
+- `build_score = 50 × 0.25 = 12.5`
+
+**Security (25 points max):**
+- Inputs: `critical=0`, `high=0`, `medium=0`
+- `sec_raw = 100 - (0 × 25) - (0 × 10) - (0 × 3) = 100`
+- `sec_score = 100 × 0.25 = 25`
+
+**Runtime (20 points max):**
+- Inputs: `pages_rendering=0`, `total_pages=10` (from System Map)
+- `runtime_raw = (0 / 10) × 100 = 0`
+- `runtime_score = 0 × 0.20 = 0`
+
+**Dependencies (15 points max):**
+- Inputs: `critical_cves=0`, `high_cves=0`, `major_behind=14`, `unused_deps=7`
+- `dep_raw = 100 - (0 × 20) - (0 × 10) - (14 × 3) - (7 × 1)`
+- `dep_raw = 100 - 0 - 0 - 42 - 7 = 51`
+- `dep_score = 51 × 0.15 = 7.65`
+
+**Architecture (15 points max):**
+- Inputs: `circular_dep_cycles=0`, `no_test_infra=0`, `pending_migrations=0` (unknown; DB unreachable), `undocumented_env_vars=0`
+- `arch_raw = 100 - (0 × 10) - (0 × 20) - (0 × 5) - (0 × 2) = 100`
+- `arch_score = 100 × 0.15 = 15`
+
+**Total:**
+- `health_score = round(12.5 + 25 + 0 + 7.65 + 15) = 60`
+
+## Finding Summary
+- CRITICAL: 1 finding
+- HIGH: 2 findings
+- MEDIUM: 5 findings
+- LOW: 4 findings
+- Total unique findings: 12
+
+## Effort Estimate
+- Rescue effort: ~7.5 hours (CRITICAL × 2h + HIGH × 1h + MEDIUM × 0.5h + LOW × 0.25h)
+- Buffered rescue effort (+50%): ~11.25 hours
+- Rewrite effort: ~40 hours (10 user-facing pages/features × 4h/feature greenfield estimate)
+- Rescue/Rewrite ratio: 0.28x (below 1.0 = rescue wins)
+
+## Rewrite Threshold Check
+- [x] Health score ≥ 20? YES
+- [ ] >50% pages render? **NO** (runtime audit observed 0/10 verifiably rendering)
+- [x] <20 CRITICAL security findings? YES
+- [x] <10 circular dependency cycles? YES
+→ One NO gate (runtime) means REWRITE is on the table.
+
+## The Hard Question
+The static health is good (TypeScript clean, build passes, auth/tenant patterns look solid), but the runtime situation is currently unacceptable: the dev server fails in sandboxed execution and appears unstable even when started outside sandbox, with repeated connection resets and initial page probes returning 500s.
+
+That said, the failure mode looks environment/tooling-related (sandbox network interface restrictions; blocked Semgrep downloads; DB connectivity blocked; repeated “Failed to proxy … localhost:3000” errors) more than fundamental code rot. The dependency graph in `src/` has no cycles and the app architecture is coherent for its size. Rewriting would burn time reimplementing working build-time plumbing, tRPC, Prisma models, and AI validation/guards that already exist.
+
+## Decision
+
+**RESCUE**
+
+### Conditions (if RESCUE)
+1. Runtime stability (dev server + `/` + `/api/health`) must be restored in ≤ 4 hours.
+2. The “Failed to proxy … localhost:3000” / `ECONNRESET` issue must be identified as configuration/tooling and eliminated (not papered over).
+3. A minimal runtime verification pass (curl + one Playwright smoke) must succeed after the fix.
+
+### Minimum Viable Rescue Path
+1. Fix dev runtime instability: eliminate proxy/reset loop, ensure `/` and `/api/health` return 200.
+2. Make runtime audits reproducible in this environment (dev server start + route probes + Lighthouse).
+3. Address dependency health quick wins:
+   - remove `playwright-report/**` (generated) from ESLint scope
+   - resolve Knip “unlisted/unresolved” (`dotenv`, `postcss-load-config`, `babel-jest`) and extraneous node_modules packages
+4. Re-run Phase 0 Runtime + Security scans to establish a trustworthy baseline (Semgrep with vendored rules or allowed network).
+
+# Rescue Decision
+
 ## Health Score: 84/100
 
 | Category | Raw Score | Weight | Weighted |

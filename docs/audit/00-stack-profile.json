@@ -1,0 +1,18 @@
+{
+  "language": "typescript",
+  "framework": "nextjs",
+  "frameworkVersion": "16.2.1",
+  "packageManager": "npm",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "typeCheckCommand": "npx tsc --noEmit",
+  "lintCommand": "npx eslint .",
+  "testCommand": "npx playwright test",
+  "orm": "prisma",
+  "deployTarget": "vercel",
+  "port": 3000,
+  "sourceDirectories": ["src"],
+  "routePattern": "src/app/**/page.tsx",
+  "apiPattern": "src/app/api/**/route.ts"
+}
+

@@ -118,9 +118,7 @@ export default function SettingsPage() {
               Save changes
             </Button>
             {saveSuccess && (
-              <span className="text-sm text-pp-success-text">
-                Saved!
-              </span>
+              <span className="text-sm text-pp-success-text">Saved!</span>
             )}
           </div>
         </div>

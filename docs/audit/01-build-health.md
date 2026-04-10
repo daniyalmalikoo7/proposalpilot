@@ -1,6 +1,47 @@
 # Build Health Audit
 
 ## Summary
+- TypeScript: 0 errors, 0 warnings across 0 files (see `docs/audit/tsc-raw.txt`)
+- ESLint: 115 errors, 0 warnings across 3 files (all in `playwright-report/trace/**` generated assets)
+- Build: PASS (elapsed: 12.4s)
+- Scripts: dev ✅, build ✅, lint ✅, test ✅, start ✅
+
+## TypeScript Errors (by category)
+### Type Errors (0)
+None.
+
+### Missing Imports (0)
+None.
+
+### Configuration Issues
+- `tsconfig.json`: `strict: true`
+- Notable flags: `skipLibCheck: true`, `allowJs: true`, `moduleResolution: "bundler"`, `noEmit: true`
+
+## ESLint Errors (top 20 by frequency)
+| Rule | Count | Example Location |
+|---|---:|---|
+| `react-hooks/rules-of-hooks` | 113 | `playwright-report/trace/assets/defaultSettingsView-GTWI-W_B.js` |
+| `no-console` | 2 | `playwright-report/trace/**` |
+
+Top files by issue count:
+- `playwright-report/trace/assets/defaultSettingsView-GTWI-W_B.js`: 107 errors
+- `playwright-report/trace/uiMode.Vipi55dB.js`: 7 errors
+- `playwright-report/trace/sw.bundle.js`: 1 error
+
+## Build Output
+- Result: PASS (`next build`)
+- Warnings observed in output:
+  - `Warning: \`--localstorage-file\` was provided without a valid path`
+  - `npm warn Unknown env config "devdir". This will stop working in the next major version of npm.`
+
+## Raw Data
+- TypeScript: `docs/audit/tsc-raw.txt`
+- ESLint: `docs/audit/eslint-raw.json` (stdout: `docs/audit/eslint-stdout.txt`)
+- Build: `docs/audit/build-raw.txt` (timing: `docs/audit/build-meta.json`)
+
+# Build Health Audit
+
+## Summary
 - TypeScript: 0 errors, 0 warnings across 0 files
 - ESLint: 2 errors, 0 warnings — top rule: no-console (2)
 - Build: PASS (time: 5.7s compile + static gen)

@@ -1,17 +1,7 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm.
 Environment variables loaded from .env
 Prisma schema loaded from prisma/schema.prisma
 Datasource "db": PostgreSQL database "postgres", schema "public" at "aws-1-ap-northeast-2.pooler.supabase.com:5432"
+Error: P1001: Can't reach database server at `aws-1-ap-northeast-2.pooler.supabase.com:5432`
 
-No migration found in prisma/migrations
-
-┌─────────────────────────────────────────────────────────┐
-│  Update available 6.19.3 -> 7.7.0                       │
-│                                                         │
-│  This is a major update - please follow the guide at    │
-│  https://pris.ly/d/major-version-upgrade                │
-│                                                         │
-│  Run the following to update                            │
-│    npm i --save-dev prisma@latest                       │
-│    npm i @prisma/client@latest                          │
-└─────────────────────────────────────────────────────────┘
-Database schema is up to date!
+Please make sure your database server is running at `aws-1-ap-northeast-2.pooler.supabase.com:5432`.

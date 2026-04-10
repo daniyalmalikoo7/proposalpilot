@@ -1,6 +1,64 @@
 # Security Audit
 
 ## Summary
+- SAST findings: 0 critical, 0 high, 0 medium, 0 low (**Semgrep could not fetch rulesets due to network/proxy restrictions; results are not authoritative**)
+- Secrets detected: 0 findings (pattern scan over repo + `src/`)
+- Auth coverage: 5/6 API routes protected (1 intentionally public), tRPC procedures appear protected by `protectedProcedure` / `orgProtectedProcedure`
+- IDOR risk: 0 confirmed endpoints without ownership checks (sampling across API + tRPC shows consistent org scoping); 1 endpoint is user-scoped only (`/api/upload`)
+- Prompt injection: 2 AI entrypoints assessed (`/api/ai/stream-section`, `ai.generateSection`); 1 has strong sanitization/validation, 1 has weaker prompt-boundary handling
+
+## SAST Findings (Semgrep)
+Semgrep execution produced `docs/audit/semgrep-raw.json`, but the scan could not download the `auto` / pack configs because outbound access to `semgrep.dev` was blocked by proxy restrictions (403).
+
+As a result:
+- Counts in `semgrep-raw.json` are **0 findings**, but should be treated as **unknown** until Semgrep can run with network access (or with vendored rules).
+
+## Secret Leaks
+No matches found for common token/key patterns (sampled):
+- `sk-...` (OpenAI-style)
+- `AKIA...` (AWS)
+- `ghp_...` (GitHub)
+- `BEGIN * PRIVATE KEY`
+- simple `password="..."` patterns under `src/`
+
+## Authentication Coverage
+### API Routes (filesystem enumerated)
+| Route | Auth Method | Status |
+|---|---|---|
+| `/api/health` | None (public health check) | **Public (intentional)** |
+| `/api/upload` | `auth()` (Clerk) requires `userId` | **Protected** |
+| `/api/upload/kb` | `auth()` (Clerk) requires `userId` + `orgId` | **Protected** |
+| `/api/ai/stream-section` | `auth()` (Clerk) requires `userId` + `orgId` | **Protected** |
+| `/api/trpc/[trpc]` | tRPC context via Clerk `auth()` | **Protected by procedure-level guards** |
+| `/api/webhooks/stripe` | Stripe signature verification (`STRIPE_WEBHOOK_SECRET`) | **Protected (signature)** |
+
+### tRPC Procedures
+Observed router usage:
+- `orgProtectedProcedure` for org-scoped reads/writes (proposal/kb/ai/billing/settings)
+- `protectedProcedure` for settings `getOrg` to allow pre-provision flows
+- No observed use of `publicProcedure` in `src/server/routers/*`
+
+## IDOR Assessment
+Sampling indicates org ownership checks are consistently applied:
+- `proposal.get/list/*` query by `orgId: ctx.internalOrgId`
+- `kb.list/search/delete` query by `orgId: ctx.internalOrgId`
+- `/api/ai/stream-section` verifies `proposalId` belongs to internal org before any KB fetch or generation
+
+Potential weak spot to track:
+- `/api/upload` is authenticated by `userId` only (no org check). It currently looks like an extraction utility that returns chunks without DB writes, but it still processes untrusted file input and should remain rate-limited and authenticated (it is).
+
+## AI/Prompt Injection Assessment
+| Endpoint | User Input in Prompt | Input Sanitized | Output Validated | Risk Level |
+|---|---|---|---|---|
+| `/api/ai/stream-section` | section title, requirements, instructions, KB item content, brand voice | **Yes** (`renderPrompt` sanitizes variables; explicit `sanitizeForPrompt` on KB/brand voice); guard checks | **Yes** (`SectionGeneratorOutputSchema`) | Low |
+| `ai.generateSection` (tRPC) | section title, requirements, instructions, KB item content, brand voice | **Partial/unclear** (prompt variables built without explicit per-field sanitization in this router) | **Yes** (`SectionGeneratorOutputSchema`) | Medium |
+
+## Raw Data
+- Semgrep: `docs/audit/semgrep-raw.json` (stderr: `docs/audit/semgrep-stderr.txt`)
+
+# Security Audit
+
+## Summary
 - SAST findings: 0 critical, 0 high, 0 medium, 0 low (Semgrep — 103 rules, 226 files)
 - Secrets detected: 0 findings (manual scan; gitleaks not installed)
 - Auth coverage: 5/5 API routes protected (0 unprotected)

@@ -1,139 +1,99 @@
 # Fix Plan
 
 ## Total Estimate
-- Minimum viable rescue (Layers 0–4): ~8 hours
+- Minimum viable rescue (Layers 0–4): ~8.5 hours
 - Full rescue (including Layer 5): ~11 hours
-- Devil's Advocate estimate: ~11 hours
-- Delta: within range (L5 polish deferred accounts for difference)
-
----
+- Devil's Advocate estimate: ~11.25 hours (buffered)
+- Variance: within 1.3x — acceptable
 
 ## Layer 0: Auto-Fixes
-**Time:** ~10 min | **Findings:** L1, L4
-**Verify:** `npm run lint && npm run build`
+**Time:** ~15 min | **Verify:** `npm run build`
 
-| Step | Command | Expected Result |
-|------|---------|-----------------|
-| 0.1 | `npx eslint --fix scripts/` | Removes 2 `no-console` errors in scripts/test-gemini.ts |
-| 0.2 | `npm prune` | Removes 4 extraneous packages (@emnapi/*, @tybys/wasm-util) from node_modules |
+| Step | Command | Expected Result | Finding(s) |
+|------|---------|-----------------|------------|
+| 0.1 | `npx prettier --write .` | Formatting normalized | — |
+| 0.2 | `ESLINT_USE_FLAT_CONFIG=false npx eslint src/ --fix` | Auto-fixable lint issues resolved | H1 (partial) |
+| 0.3 | `npm prune` | 4 extraneous packages removed | L2 |
+| 0.4 | `npm update` | Minor/patch-behind packages updated | L4 |
 
-**Findings resolved:** L1, L4
-**Commit after:** `fix(auto): remove no-console lint errors and extraneous node_modules`
-
----
+**Commit:** `fix(auto): deterministic fixes — prettier, eslint --fix, npm prune, npm update`
 
 ## Layer 1: Build Fixes
-**Time:** ~30 min | **Findings:** M1
-**Verify:** `npm run build` — zero deprecation warnings
+**Time:** ~1 hour | **Verify:** `npx tsc --noEmit && npm run build`
 
 | WP# | Finding(s) | Files | What to Fix | Verify |
 |-----|-----------|-------|-------------|--------|
-| 1.1 | M1 | `src/middleware.ts` → `src/proxy.ts` | Rename `src/middleware.ts` to `src/proxy.ts` per Next.js 16 convention. The file content stays identical — only the filename changes. Next.js 16 automatically picks up `src/proxy.ts` as the middleware/proxy file. Verify the Clerk `clerkMiddleware` still applies to protected routes after rename. | `npm run build` — no `⚠ middleware file convention is deprecated` warning |
+| 1.1 | H1 | `.eslintrc.json` or `.eslintignore` | Add `playwright-report/**` to ESLint `ignorePatterns` so generated trace files don't pollute lint results. | `ESLINT_USE_FLAT_CONFIG=false npx eslint src/ --format json 2>&1 \| node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf8'));console.log(d.reduce((a,f)=>a+f.errorCount,0),'errors')"` |
+| 1.2 | M4 | `package.json`, `postcss.config.js`, `jest.config.js` | Resolve unlisted/unresolved packages: add `postcss-load-config` and `dotenv` to `devDependencies` (they're used by PostCSS config and Playwright); fix or remove `babel-jest` reference in Jest config. | `npx knip --reporter json 2>&1 \| node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf8'));console.log('unlisted:',d.unlisted?.length??0,'unresolved:',d.unresolved?.length??0)"` |
 
-**Commit after:** `fix(build): rename middleware.ts to proxy.ts for Next.js 16 convention`
-
----
+**Commit per WP:** `fix(build): exclude playwright-report from eslint scope`, `fix(build): resolve unlisted and unresolved packages`
 
 ## Layer 2: Security Fixes
-**Time:** 0 — No security findings to fix
-**Verify:** `semgrep scan --config p/owasp-top-ten --json` — zero findings
+**Time:** ~2 hours | **Verify:** re-run Semgrep (with network or vendored rules), review auth coverage
 
-No CRITICAL or HIGH security findings were found in Phase 0. Layer 2 is a no-op for this codebase.
+| WP# | Finding(s) | Files | What to Fix | Verify |
+|-----|-----------|-------|-------------|--------|
+| 2.1 | H3 | `src/server/routers/ai.ts` | Add explicit `sanitizeForPrompt` call on all user-supplied fields (`title`, `requirements`, `instructions`, `kbContent`, `brandVoice`) before they're interpolated into the prompt template, matching the pattern already used in `/api/ai/stream-section`. | Manual review + grep for `sanitizeForPrompt` usage consistency |
+| 2.2 | H2 | CI/tooling | Re-run Semgrep with vendored rules or in an environment with unrestricted network access to `semgrep.dev`. Produce authoritative SAST baseline. | `semgrep scan --config auto --json` produces findings file |
 
-Verification checkpoint still required: re-run Semgrep to confirm no regressions from Layer 0–1 changes.
-
----
+**Commit per WP:** `fix(security): sanitize prompt inputs in ai.generateSection`, `chore(security): re-run semgrep with authoritative ruleset`
 
 ## Layer 3: Feature Fixes
-**Time:** ~2 hours | **Findings:** H3
-**Verify:** Start dev server, navigate to each route, confirm skeleton loader appears before data loads
+**Time:** ~2.5 hours | **Verify:** `npm run dev` + curl every page route returns 200
 
 | WP# | Finding(s) | Files | What to Fix | Verify |
 |-----|-----------|-------|-------------|--------|
-| 3.1 | H3 | `src/app/(app)/dashboard/loading.tsx` (create) | Create a `loading.tsx` file that renders a skeleton layout matching the dashboard page structure: header skeleton, stat card skeletons (3–4 cards), content area skeleton. Use existing design tokens (`bg-muted`, `animate-pulse`, `rounded-md`, etc.) consistent with patterns in `knowledge-base/page.tsx` and `proposals/page.tsx`. | Navigate to `/dashboard` — skeleton visible before hydration completes |
-| 3.2 | H3 | `src/app/(app)/onboarding/loading.tsx` (create) | Create a `loading.tsx` with a centered card skeleton matching the onboarding step layout: title skeleton, description skeleton, input/button area skeleton. | Navigate to `/onboarding` — no blank flash |
-| 3.3 | H3 | `src/app/(app)/settings/loading.tsx` (create) | Create a `loading.tsx` with a settings page skeleton: section header skeleton, form field skeletons. This loading file covers both `/settings` and `/settings/brand-voice` since `brand-voice` is a child segment — a separate `brand-voice/loading.tsx` is only needed if the sub-route needs different treatment. Add `src/app/(app)/settings/brand-voice/loading.tsx` as well to be explicit. | Navigate to `/settings` and `/settings/brand-voice` — no blank flash |
+| 3.1 | C1 | Next.js config, middleware, `.env` | Diagnose and fix dev server runtime instability. The repeated "Failed to proxy localhost:3000" / ECONNRESET pattern suggests: (a) missing/invalid env vars causing Clerk middleware to error on every request, (b) a proxy/rewrite loop, or (c) a port conflict. Steps: verify `.env` has all required Clerk keys, start dev server, check for middleware errors, isolate whether it's a Clerk auth redirect loop or a network-level issue. | `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/` returns `200` (or `302` for auth-required routes) |
 
-**Commit after each WP:** one commit per loading.tsx file (3 commits total):
-- `fix(ux): add loading skeleton for /dashboard`
-- `fix(ux): add loading skeleton for /onboarding`
-- `fix(ux): add loading skeletons for /settings and /settings/brand-voice`
+**Commit:** `fix(runtime): resolve dev server proxy loop / ECONNRESET`
 
----
+**NOTE:** WP 3.1 (C1) is the highest-priority work package in the entire rescue. It blocks all runtime verification, Lighthouse testing, and meaningful E2E testing. It should be attempted first within Layer 3, and if it takes >4 hours, the rescue should be reassessed per the Devil's Advocate conditions.
 
 ## Layer 4: Test Creation
-**Time:** ~4 hours | **Findings:** H1, H2
-**Verify:** `npm test` exits 0 with test results
+**Time:** ~2.5 hours | **Verify:** `npx playwright test` + `npx jest`
 
-### Step 4.0 — Create jest.config.ts (H1 prerequisite)
+| WP# | Feature/Path | Test File | Assertions | Finding(s) |
+|-----|-------------|-----------|------------|------------|
+| 4.1 | Health check (`/api/health`) | `tests/api/health.spec.ts` | Returns 200, valid JSON body | M6 |
+| 4.2 | Landing page (`/`) | `tests/e2e/landing.spec.ts` | Page loads, key elements visible, no console errors | M6 |
+| 4.3 | Auth flow (`/sign-in` → `/dashboard`) | `tests/e2e/auth-flow.spec.ts` | Clerk sign-in renders, protected routes redirect unauthenticated users | M6 |
+| 4.4 | Proposal CRUD (`/proposals`) | `tests/e2e/proposals.spec.ts` | List loads, create proposal works, editor opens | M6 |
+| 4.5 | Knowledge base (`/knowledge-base`) | `tests/e2e/kb.spec.ts` | KB page loads, upload form visible | M6 |
+| 4.6 | tRPC router unit tests | `tests/unit/routers/*.test.ts` | Input validation, auth guards, org scoping for proposal/kb/ai routers | M6 |
 
-| WP# | Finding(s) | Files | What to Fix | Verify |
-|-----|-----------|-------|-------------|--------|
-| 4.0 | H1 | `jest.config.ts` (create), `jest.setup.ts` (create) | Create `jest.config.ts` at project root that configures: `testEnvironment: 'node'` for server-side tests, `moduleNameMapper` for `@/*` path aliases matching tsconfig paths, `transform` using `ts-jest` or `babel-jest` with Next.js babel config, `setupFilesAfterFramework: ['./jest.setup.ts']`. Create minimal `jest.setup.ts` that imports `@testing-library/jest-dom`. Target: `src/**/*.test.ts`. | `npm test` runs without config error; `npx jest --listTests` shows test files |
-
-**Commit:** `fix(test): add jest.config.ts and jest.setup.ts`
-
-### Step 4.1 — Write unit tests (H2)
-
-Priority order: test the highest-risk server-side logic first.
-
-| WP# | Finding(s) | Test File | What to Test | Assertions |
-|-----|-----------|-----------|-------------|------------|
-| 4.1 | H2 | `src/server/routers/proposal.test.ts` | tRPC proposal router — create, list, update, delete procedures. Mock `ctx.db` with in-memory stub. Mock `ctx.internalOrgId`. | create returns a new proposal with correct orgId scoping; getById with wrong orgId returns null; delete is org-scoped |
-| 4.2 | H2 | `src/server/routers/kb.test.ts` | tRPC kb router — create KB item, get by id, delete. Focus on org-scoping. Mock db. | getById with correct orgId returns item; getById with different orgId returns not-found error |
-| 4.3 | H2 | `src/lib/ai/prompts/base.test.ts` | `sanitizeForPrompt()` function — the prompt injection defence. Also test `renderPrompt()` variable substitution and missing-variable detection. | strips `<s>`, `<user>` tags; breaks `{{` template syntax; enforces 10k char limit; renderPrompt throws on missing variable |
-| 4.4 | H2 | `src/lib/middleware/rate-limit.test.ts` | `checkRateLimit()` function — sliding window logic. | allows requests under limit; throws on exceeding limit; resets after window |
-
-**Commit after each WP:** one commit per test file.
-
----
+**Commit per WP:** `test(e2e): add smoke tests for [feature]`, `test(unit): add tRPC router tests`
 
 ## Layer 5: Polish (post-MVP backlog)
-**Time:** ~3 hours | **Findings:** M2, M3, M4, M5, L2, L3, L5, L6, L7
+These are MEDIUM and LOW findings deferred from the minimum viable rescue. Tracked for completeness.
 
-These are deferred — do NOT fix during the minimum viable rescue.
-
-| # | Finding | Effort | Notes |
-|---|---------|--------|-------|
-| M2 | Env validation (custom proxy → Zod via @t3-oss/env-nextjs) | ~1h | Migrate `src/lib/config.ts` to t3-env. Low risk of breakage but touches env access across all routes. |
-| M3 | Prisma migrations baseline | ~30min | Run `npx prisma migrate dev --name init` to create baseline migration from current schema. No schema changes needed. |
-| M4 | 14 major-version-behind deps | ~2h | Upgrade one at a time, in this order: (1) next + eslint-config-next (patch to 16.2.2), (2) @types/node, (3) @clerk/nextjs 6→7 (check Clerk changelog), (4) lucide-react 0→1. Defer stripe 17→22, prisma 6→7, tailwind 3→4, zod 3→4 (these are large breaking upgrades). |
-| M5 | @anthropic-ai/sdk 0.36.3→0.85.0 | ~1h | Upgrade and verify AI streaming endpoint still works. Check for API breaking changes in changelog. |
-| L2 | ESLint .eslintrc → flat config | ~30min | Migrate to `eslint.config.js`. Required before ESLint v10. |
-| L3 | jest-environment-jsdom CVEs | ~15min | Upgrade jest + jest-environment-jsdom to v30. Only needed once tests exist. |
-| L5 | --localstorage-file Node.js warning | ~15min | Trace source (Next.js 16 internal). Likely resolves with next patch upgrade. |
-| L6 | 12 orphan modules | ~30min | Review each; remove confirmed dead code (likely `src/lib/theme.tsx`). |
-| L7 | 9 minor/patch packages behind | ~15min | Batch upgrade: `npx npm-check-updates -u --target minor && npm install` |
-
----
+| # | Finding | Category | Severity | Effort |
+|---|---------|----------|----------|--------|
+| M1 | 7 unused production deps | DEPENDENCY | MEDIUM | 15 min |
+| M2 | 4 unused devDeps | DEPENDENCY | MEDIUM | 10 min |
+| M3 | 14 major-behind packages | DEPENDENCY | MEDIUM | 2–4 hours (per-package evaluation) |
+| M5 | 16 unused exports | DEPENDENCY | MEDIUM | 20 min (knip --fix) |
+| M7 | 7 unused files | DEPENDENCY | MEDIUM | 15 min (review + delete) |
+| L1 | 4 low CVEs in test deps | DEPENDENCY | LOW | 30 min (major bump jest-environment-jsdom) |
+| L3 | ESLint flat config migration | BUILD | LOW | 1–2 hours |
+| L5 | Zod env validation upgrade | ARCHITECTURE | LOW | 1 hour |
 
 ## Verification Checkpoints
-
 | After | Command | Must Pass |
 |-------|---------|-----------|
-| Layer 0 | `npm run build && npm run lint` | Exit code 0, zero lint errors |
-| Layer 1 | `npm run build` | Zero deprecation warnings for middleware |
-| Layer 2 | `semgrep scan --config p/owasp-top-ten --json docs/audit/semgrep-raw.json` | Zero CRITICAL findings |
-| Layer 3 | Start dev server, navigate to `/dashboard`, `/onboarding`, `/settings`, `/settings/brand-voice` | Skeleton loader visible on each route before content appears |
-| Layer 4 | `npm test` | All tests pass, zero failures |
+| Layer 0 | `npm run build` | Exit code 0 |
+| Layer 1 | `npx tsc --noEmit && ESLINT_USE_FLAT_CONFIG=false npx eslint src/ --format json` | 0 TS errors, 0 src ESLint errors |
+| Layer 2 | `semgrep scan --config auto --json` (with network) | 0 CRITICAL findings |
+| Layer 3 | `npm run dev` + `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/` | Dev server stable, pages return 200/302 |
+| Layer 4 | `npx playwright test && npx jest` | All tests green |
 
----
-
-## Dependency Order Summary
-
+## Dependency Graph (execution order)
 ```
 Layer 0 (auto-fixes)
-  ↓ [build must pass]
-Layer 1 (build: middleware rename)
-  ↓ [build clean, no warnings]
-Layer 2 (security: no-op, but verify)
-  ↓ [zero security regressions]
-Layer 3 (feature: loading.tsx files)
-  ↓ [UX verified manually]
-Layer 4 (tests: jest config first, then unit tests)
-  H1 (jest.config.ts) → must exist before H2 (write tests)
-  ↓ [all tests pass]
-Layer 5 (polish: deferred)
+  └→ Layer 1 (build fixes)
+       ├→ Layer 2 (security fixes)  ← can start after Layer 1
+       └→ Layer 3 (feature fixes)   ← can start after Layer 1
+            └→ Layer 4 (test creation) ← requires Layer 3 (runtime must work)
+                 └→ Layer 5 (polish)   ← post-MVP backlog
 ```
 
-**File conflict check:** No file is touched in more than one work package within a layer. Layer 1 touches only `src/middleware.ts` → `src/proxy.ts`. Layer 3 creates 4 new files in separate directories. Layer 4 creates 5 new files (jest.config.ts, jest.setup.ts, 3 test files).
+Note: Layers 2 and 3 can run in parallel after Layer 1 completes, since security fixes (prompt sanitization) and runtime fixes (dev server) touch different files. Layer 4 depends on Layer 3 because E2E tests require a working dev server.

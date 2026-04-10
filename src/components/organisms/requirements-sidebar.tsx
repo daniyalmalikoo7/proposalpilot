@@ -59,7 +59,10 @@ export function RequirementsSidebar({
         </div>
         <div className="flex-1 space-y-2 overflow-y-auto p-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="space-y-1.5 rounded-md border border-pp-border p-3">
+            <div
+              key={i}
+              className="space-y-1.5 rounded-md border border-pp-border p-3"
+            >
               <Skeleton className="h-3 w-full" />
               <Skeleton className="h-3 w-4/5" />
               <Skeleton className="h-3 w-1/2" />
@@ -95,7 +98,9 @@ export function RequirementsSidebar({
   return (
     <aside className="flex h-full w-72 flex-shrink-0 flex-col border-r border-pp-border bg-pp-background-card">
       <div className="border-b border-pp-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-pp-foreground">Requirements</h2>
+        <h2 className="text-sm font-semibold text-pp-foreground">
+          Requirements
+        </h2>
         <p className="mt-0.5 text-xs text-pp-foreground-muted">
           {addressedCount} / {requirements.length} addressed
         </p>

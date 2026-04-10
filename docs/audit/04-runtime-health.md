@@ -1,6 +1,73 @@
 # Runtime Health Audit
 
 ## Summary
+- Dev server: starts ✅ (outside sandbox); starts ❌ (inside sandbox)
+- Pages: 0/10 verified rendering correctly (initial probes returned `500` and later requests timed out)
+- API routes: unable to validate responses reliably due to dev server connection resets/timeouts
+- Console/server errors: repeated `ECONNRESET` / `socket hang up` with messages like `Failed to proxy http://localhost:3000/...`
+- Lighthouse: not run (server was not stable enough to complete fetches)
+
+## Dev Server Startup
+### In sandboxed execution
+`npm run dev` failed immediately with:
+- `uv_interface_addresses returned Unknown system error 1` (from `node:os networkInterfaces`)
+
+This blocks runtime testing in the sandboxed environment.
+
+### Outside sandbox (host-bound)
+`npm run dev -- -H 127.0.0.1 -p 3000` reported readiness:
+- `✓ Ready in 398ms`
+
+However, immediately after startup the server log began emitting repeated connection reset errors (see below).
+
+## Page Results
+Routes enumerated from filesystem (`src/app/**/page.tsx`):
+
+| Route | HTTP Status | Renders Content | Console Errors | Screenshot |
+|---|---:|---|---|---|
+| `/` | 500 (initial probe) / timeout later | No (error) | Server log shows `ECONNRESET` | Not captured |
+| `/sign-in` | 500 (initial probe) / timeout later | No (error) | Server log shows `ECONNRESET` | Not captured |
+| `/sign-up` | 500 (initial probe) / timeout later | No (error) | Server log shows `ECONNRESET` | Not captured |
+| `/onboarding` | 500 (initial probe) / timeout later | No (error) | Server log shows `ECONNRESET` | Not captured |
+| `/dashboard` | 500 (initial probe) / timeout later | No (error) | Server log shows `ECONNRESET` | Not captured |
+| `/proposals` | 500 (initial probe) / timeout later | No (error) | Server log shows `ECONNRESET` | Not captured |
+| `/proposals/[id]` | 500 (initial probe via `/proposals/test`) / timeout later | No (error) | Server log shows `ECONNRESET` | Not captured |
+| `/knowledge-base` | 500 (initial probe) / timeout later | No (error) | Server log shows `ECONNRESET` | Not captured |
+| `/settings` | 500 (initial probe) / timeout later | No (error) | Server log shows `ECONNRESET` | Not captured |
+| `/settings/brand-voice` | not reached (probe hung) | Unknown | Unknown | Not captured |
+
+## Broken Pages (detail)
+Observed server-side errors (representative samples):
+- `Failed to proxy http://localhost:3000/ Error: socket hang up (code: ECONNRESET)`
+- `Failed to proxy http://localhost:3000/sign-in Error: socket hang up (code: ECONNRESET)`
+- `Failed to proxy http://localhost:3000/sign-up Error: socket hang up (code: ECONNRESET)`
+
+This indicates runtime is currently **unstable** in this environment and prevents meaningful route-by-route verification.
+
+## API Route Results
+API routes enumerated from filesystem (`src/app/api/**/route.ts`):
+
+| Route | Method | Status | Valid Response | Invalid Input Handling |
+|---|---|---:|---|---|
+| `/api/health` | GET | timeout | Unknown | N/A |
+| `/api/upload` | POST | timeout | Unknown | Unknown |
+| `/api/upload/kb` | POST | timeout | Unknown | Unknown |
+| `/api/ai/stream-section` | POST | timeout | Unknown | Unknown |
+| `/api/webhooks/stripe` | POST | timeout | Unknown | Unknown |
+| `/api/trpc/[trpc]` | GET/POST | timeout | Unknown | Unknown |
+
+## Lighthouse Scores
+Not run (server did not reliably respond to HTTP fetches).
+
+## Screenshots
+Not captured (Playwright navigation not attempted due to unstable server responses).
+
+## Raw Data
+- Dev server log excerpt: captured via terminal output during `next dev` session (shows repeated proxy `ECONNRESET` messages).
+
+# Runtime Health Audit
+
+## Summary
 - Dev server: NOT STARTED — permission denied during audit (background process not permitted)
 - Pages: 10/10 compiled successfully (all dynamic routes in build output)
 - API routes: 5/5 compiled successfully — no build-time errors

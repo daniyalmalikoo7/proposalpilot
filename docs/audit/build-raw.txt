@@ -1,3 +1,4 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm.
 
 > proposalpilot@0.1.0 build
 > next build
@@ -5,25 +6,25 @@
 ▲ Next.js 16.2.1 (Turbopack)
 - Environments: .env.local, .env
 
-⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
   Creating an optimized production build ...
-✓ Compiled successfully in 5.7s
+✓ Compiled successfully in 5.2s
   Running TypeScript ...
-  Finished TypeScript in 6.2s ...
-  Collecting page data using 9 workers ...
-(node:10636) Warning: `--localstorage-file` was provided without a valid path
+  Finished TypeScript in 4.9s ...
+  Collecting page data using 1 worker ...
+(node:17246) Warning: `--localstorage-file` was provided without a valid path
 (Use `node --trace-warnings ...` to show where the warning was created)
-  Generating static pages using 9 workers (0/5) ...
-  Generating static pages using 9 workers (1/5) 
-  Generating static pages using 9 workers (2/5) 
-  Generating static pages using 9 workers (3/5) 
-✓ Generating static pages using 9 workers (5/5) in 236ms
+  Generating static pages using 1 worker (0/6) ...
+  Generating static pages using 1 worker (1/6) 
+  Generating static pages using 1 worker (2/6) 
+  Generating static pages using 1 worker (4/6) 
+✓ Generating static pages using 1 worker (6/6) in 97ms
   Finalizing page optimization ...
 
 Route (app)
 ┌ ƒ /
 ├ ƒ /_not-found
 ├ ƒ /api/ai/stream-section
+├ ƒ /api/health
 ├ ƒ /api/trpc/[trpc]
 ├ ƒ /api/upload
 ├ ƒ /api/upload/kb

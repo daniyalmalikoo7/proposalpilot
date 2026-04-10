@@ -2,7 +2,12 @@ import { Skeleton } from "@/components/atoms/skeleton";
 
 export default function SettingsLoading() {
   return (
-    <div className="space-y-6" role="status" aria-label="Loading settings…" aria-busy="true">
+    <div
+      className="space-y-6"
+      role="status"
+      aria-label="Loading settings…"
+      aria-busy="true"
+    >
       {/* Page header */}
       <div className="space-y-1.5">
         <Skeleton className="h-7 w-24" />

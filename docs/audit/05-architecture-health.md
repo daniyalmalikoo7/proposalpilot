@@ -1,6 +1,63 @@
 # Architecture Health Audit
 
 ## Summary
+- Circular dependencies: 0 cycles (within `src/**`; dependency-cruiser includes cycles in `node_modules`, ignored)
+- Orphan modules: 68 files (heuristic; includes Next.js route files/components that appear as entrypoints)
+- Prisma schema: valid ✅
+- Pending migrations: unable to check ⚠️ (DB unreachable from this environment; `P1001`)
+- Schema drift: unable to check ⚠️ (requires DB access)
+- Test infrastructure: Jest ✅ + Playwright ✅
+- Test files: 9 (coverage ratio: 9 test files / ~99 source files)
+- Env vars: 11 referenced (via `src/lib/config.ts` + limited direct `process.env`), 11 documented, 0 undocumented
+
+## Circular Dependencies
+Dependency-cruiser was run without a custom config (`--no-config`) and reported **0 circular dependencies within `src/`**.
+
+Note: the raw output includes circularities in `node_modules/` (e.g., `mammoth`, `jszip`, `readable-stream`), which are external and not actionable here.
+
+## Orphan Modules
+Orphan detection is heuristic without a project-specific depcruise config. The reported orphans include many Next.js entrypoints (App Router pages/routes) which are expected to have no inbound imports.
+
+Examples (sample):
+- `src/app/(app)/dashboard/page.tsx`
+- `src/app/api/health/route.ts`
+- `src/components/atoms/button.tsx`
+
+## Database Health
+- Prisma validate: ✅ schema is valid (`docs/audit/prisma-validate-raw.txt`)
+- Prisma migrate status: ⚠️ failed to reach DB (`P1001`) (`docs/audit/prisma-migrate-raw.txt`)
+- Schema drift: ⚠️ not checked (requires `DATABASE_URL` connectivity)
+
+## File Organization
+Top-level `src/` directory file counts:
+| Directory | Files | Pattern |
+|---|---:|---|
+| `src/app` | 36 | Next.js App Router (route groups + API routes) |
+| `src/lib` | 31 | Shared services/utilities (AI, DB, middleware) |
+| `src/components` | 23 | Component library (atoms/molecules/organisms/templates) |
+| `src/server` | 9 | tRPC router + server plumbing |
+
+Assessment: generally consistent App Router + service-layer split; no single directory exceeds ~36 files.
+
+## Environment Configuration
+- `.env.example`: exists ✅
+- Env validation: exists ✅ (`src/lib/config.ts` as centralized env accessor with runtime-required enforcement)
+- Undocumented env vars: none found (all referenced keys are present in `.env.example`)
+- Potentially sensitive vars in client code: expected `NEXT_PUBLIC_*` usage (documented in `.env.example`)
+
+## Test Infrastructure
+- Unit test runner: Jest (`jest.config.js`)
+- E2E test runner: Playwright (`playwright.config.ts`)
+- Test files: 9 total
+
+## Raw Data
+- dependency-cruiser: `docs/audit/depcruise-raw.json` (stderr: `docs/audit/depcruise-stderr.txt`)
+- Prisma validate: `docs/audit/prisma-validate-raw.txt`
+- Prisma migrate: `docs/audit/prisma-migrate-raw.txt`
+
+# Architecture Health Audit
+
+## Summary
 - Circular dependencies: 0 cycles (in src/ — node_modules excluded)
 - Orphan modules: 12 files (not reachable from dependency graph entry points)
 - Prisma schema: valid ✅
