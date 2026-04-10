@@ -1,104 +1,70 @@
 # Code Review Report
 
-## Scope
-All rescue commits from `pre-rescue-20260409` to HEAD — 13 commits, 23 files changed, 2,964 insertions, 59 deletions.
+## Summary
+- Rescue commits: 8
+- Files changed in `src/`: 17
+- Lines added: 361, removed: 26
+- `any` types introduced: 0 (target: 0)
+- `@ts-ignore` introduced: 0 (target: 0)
+- New dependencies added: 3 (all devDependencies, all justified)
+- New features added: 0 (target: 0)
 
-## Commit List
-
-| Commit | Message | Scope | Assessment |
-|--------|---------|-------|------------|
-| `76f28b5` | fix(auto): replace console.log with console.error | scripts/ | ✅ Correct |
-| `3722d3d` | fix(build): rename middleware.ts to proxy.ts | src/ | ✅ Correct |
-| `489b8a5` | fix(ux): add loading skeleton for /dashboard | src/ | ✅ Correct |
-| `8a7d818` | fix(ux): add loading skeleton for /onboarding | src/ | ✅ Correct |
-| `4460b32` | fix(ux): add loading skeletons for /settings and /settings/brand-voice | src/ | ✅ Correct |
-| `dda80ca` | feat(agents): add stack-evaluator (Phase 0) and load-tester (Phase 3) | .claude/ | ⚠️ Minor (see note) |
-| `0f47d0d` | fix(test): add jest.config.js and jest.setup.ts | root | ✅ Correct |
-| `627c47e` | test(rate-limit): add unit tests for checkRateLimit sliding window | src/ | ✅ Correct |
-| `dcb5fc2` | test(prompts): add unit tests for sanitizeForPrompt and renderPrompt | src/ | ✅ Correct |
-| `217722e` | test(proposal-router): add unit tests for list/get/updateSection with IDOR coverage | src/ | ✅ Correct |
-| `01f337d` | test(kb-router): add unit tests for list/get/delete with IDOR coverage | src/ | ✅ Correct |
-| `6fe97c3` | docs: add phase 1-2 rescue artifacts (triage, fix reports) | docs/ | ✅ Correct |
-| `b76641d` | fix(a11y): add role=status, aria-label, aria-busy to loading skeleton wrappers | src/ | ✅ Correct |
-
-**Note on `dda80ca`:** Prefix `feat` was used for workflow agent definition files (`.claude/agents/`). These are infrastructure config, not product features — `chore` would be more accurate. No functional impact; non-blocking.
+## Commit Inventory
+| Hash | Message | Scope | Verdict |
+|------|---------|-------|---------|
+| `a90a5a7` | fix(auto): prettier formatting | `src/` (13 files), docs | ✅ Formatting only |
+| `dd0cec4` | fix(auto): npm update minor/patch dependencies | `package-lock.json` | ✅ Semver-compatible updates |
+| `688cf80` | fix(build): exclude playwright-report from eslint scope | `.eslintrc.json` | ✅ Correct config change |
+| `21e86e6` | fix(build): add unlisted devDependencies | `package.json`, `package-lock.json` | ✅ Justified (postcss-load-config, dotenv, babel-jest) |
+| `c2b034d` | fix(security): sanitize prompt inputs in ai.generateSection | `src/server/routers/ai.ts` | ✅ Correct pattern match with stream-section |
+| `640dcd6` | chore(security): re-run semgrep with authoritative ruleset | `docs/fix/` | ✅ Audit artifact |
+| `d76157f` | test(unit): add AI router tests | `src/server/routers/ai.test.ts` | ✅ 10 tests, follows project pattern |
+| `4b6f46e` | docs(fix): add Phase 2 fix reports | `docs/fix/`, `.claude/state/` | ✅ Phase artifacts |
 
 ## Engineering Standard Compliance
+| Check | Status | Details |
+|-------|--------|---------|
+| No `any` types introduced | ✅ | Zero `any` or `as any` in rescue diff (6 pre-existing in landing components) |
+| No `@ts-ignore` | ✅ | Zero introduced |
+| Error handling | ✅ | Security fix preserves existing TRPCError pattern |
+| Naming conventions | ✅ | All files kebab-case, all functions camelCase |
+| Consistent imports | ✅ | `sanitizeForPrompt` import matches existing `loadPrompt`/`renderPrompt` pattern |
 
-### TypeScript Strictness
-| Check | Result | Detail |
-|-------|--------|--------|
-| `as any` in rescue changes | ✅ NONE | All 6 pre-existing `as any` usages are in landing page components (`hero.tsx`, `nav.tsx`, `pricing.tsx`, `footer.tsx`) — pre-rescue, not touched |
-| `@ts-ignore` in rescue changes | ✅ NONE | Zero occurrences |
-| `as unknown as` in rescue changes | ✅ NONE | One pre-existing instance in `src/lib/db.ts` (Prisma global singleton pattern) — pre-rescue |
-| Explicit return types | ✅ | All loading.tsx files export typed React components |
+## Rescue Anti-Pattern Check
+| Check | Status | Details |
+|-------|--------|---------|
+| No new features | ✅ | Zero new routes, pages, or components. All page diffs are prettier formatting only |
+| No unnecessary API changes | ✅ | `ai.generateSection` public API unchanged — only internal prompt building modified |
+| No unjustified new deps | ✅ | 3 devDeps added: `postcss-load-config` (config type), `dotenv` (Playwright env), `babel-jest` (Jest transform) — all were already used but unlisted |
+| No deleted functionality | ✅ | Zero deletions of functional code |
 
-### No New Features Introduced
-All rescue changes are fixes and tests. The `feat(agents)` commit adds only `.claude/` workflow agent files — no product code, no new routes, no new UI features. Engineering standard compliance: **PASS**.
+## Commit Quality
+- Total rescue commits: 8
+- Conventional format: 8/8 ✅
+- Descriptive messages: 8/8 ✅
+- One logical change per commit: 8/8 ✅
+- Revert-friendly granularity: each auto-fix tool has its own commit, security fix separate from tests
 
-### No Refactoring During Rescue
-- `src/proxy.ts`: pure rename from `src/middleware.ts`, zero content changes (confirmed by `git show`)
-- `scripts/test-gemini.ts`: only `console.log` → `console.error` substitution; no logic changes
-- Loading skeletons: new files only, no modifications to existing components
+## Security Fix Review (c2b034d)
+The substantive code change adds `sanitizeForPrompt()` calls to 5 locations in `ai.generateSection`:
+1. KB item `title` — ✅ matches `stream-section` pattern
+2. KB item `content` — ✅ matches `stream-section` pattern
+3. Brand voice `tone`, `style`, `terminology` — ✅ matches `stream-section` pattern
+4. Individual requirement strings — ✅ per-item sanitization
+5. Optional `instructions` field — ✅ with correct null-coalescing
 
-### Git Discipline
-- All commits use conventional commit format (`type(scope): description`)
-- One logical change per commit — confirmed by `--stat` output (each commit touches only its concern)
-- No `.env` files, API keys, or secrets in any commit
+The KB context format string was also updated from `[${item.id}] ${item.type}: ${item.title}` to `[KB Item ID: ${item.id}]\nType: ${item.type}\nTitle: ${sanitizeForPrompt(item.title)}` to match the streaming endpoint's format exactly. This is a safe change — the format is consumed by the LLM, not by any downstream parser.
 
-### Design Token Usage
-All 4 loading.tsx files use only existing design tokens:
-- `border-pp-border` — existing token
-- `bg-pp-background-card` — existing token
-- Class names inherited from existing skeleton patterns
+## Test Review (d76157f)
+- 287 lines, 10 test cases in `ai.test.ts`
+- Follows the established pattern from `proposal.test.ts` and `kb.test.ts`:
+  - Mock external deps (Clerk, Prisma) at module level
+  - Inline procedure creation to avoid ESM import issues
+  - Test org-scoping (IDOR protection) and business logic separately
+- Sanitization tests call the real `sanitizeForPrompt` function (not mocked) — validates actual behavior
 
-Zero new color values, spacing values, or font sizes introduced.
-
-### Console / Debug Statements
-Zero `console.log` or `console.warn` added to `src/` in rescue changes.
-
-## Test Quality Review
-
-### Coverage Added
-| File | Tests | Coverage Target |
-|------|-------|----------------|
-| `rate-limit.test.ts` | 6 tests | sliding window, error type, key isolation, expiry |
-| `base.test.ts` | 14 tests | sanitizeForPrompt (8), renderPrompt (6) |
-| `proposal.test.ts` | 9 tests | list (4), get (3), updateSection (2) |
-| `kb.test.ts` | 8 tests | list (3), get (3), delete (2) |
-| **Total** | **37 tests** | **37/37 passing** |
-
-### Test Architecture
-- **Isolation**: All external dependencies (Clerk, Prisma, Voyage AI, logger) are mocked via `jest.mock()` — no network calls, no database connections
-- **IDOR coverage**: Every `get` and `delete` procedure has a test verifying that `orgId: ctx.internalOrgId` is always included in the Prisma `where` clause; cross-org access attempts verified to throw `TRPCError`
-- **tRPC v11 compatibility**: Tests use `initTRPC.context<TestContext>().create()` + `createCallerFactory` — correct v11 pattern, no deprecated v10 imports
-- **No real I/O**: `testEnvironment: "node"`, no filesystem or network side effects
-
-### Test Patterns
-- ✅ Unique keys per test in rate-limit tests (avoids cross-test bucket contamination)
-- ✅ `mockResolvedValueOnce` used (not `mockReturnValue`) — correct for async Prisma calls
-- ✅ Negative cases (NOT_FOUND, IDOR guards) tested alongside positive cases
-- ✅ Error instances checked with `toBeInstanceOf(TRPCError)` / `toBeInstanceOf(RateLimitError)`
-
-## Pre-Existing Issues (Not from Rescue)
-
-These were present before rescue and are out of scope:
-
-| Issue | Location | Impact |
-|-------|----------|--------|
-| `href={"/sign-in" as any}` | landing/nav.tsx, hero.tsx, footer.tsx, pricing.tsx | No a11y impact; type cast workaround |
-| `globalThis as unknown as` | src/lib/db.ts | Standard Prisma singleton pattern for Next.js hot-reload |
-| No `skip-to-main-content` link | Global | Minor WCAG 2.4.1 gap; pre-rescue |
+## Issues Found
+None — code quality meets engineering standard, rescue discipline maintained.
 
 ## Verdict
-
-**PASS** — All rescue commits meet the engineering standard.
-
-- Zero `as any` / `@ts-ignore` introduced
-- Zero new features added during rescue
-- One commit per logical change; all commits conventional-format
-- Design tokens used exclusively — no one-off values
-- Test suite: 37/37 passing, proper IDOR coverage, correct tRPC v11 patterns
-- Build: ✅ passing | TypeScript: ✅ zero errors
-
-One minor finding: `feat(agents)` commit prefix should be `chore` — non-blocking, no functional impact.
+**PASS** — All 8 rescue commits follow conventional format, contain focused single-purpose changes, introduce zero `any`/`@ts-ignore`, add no new features, and maintain consistency with existing project patterns.

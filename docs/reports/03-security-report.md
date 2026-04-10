@@ -3,72 +3,65 @@
 ## Summary
 | Category | Phase 0 | Current | Delta |
 |----------|---------|---------|-------|
-| SAST Critical | 0 | 0 | 0 |
-| SAST High | 0 | 0 | 0 |
-| SAST Warning | 0 | 1 (WARNING severity) | +1 (pre-existing, not from rescue) |
-| SAST Info | 0 | 2 (INFO severity) | +2 (pre-existing, not from rescue) |
-| Unprotected Routes | 0 | 0 | 0 |
-| IDOR Risks | 0 | 0 | 0 |
-| Secret Leaks | 0 | 0 | 0 |
-| `any` types from rescue | 0 | 0 | 0 |
+| SAST Critical | Unknown (scan failed) | 0 | N/A |
+| SAST High | Unknown (scan failed) | 0 | N/A |
+| SAST Warning | Unknown | 1 (false positive) | N/A |
+| SAST Info | Unknown | 2 (false positives) | N/A |
+| Unprotected Routes | 0 | 0 | No change |
+| IDOR Risks | 0 | 0 | No change |
+| Secret Leaks | 0 | 0 | No change |
+| Prompt Injection | 1 MEDIUM (H3) | 0 | **-1 (fixed)** |
 
 ## Semgrep Comparison
-- Phase 0 findings: 0 (103 rules, 226 files — ran without `--config auto`)
-- Current findings: 3 (254 rules, 256 files — ran with `--config auto` added)
-- Resolved: 0 (nothing was broken)
-- New from rescue changes: 0
-- **Delta explained:** 3 findings appeared because this run included `--config auto` in addition to the original p/ configs. All 3 findings are in PRE-RESCUE code, not in any rescue commit. They were not detected in Phase 0 because `--config auto` was not included.
+- Phase 0 findings: 0 (but scan was **not authoritative** — rulesets couldn't be fetched)
+- Phase 2 re-run: 3 findings (210 rules, authoritative)
+- Current (Phase 3 re-run): 3 findings (identical to Phase 2 baseline)
+- New findings introduced during rescue: **0**
 
-### Finding Details (3 total — all pre-rescue, not critical)
-| Severity | Rule | File:Line | Assessment |
-|----------|------|-----------|------------|
-| INFO | `unsafe-formatstring` | `src/app/api/trpc/[trpc]/route.ts:15` | False positive — `console.error('tRPC error on ' + path, error.message)` in dev-only error handler. Not a format string injection vulnerability. |
-| INFO | `unsafe-formatstring` | `src/components/organisms/proposal-editor/index.tsx:51` | False positive — template literal string concatenation. Not a `printf`-style format string. |
-| WARNING | `path-join-resolve-traversal` | `src/lib/ai/prompts/base.ts:84` | `path.join(PROMPTS_DIR, promptId + '.v' + version + '.md')` — `promptId` is a hardcoded constant in all callers (`"section-generator"`), NEVER user-supplied. No traversal risk in practice. |
+| # | Severity | Rule | File:Line | Status |
+|---|----------|------|-----------|--------|
+| 1 | INFO | unsafe-formatstring | `src/app/api/trpc/[trpc]/route.ts:15` | False positive — console.error with tRPC error |
+| 2 | INFO | unsafe-formatstring | `src/components/organisms/proposal-editor/index.tsx:51` | False positive — console.error with error object |
+| 3 | WARNING | path-join-resolve-traversal | `src/lib/ai/prompts/base.ts:84` | False positive — `promptId` is hardcoded from internal callers, never user input |
 
-**Verdict on new findings: all 3 are false positives.** The path-join finding would be a real risk if `promptId` came from user input — but inspection of all call sites confirms it's always a hardcoded string literal (`loadPrompt("section-generator")`).
+**0 CRITICAL, 0 HIGH** — all findings are false positives.
 
 ## Auth Coverage
-All routes protected — same as Phase 0:
-| Route | Phase 0 | Current |
-|-------|---------|---------|
-| POST /api/ai/stream-section | Clerk auth() ✅ | Clerk auth() ✅ |
-| /api/trpc/[trpc] | protectedProcedure / orgProtectedProcedure ✅ | protectedProcedure / orgProtectedProcedure ✅ |
-| POST /api/upload/kb | Clerk auth() ✅ | Clerk auth() ✅ |
-| POST /api/upload | Clerk auth() ✅ | Clerk auth() ✅ |
-| POST /api/webhooks/stripe | Stripe signature ✅ | Stripe signature ✅ |
+| Route | Auth Method | Phase 0 | Current |
+|-------|------------|---------|---------|
+| `/api/health` | None (intentionally public) | Public ✅ | Public ✅ |
+| `/api/upload` | `auth()` (Clerk userId) | Protected ✅ | Protected ✅ |
+| `/api/upload/kb` | `auth()` (Clerk userId + orgId) | Protected ✅ | Protected ✅ |
+| `/api/ai/stream-section` | `auth()` (Clerk userId + orgId) | Protected ✅ | Protected ✅ |
+| `/api/webhooks/stripe` | Stripe signature verification | Protected ✅ | Protected ✅ |
+| `/api/trpc/[trpc]` | Procedure-level (`protectedProcedure` / `orgProtectedProcedure`) | Protected ✅ | Protected ✅ |
 
-### tRPC Router Coverage (all procedures use auth)
-| Router | Protected Procedures |
-|--------|---------------------|
-| ai.ts | 7/7 orgProtectedProcedure |
-| billing.ts | 3/3 protectedProcedure |
-| kb.ts | 5/5 orgProtectedProcedure |
-| proposal.ts | 8/8 orgProtectedProcedure |
-| settings.ts | 5/5 orgProtectedProcedure |
+**28 tRPC procedure-level guards** across 5 routers (ai: 7, billing: 3, kb: 5, proposal: 8, settings: 5).
 
 ## IDOR Verification
-All DB queries include `orgId` scope — verified via unit tests and grep:
-| Endpoint | Phase 0 | Current | Test Verification |
-|---------|---------|---------|-----------------|
-| proposal.get | SAFE | SAFE | `proposal.test.ts`: "always includes orgId in the where clause" ✅ |
-| proposal.list | SAFE | SAFE | `proposal.test.ts`: "scopes the query to internalOrgId" ✅ |
-| proposal.updateSection | SAFE | SAFE | `proposal.test.ts`: "verifies proposal ownership before updating section" ✅ |
-| kb.get | SAFE | SAFE | `kb.test.ts`: "always includes orgId in the where clause" ✅ |
-| kb.delete | SAFE | SAFE | `kb.test.ts`: "throws NOT_FOUND when attempting to delete another org's item" ✅ |
-| /api/ai/stream-section | SAFE | SAFE | orgId from Clerk auth, Prisma query scoped ✅ |
+| Router | Org-scoping method | Phase 0 | Current |
+|--------|-------------------|---------|---------|
+| `proposal.*` | `where: { orgId: ctx.internalOrgId }` | OK ✅ | OK ✅ |
+| `kb.*` | `where: { orgId: ctx.internalOrgId }` | OK ✅ | OK ✅ |
+| `ai.generateSection` | Proposal + KB lookup by `orgId` | OK ✅ | OK ✅ (+ sanitization added) |
+| `ai.matchContent` | Requirement via `proposal.orgId` | OK ✅ | OK ✅ |
+| `billing.*` | `where: { orgId: ctx.internalOrgId }` | OK ✅ | OK ✅ |
+| `settings.*` | `where: { orgId: ctx.internalOrgId }` | OK ✅ | OK ✅ |
+
+## Prompt Injection
+| Endpoint | Phase 0 | Current |
+|----------|---------|---------|
+| `/api/ai/stream-section` | Low (sanitized) | Low (sanitized) ✅ |
+| `ai.generateSection` (tRPC) | **MEDIUM** (partial sanitization) | **Low** (full sanitization added in Phase 2) ✅ |
+
+`sanitizeForPrompt` now applied to all user-supplied fields in both AI endpoints. 10 unit tests validate sanitization behavior.
 
 ## Secret Scan
-- Gitleaks: not installed — manual scan performed
-- `grep` for secret patterns (sk-, AKIA, ghp_, password=) across rescue diff: **0 matches**
-- `git diff pre-rescue-20260409..HEAD | grep -i "secret\|key\|token\|password"`: only test mock references
-- New secrets committed during rescue: **none**
-- Existing env proxy pattern unchanged: all secrets still gated through `src/lib/config.ts`
+- Pattern scan for `sk-*`, `AKIA*`, `ghp_*`, `BEGIN PRIVATE KEY`: **0 matches** in `src/`
+- No new secrets committed during rescue (git diff confirms no .env files committed)
 
-## `any` Type Check (rescue commits only)
-- `git diff pre-rescue-20260409..HEAD -- src/ | grep "^+" | grep "as any\|: any"`: **0 matches**
-- Pre-existing `as any` in `src/app/_components/landing/`: 6 occurrences (href type workaround) — these are **pre-rescue** and not in any rescue commit
-- Zero `@ts-ignore` in rescue commits confirmed
+## Pre-existing Code Quality Note
+6 instances of `as any` exist in `src/app/_components/landing/` for typed route href casts. These are **pre-existing** (not introduced during rescue) and relate to Clerk auth routes not being in the Next.js typed routes manifest. Low risk — no security impact.
 
 ## Verdict
-**PASS** — Zero CRITICAL findings. Zero HIGH findings. Zero SAST critical/high findings. All API routes protected. All ID-accepting endpoints org-scoped. Zero secrets committed during rescue. The 3 new Semgrep findings are INFO/WARNING severity, pre-rescue code, and are false positives upon inspection.
+**PASS** — Zero CRITICAL findings. Zero HIGH findings. Zero new vulnerabilities introduced. Prompt injection risk downgraded from MEDIUM to LOW. Auth coverage 100%. IDOR protection verified across all routers.
