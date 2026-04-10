@@ -14,12 +14,31 @@ Read ALL of these before starting:
 ## Mandate
 
 When activated:
-1. Calculate an overall health score (0-100) using this rubric:
-   - **Build (25%):** 100 if build passes clean, -10 per TypeScript error (cap at 0), -5 per ESLint error (cap at 0)
-   - **Security (25%):** 100 base, -25 per CRITICAL finding, -10 per HIGH, -5 per MEDIUM
-   - **Runtime (20%):** (pages that render correctly / total pages) × 100
-   - **Dependencies (15%):** 100 base, -20 per critical CVE, -5 per major-version-behind dep, -2 per unused dep
-   - **Architecture (15%):** 100 base, -10 per circular dependency cycle, -5 if no tests exist, -5 per pending migration
+1. Calculate an overall health score (0-100) using the DETERMINISTIC rubric below. This formula is reproducible — two agents given the same audit reports MUST produce the same score.
+
+   **Build (25 points max):**
+   `build_raw = 100 - (ts_errors × 2, cap at 100) - (eslint_errors × 0.5, cap at 50) - (build_fails × 50)`
+   `build_score = max(0, build_raw) × 0.25`
+
+   **Security (25 points max):**
+   `sec_raw = 100 - (critical × 25) - (high × 10) - (medium × 3)`
+   `sec_score = max(0, sec_raw) × 0.25`
+
+   **Runtime (20 points max):**
+   `runtime_raw = (pages_rendering / total_pages) × 100`  (if 0 pages exist, score = 0)
+   `runtime_score = runtime_raw × 0.20`
+
+   **Dependencies (15 points max):**
+   `dep_raw = 100 - (critical_cves × 20) - (high_cves × 10) - (major_behind × 3) - (unused_deps × 1)`
+   `dep_score = max(0, dep_raw) × 0.15`
+
+   **Architecture (15 points max):**
+   `arch_raw = 100 - (circular_dep_cycles × 10) - (no_test_infra × 20) - (pending_migrations × 5) - (undocumented_env_vars × 2)`
+   `arch_score = max(0, arch_raw) × 0.15`
+
+   **Total: `health_score = round(build_score + sec_score + runtime_score + dep_score + arch_score)`**
+
+   Write the exact inputs, intermediate calculations, and final score in the output artifact. Show your work — the formula must be auditable.
 2. Count total findings from all 5 reports: CRITICAL, HIGH, MEDIUM, LOW (deduplicated).
 3. Estimate rescue effort: CRITICAL findings × 2hrs + HIGH × 1hr + MEDIUM × 30min + LOW × 15min. Compare against estimated rewrite effort (count features from runtime audit, estimate 4hrs per feature for greenfield).
 4. Apply the rewrite threshold: if health score <20 OR >50% of pages don't render OR >20 CRITICAL security findings OR architecture has >10 circular dep cycles → recommend REWRITE. Otherwise → recommend RESCUE.
@@ -82,7 +101,7 @@ Produce: `docs/audit/06-rescue-decision.md`
 3. [Specific condition]
 
 ### Minimum Viable Rescue Path
-[Ordered list of the specific fixes that get this app from current state to "shippable." Only CRITICALs and HIGHs. METIUMs and LOWs deferred to post-rescue.]
+[Ordered list of the specific fixes that get this app from current state to "shippable." Only CRITICALs and HIGHs. MEDIUMs and LOWs deferred to post-rescue.]
 ```
 
 ## Downstream Consumers

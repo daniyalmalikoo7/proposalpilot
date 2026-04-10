@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Validation Report",
+  "description": "Schema for Phase 3 validation report artifacts",
+  "type": "object",
+  "required": ["hasSummary", "hasVerdict", "hasFindings", "hasComparisonToBaseline"],
+  "properties": {
+    "hasSummary": { "const": true, "description": "Must contain ## Summary" },
+    "hasVerdict": { "const": true, "description": "Must contain a clear PASS/FAIL/WARN verdict" },
+    "hasFindings": { "const": true, "description": "Must list findings with severity" },
+    "hasComparisonToBaseline": { "const": true, "description": "Must compare against Phase 0 baseline" }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Fix Report",
+  "description": "Schema for Phase 2 fix report artifacts",
+  "type": "object",
+  "required": ["hasSummary", "hasChangesApplied", "hasVerificationResult"],
+  "properties": {
+    "hasSummary": { "const": true, "description": "Must contain ## Summary" },
+    "hasChangesApplied": { "const": true, "description": "Must list changes applied (commits, files)" },
+    "hasVerificationResult": { "const": true, "description": "Must contain verification result (build status, tool re-run)" }
+  }
+}

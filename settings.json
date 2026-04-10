@@ -2,19 +2,44 @@
   "permissions": {
     "defaultMode": "acceptEdits",
     "allow": [
-      "Read", "Edit", "MultiEdit", "Write",
-      "Bash(npm run *)", "Bash(npx *)", "Bash(node *)",
-      "Bash(pip install *)", "Bash(semgrep *)", "Bash(gitleaks *)",
-      "Bash(git status)", "Bash(git diff *)", "Bash(git add *)", "Bash(git commit:*)",
-      "Bash(git log *)", "Bash(git tag *)",
-      "Bash(curl *)", "Bash(lsof *)", "Bash(kill *)",
-      "Bash(find *)", "Bash(grep *)", "Bash(wc *)", "Bash(head *)", "Bash(tail *)",
-      "Bash(cat *)", "Bash(ls *)", "Bash(mkdir *)", "Bash(cp *)",
-      "Grep", "Glob", "LS"
+      "Bash(cat *)",
+      "Bash(cp *)",
+      "Bash(curl *)",
+      "Bash(find *)",
+      "Bash(git add *)",
+      "Bash(git commit:*)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git status)",
+      "Bash(git tag *)",
+      "Bash(gitleaks *)",
+      "Bash(grep *)",
+      "Bash(head *)",
+      "Bash(kill *)",
+      "Bash(ls *)",
+      "Bash(lsof *)",
+      "Bash(mkdir *)",
+      "Bash(node *)",
+      "Bash(npm run *)",
+      "Bash(npx *)",
+      "Bash(pip install *)",
+      "Bash(semgrep *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Edit",
+      "Glob",
+      "Grep",
+      "LS",
+      "MultiEdit",
+      "Read",
+      "Write"
     ],
     "deny": [
-      "Bash(rm -rf *)", "Bash(git push *)", "Bash(sudo:*)",
-      "Bash(npm audit fix --force*)", "Edit(.env)"
+      "Bash(git push *)",
+      "Bash(npm audit fix --force*)",
+      "Bash(rm -rf *)",
+      "Bash(sudo:*)",
+      "Edit(.env)"
     ]
   }
 }

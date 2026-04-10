@@ -1,0 +1,60 @@
+{
+  "profileName": "node-typescript",
+  "description": "Node.js + TypeScript projects (Next.js, Express, Fastify, etc.)",
+  "detection": {
+    "indicators": ["package.json", "tsconfig.json"],
+    "frameworkDetection": {
+      "nextjs": { "check": "dependencies.next || devDependencies.next", "version": "dependencies.next" },
+      "express": { "check": "dependencies.express" },
+      "fastify": { "check": "dependencies.fastify" },
+      "remix": { "check": "dependencies.@remix-run/node" },
+      "astro": { "check": "dependencies.astro" }
+    }
+  },
+  "commands": {
+    "buildCommand": "npm run build",
+    "devCommand": "npm run dev",
+    "typeCheckCommand": "npx tsc --noEmit --pretty false",
+    "lintCommand": "npx eslint . --format json",
+    "testCommand": "npx playwright test",
+    "formatCommand": "npx prettier --write .",
+    "lintFixCommand": "npx eslint --fix src/",
+    "deadCodeCommand": "npx knip --reporter json",
+    "auditCommand": "npm audit --json",
+    "outdatedCommand": "npm outdated --json",
+    "depGraphCommand": "npx depcruise src --output-type json",
+    "securityScanCommand": "semgrep scan --config auto --config p/typescript --config p/owasp-top-ten --json",
+    "lighthouseCommand": "npx lighthouse {url} --output=json --output-path={output} --chrome-flags=\"--headless\""
+  },
+  "autoFixOrder": [
+    { "tool": "prettier", "command": "npx prettier --write .", "safe": true },
+    { "tool": "eslint", "command": "npx eslint --fix src/", "safe": true, "maxPasses": 3 },
+    { "tool": "knip", "command": "npx knip --fix", "safe": true, "requiresApproval": ["--allow-remove-files"] },
+    { "tool": "npm-audit", "command": "npm audit fix", "safe": true, "requiresApproval": ["--force"] }
+  ],
+  "paths": {
+    "sourceDirectories": ["src", "app", "lib"],
+    "testDirectories": ["tests", "__tests__", "test"],
+    "configFiles": ["tsconfig.json", "next.config.js", "next.config.mjs", "next.config.ts"],
+    "schemaFiles": ["prisma/schema.prisma", "drizzle.config.ts"],
+    "routePatterns": {
+      "nextjsPages": "app/**/page.tsx",
+      "nextjsApi": "app/api/**/route.ts",
+      "expressRoutes": "src/routes/**/*.ts",
+      "trpcRouters": "src/server/routers/**/*.ts"
+    }
+  },
+  "semgrepRulesets": ["auto", "p/typescript", "p/react", "p/nextjs", "p/owasp-top-ten"],
+  "errorPatterns": {
+    "typeError": "error TS[0-9]+",
+    "eslintError": "\"severity\":2",
+    "buildFail": "exit code [^0]"
+  },
+  "thresholds": {
+    "performanceScore": 70,
+    "bundleSizeGzipKB": 300,
+    "apiP95ms": 500,
+    "lighthousePerformance": 70,
+    "lighthouseAccessibility": 90
+  }
+}

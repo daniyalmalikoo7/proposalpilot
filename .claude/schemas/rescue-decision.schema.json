@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Rescue Decision",
+  "description": "Schema for Devil's Advocate rescue decision artifact",
+  "type": "object",
+  "required": ["hasHealthScore", "hasDecisionSection", "hasDecisionValue", "hasFindingSummary", "hasEffortEstimate", "hasRewriteThreshold"],
+  "properties": {
+    "hasHealthScore": { "const": true, "description": "Must contain ## Health Score with XX/100" },
+    "hasDecisionSection": { "const": true, "description": "Must contain ## Decision heading" },
+    "hasDecisionValue": { "const": true, "description": "Must contain RESCUE, REWRITE, or ABANDON" },
+    "hasFindingSummary": { "const": true, "description": "Must contain ## Finding Summary" },
+    "hasEffortEstimate": { "const": true, "description": "Must contain ## Effort Estimate" },
+    "hasRewriteThreshold": { "const": true, "description": "Must contain ## Rewrite Threshold Check" }
+  }
+}

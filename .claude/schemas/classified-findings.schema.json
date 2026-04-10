@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Classified Findings",
+  "description": "Schema for Triage Analyst classified findings artifact",
+  "type": "object",
+  "required": ["hasSeverityCategories", "hasSummaryTable", "hasDeduplication"],
+  "properties": {
+    "hasSeverityCategories": { "const": true, "description": "Must contain all four: CRITICAL, HIGH, MEDIUM, LOW" },
+    "hasSummaryTable": { "const": true, "description": "Must contain a summary table with counts" },
+    "hasDeduplication": { "const": true, "description": "Must mention deduplication or unique findings count" }
+  }
+}

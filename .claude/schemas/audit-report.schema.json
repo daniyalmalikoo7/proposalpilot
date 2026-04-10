@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Audit Report",
+  "description": "Schema for Phase 0 audit report markdown artifacts",
+  "type": "object",
+  "required": ["hasSummarySection", "hasRawDataSection", "minimumLines"],
+  "properties": {
+    "hasSummarySection": { "const": true, "description": "Must contain ## Summary" },
+    "hasRawDataSection": { "const": true, "description": "Must contain ## Raw Data" },
+    "minimumLines": { "type": "integer", "minimum": 15, "description": "Minimum line count" }
+  }
+}
