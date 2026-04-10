@@ -1,7 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { router, orgProtectedProcedure } from "@/server/trpc";
-import { loadPrompt, renderPrompt } from "@/lib/ai/prompts/base";
+import {
+  loadPrompt,
+  renderPrompt,
+  sanitizeForPrompt,
+} from "@/lib/ai/prompts/base";
 import { executeWithFallback } from "@/lib/ai/fallback-chain";
 import {
   VoyageEmbeddingProvider,
@@ -190,17 +194,17 @@ export const aiRouter = router({
           ? kbItems
               .map(
                 (item) =>
-                  `[${item.id}] ${item.type}: ${item.title}\n${item.content}`,
+                  `[KB Item ID: ${item.id}]\nType: ${item.type}\nTitle: ${sanitizeForPrompt(item.title)}\n\n${sanitizeForPrompt(item.content)}`,
               )
               .join("\n\n---\n\n")
           : "No knowledge base context provided.";
 
       const brandVoiceText = brandVoice
-        ? `Tone: ${brandVoice.tone}\nStyle: ${JSON.stringify(brandVoice.style)}\nPreferred terminology: ${JSON.stringify(brandVoice.terminology)}`
+        ? `Tone: ${sanitizeForPrompt(brandVoice.tone)}\nStyle: ${sanitizeForPrompt(JSON.stringify(brandVoice.style))}\nPreferred terminology: ${sanitizeForPrompt(JSON.stringify(brandVoice.terminology))}`
         : "Professional, clear, and concise. First-person plural (we/our).";
 
       const requirementsText = input.requirements
-        .map((r, i) => `${i + 1}. ${r}`)
+        .map((r, i) => `${i + 1}. ${sanitizeForPrompt(r)}`)
         .join("\n");
 
       const prompt = loadPrompt("section-generator");
@@ -210,7 +214,9 @@ export const aiRouter = router({
         requirements: requirementsText,
         brand_voice: brandVoiceText,
         kb_context: kbContext,
-        instructions: input.instructions ?? "None.",
+        instructions: input.instructions
+          ? sanitizeForPrompt(input.instructions)
+          : "None.",
       });
 
       const { data } = await executeWithFallback(
