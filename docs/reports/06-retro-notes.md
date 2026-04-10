@@ -18,53 +18,76 @@
 
 ### Devil's Advocate
 
-**1. The CRITICAL finding was never a code defect.** C1 (runtime instability) was classified CRITICAL and drove the entire rescue urgency, but the root cause turned out to be the audit methodology (`-H 127.0.0.1` flag interfering with Turbopack's proxy). No code change was made to fix it. This means our Phase 0 health score of 60/100 was artificially depressed — the real pre-rescue score was closer to 72/100 (if runtime had scored 60/100 instead of 0). The rescue was less dire than we thought.
+**1. The UI/UX standard was never enforced — and it says it's mandatory.** The rescue's own `uiux-standard.md` states: "Loading states, error states, and empty states are MANDATORY for any feature touched during rescue." The Feature Fixer mandate requires: "Every fixed component has loading, error, AND empty states." Yet no validator checked this. The evidence:
+- 3 of the 7 app routes lack a `loading.tsx` Suspense boundary: `/knowledge-base`, `/proposals`, and `/proposals/[id]`. These are the three most data-intensive pages in the entire application.
+- Lighthouse Performance scored 64–68, below the ≥70 target stated in the standard's "Performance as UX" principle (Rule #06).
+- Lighthouse Best Practices scored 73, below the ≥80 target.
+- Color contrast violations exist on the landing page (`text-indigo-600/30` at 30% opacity, `text-slate-500`).
+- No visual regression testing was performed during the rescue.
 
-**2. E2E tests were never executed.** 23 Playwright test cases exist across 5 spec files, but not a single one ran during this rescue. They require Clerk test credentials in `.env.test.local` and a `clerk-global-setup.ts` auth flow. We're declaring QA PASS based on 47 unit tests and curl probes — that's a weaker signal than we're presenting.
+This is not a minor cosmetic gap. The standard says "performance is UX" and "accessibility is not optional" — and both benchmarks failed. We wrote the rules, then skipped verifying them.
 
-**3. Layer 5 deferred items include real debt.** 14 packages are major versions behind. Stripe is 5 majors behind (17 → 22). Clerk is 1 major behind (6 → 7). These aren't cosmetic — major versions mean API changes, security patches, and eventual forced upgrades. We're shipping with known version debt.
+**2. The CRITICAL finding was never a code defect.** C1 (runtime instability) was classified CRITICAL and drove the entire rescue urgency, but the root cause turned out to be the audit methodology (`-H 127.0.0.1` flag interfering with Turbopack's proxy). No code change was made to fix it. The real pre-rescue score was closer to 72/100.
+
+**3. E2E tests were never executed.** 23 Playwright test cases exist across 5 spec files, but not a single one ran during this rescue. They require Clerk test credentials. We're declaring QA PASS based on 47 unit tests and curl probes.
 
 ### Security Engineer
 
-**1. The `sanitizeForPrompt` fix is defence-in-depth, not a primary control.** The `renderPrompt` function already calls `sanitizeForPrompt` on every template variable via its regex replacement loop. The fix we applied adds per-field sanitization *before* concatenation, matching the streaming endpoint's pattern. This is correct and reduces attack surface, but it means the MEDIUM prompt injection finding was arguably lower risk than classified — the primary control was already in place. I want to be honest about this: we fixed a real gap, but the app wasn't actively vulnerable.
+**1. The `sanitizeForPrompt` fix is defence-in-depth, not a primary control.** The `renderPrompt` function already calls `sanitizeForPrompt` on every template variable. The fix we applied adds per-field sanitization *before* concatenation. This is correct and reduces attack surface, but the app wasn't actively vulnerable — the primary control was already in place. We fixed a real gap; we should be honest about the pre-existing risk level.
 
-**2. `as any` in landing components is a broken window.** Six instances of `as any` exist on typed route `href` props. These are pre-existing and low-risk, but they're the kind of thing that normalizes `as any` usage for future developers. They should be fixed with proper route type casting.
+**2. `as any` in landing components is a broken window.** Six instances of `as any` exist on typed route `href` props. Pre-existing and low-risk, but they normalize `as any` usage for future developers.
 
-**3. Billing webhook handler has no unit tests.** The Stripe webhook handler (`/api/webhooks/stripe/route.ts`) processes payment events and provisions organization plans. It's signature-verified, but there are zero tests for its business logic. If someone changes the webhook handling during a Stripe SDK upgrade, there's no safety net.
+**3. Billing webhook handler has no unit tests.** The Stripe webhook handler processes payment events and provisions organization plans. It's signature-verified, but there are zero tests for its business logic. A Stripe SDK upgrade could break billing with no test to catch it.
 
 ### QA Lead
 
-**1. We validated HTTP status codes, not rendered content.** Our "runtime fix" verification was 7 curl probes checking status codes (200, 307). We never verified that the pages actually *render content* — the landing page could return 200 with a blank body or a React error boundary, and our probes wouldn't catch it. Lighthouse ran on landing and sign-in (confirming they render), but the auth-protected pages were only verified as returning 307 redirects.
+**1. We validated HTTP status codes, not rendered content.** Our "runtime fix" verification was 7 curl probes checking status codes (200, 307). We never verified that pages render real content. Lighthouse ran on landing and sign-in only — the auth-protected pages (dashboard, proposals, KB, settings) were only verified as returning 307 redirects, not as rendering correctly for authenticated users.
 
-**2. Database connectivity was never tested.** The Prisma migration status check failed in Phase 0 with `P1001` (connection refused), and this was never re-tested. We don't know if the DB schema is in sync with the Prisma schema. Any tRPC procedure that touches the database (which is most of them) is untested against a real database.
+**2. Database connectivity was never tested.** The Prisma migration status check failed in Phase 0 with `P1001` (connection refused) and was never re-tested. We don't know if the DB schema is in sync. Any tRPC procedure that touches the database is untested against a real database.
 
-**3. The unit test pattern is fragile.** The existing tests (and the new AI router tests) use inline procedure recreation to avoid ESM import issues with `superjson`. This means we're testing *recreated* logic, not the actual router code. If someone changes the router but forgets to update the test's recreated procedure, the test still passes. This is a known limitation of the Jest + ESM + Next.js stack, but it's a real confidence gap.
+**3. The missing `loading.tsx` files are a real user experience problem, not just a standard violation.** When `/proposals` or `/knowledge-base` fetches data, there's no Suspense boundary — the user sees either a white flash or a layout shift. The Next.js App Router streams HTML progressively, and without `loading.tsx`, the shell renders instantly but the data-dependent content pops in with no transition. The UI/UX standard (Rule #02) says "motion is communication" and "no jarring content shifts." These three pages violate that on every navigation.
 
 ---
 
 ## Cross-Discussion
 
-**Devil's Advocate challenges Security:** "You say the prompt injection fix is defence-in-depth. But the audit report classified it as HIGH (H3), the fix plan allocated it to Layer 2, and the security report says prompt injection was 'downgraded from MEDIUM to LOW.' If the primary control was already in place, was this even a HIGH finding?"
+**Devil's Advocate opens:** "I want to start with the UI/UX standard because it's the one risk everyone glossed over. The Performance Engineer report says 'PASS — no CRITICAL performance issues' but then reports Lighthouse Performance at 64 and Best Practices at 73. Both are below the targets we set in our own standard (≥70 and ≥80). How is that a PASS?"
 
-**Security responds:** "It was correctly classified. The streaming endpoint had explicit per-field sanitization and the tRPC endpoint didn't. If someone later refactors `renderPrompt` to not sanitize (or changes the template syntax), the tRPC endpoint would be wide open. Defence-in-depth matters *because* primary controls fail. The classification was right; the fix was right; the risk was real."
+**QA responds:** "The Performance Engineer noted these were measured against a dev server with Turbopack HMR. Production builds would score higher. That caveat is legitimate — dev mode includes debug bundles, source maps, and unminified assets."
 
-**QA challenges Devil's Advocate:** "You say the rescue was less dire than we thought because C1 was environmental. But we also couldn't run Semgrep (H2 — also environmental) or check DB connectivity. How much of our Phase 0 picture was distorted by environment? Could there be issues we still haven't seen?"
+**Devil's Advocate pushes back:** "Then why set ≥70 as the target if we're going to waive it for dev-mode measurements? Either the target is wrong or the measurement is wrong. We shouldn't have both and then declare PASS."
 
-**Devil's Advocate concedes:** "Fair point. The Semgrep re-run in Phase 2 found only false positives, which is reassuring. DB connectivity is the real unknown — we genuinely don't know if migrations are in sync."
+**Security weighs in:** "I agree with the Devil's Advocate on the `loading.tsx` gap specifically. The three missing pages — knowledge-base, proposals, proposals/[id] — are exactly the pages that handle the most sensitive user data. If a user navigates to `/proposals` and there's no loading state, the page flash could expose a FOUC that briefly reveals stale content from a previous route via the browser's bfcache. It's a minor information leak vector, but it's the kind of thing that compounds."
 
-**Security challenges QA:** "You say unit tests test recreated logic, not actual code. But the sanitization tests import the real `sanitizeForPrompt` function — they test actual sanitization behavior, not mocked logic. The org-scoping tests are the ones testing recreated procedures."
+**QA adds:** "Beyond security, the empty `loading.tsx` gap means the 5 existing E2E tests in `navigation.spec.ts` are timing-fragile. Without Suspense boundaries, `waitForLoadState('networkidle')` in Playwright relies on the network going quiet, which is flaky with streaming SSR. Adding `loading.tsx` would make those tests more reliable too."
 
-**QA responds:** "Correct. The sanitization tests are strong. The org-scoping tests are the fragile ones. But org-scoping is arguably the most important thing to test — it's the IDOR boundary."
+**Devil's Advocate on E2E tests:** "We have 23 E2E test cases that exist but were never run. How do we even know they pass? They could be silently broken. Declaring 'E2E test infrastructure exists and covers critical paths' in the QA report is misleading if we've never executed them."
+
+**Security responds:** "The E2E tests are less concerning to me than the billing handler gap. If someone upgrades Stripe from v17 to v22 (which is in the deferred backlog), the webhook event schema will change. There are zero tests to catch that. That's a revenue-impacting regression risk."
+
+**QA challenges Devil's Advocate on severity:** "You want to classify UI/UX benchmark enforcement as HIGH. I'd agree, but only because it's a compound issue: missing loading states + below-target Lighthouse + no visual testing + the standard says MANDATORY. Any one of those alone would be MEDIUM. Together they're HIGH because they signal that our validation process has a blind spot."
+
+**Devil's Advocate concludes:** "That's exactly my point. The rescue pipeline has 5 validators, but none of them checked the UI/UX standard's mandatory requirements. We have a skill file that says 'loading/error/empty states are MANDATORY,' a Feature Fixer runbook that says 'verify loading, error, AND empty states exist,' and zero evidence that either was checked. The standard exists on paper only."
 
 ---
 
 ## Top 3 Risks
 
-1. **E2E tests not executed** — Severity: MEDIUM — Mitigation: Run the full Playwright suite with Clerk test credentials before production deploy. This is the #1 pre-production gate. If E2E tests fail, do not ship.
+1. **Missing UI/UX benchmark enforcement** — Severity: **HIGH** — Three data-heavy pages (`/knowledge-base`, `/proposals`, `/proposals/[id]`) lack `loading.tsx` Suspense boundaries, violating the rescue UI/UX standard's mandatory loading-state requirement. Lighthouse Performance (64–68) and Best Practices (73) both fall below declared targets (≥70, ≥80). No validator checked these mandatory requirements during Phase 3.
 
-2. **Database connectivity and migration status unknown** — Severity: MEDIUM — Mitigation: Verify `prisma migrate status` against the production/staging database. Confirm no pending migrations or schema drift before deploy.
+   **Mitigation:**
+   - Add `loading.tsx` with skeleton loaders to `/knowledge-base`, `/proposals`, and `/proposals/[id]` — matching the existing pattern in `/dashboard/loading.tsx`.
+   - Re-run Lighthouse against a production build (`next build && next start`) to get accurate performance scores. If still below target, address the 481KB chunk via lazy-loading Tiptap.
+   - Fix the landing page color contrast violations (`text-indigo-600/30` → `/40`, `text-slate-500` → `text-slate-600`).
+   - Add a UI/UX validation step to the Phase 3 validator sequence for future rescues.
 
-3. **Major dependency versions behind (Stripe +5, Clerk +1, Prisma +1)** — Severity: LOW (immediate), MEDIUM (6-month horizon) — Mitigation: Schedule a dependency upgrade sprint within 2 weeks of ship. Prioritize Stripe (largest gap) and Clerk (auth provider — security-critical).
+2. **E2E tests not executed** — Severity: **MEDIUM** — 23 Playwright test cases exist but were never run (require Clerk auth credentials). Test correctness is unverified.
+
+   **Mitigation:** Run the full Playwright suite with Clerk test credentials before production deploy. If any test fails, fix before shipping.
+
+3. **Database connectivity and migration status unknown** — Severity: **MEDIUM** — Prisma `migrate status` failed with `P1001` in Phase 0 and was never re-tested. Schema drift is possible.
+
+   **Mitigation:** Verify `prisma migrate status` against the production/staging database. Confirm no pending migrations or drift before deploy.
 
 ---
 
@@ -72,11 +95,13 @@
 
 **SHIP WITH CONDITIONS**
 
-The codebase is in good shape: build clean, types clean, security scan clean, auth coverage 100%, prompt injection fixed, 47 unit tests passing. The rescue accomplished what it set out to do.
+The codebase is structurally sound: build clean, types clean, security scan clean, auth 100%, prompt injection fixed, 47 unit tests passing. The rescue fixed every CRITICAL and HIGH finding it set out to fix.
 
-However, before production deploy:
-1. Run the full Playwright E2E suite with real Clerk test credentials
-2. Verify `prisma migrate status` against the target database
-3. Confirm the dev server starts cleanly in the deployment environment (not just this workstation)
+However, the UI/UX standard — the rescue's own quality benchmark — was not enforced. Before production deploy:
 
-If all three pass, ship. If any fail, fix and re-validate.
+1. **[HIGH]** Add `loading.tsx` to the 3 missing routes and fix landing page contrast violations
+2. **[MEDIUM]** Run the full Playwright E2E suite with Clerk test credentials
+3. **[MEDIUM]** Verify `prisma migrate status` against the target database
+4. **[MEDIUM]** Re-run Lighthouse against a production build to get accurate scores
+
+If conditions 1–3 pass, ship. Condition 4 informs post-ship optimization priority.
