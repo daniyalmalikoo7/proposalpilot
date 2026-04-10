@@ -96,7 +96,9 @@ export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
             <Sparkles className="h-4 w-4 shrink-0" />
             Get started
           </Link>
-          <p className="mt-2 px-3 text-[11px] text-pp-foreground-muted">v0.1.0</p>
+          <p className="mt-2 px-3 text-[11px] text-pp-foreground-muted">
+            v0.1.0
+          </p>
         </div>
       </aside>
     </>

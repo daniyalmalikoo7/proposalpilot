@@ -1,6 +1,7 @@
 {
   "extends": ["next/core-web-vitals"],
   "plugins": ["@typescript-eslint"],
+  "ignorePatterns": ["playwright-report/**", "test-results/**", ".next/**", "node_modules/**"],
   "rules": {
     "no-console": ["error", { "allow": ["error", "warn"] }]
   },

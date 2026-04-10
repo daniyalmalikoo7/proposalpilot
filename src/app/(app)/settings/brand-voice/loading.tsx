@@ -2,7 +2,12 @@ import { Skeleton } from "@/components/atoms/skeleton";
 
 export default function BrandVoiceLoading() {
   return (
-    <div className="space-y-6 max-w-2xl" role="status" aria-label="Loading brand voice settings…" aria-busy="true">
+    <div
+      className="space-y-6 max-w-2xl"
+      role="status"
+      aria-label="Loading brand voice settings…"
+      aria-busy="true"
+    >
       {/* Page header */}
       <div className="space-y-1.5">
         <Skeleton className="h-7 w-40" />

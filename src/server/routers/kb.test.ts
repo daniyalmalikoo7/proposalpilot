@@ -25,7 +25,12 @@ jest.mock("@/lib/utils/chunker", () => ({
 }));
 
 jest.mock("@/lib/logger", () => ({
-  logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+  logger: {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
 }));
 
 // ── Test context ──────────────────────────────────────────────────────────────

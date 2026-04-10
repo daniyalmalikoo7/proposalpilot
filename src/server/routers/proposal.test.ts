@@ -97,8 +97,7 @@ const testT = initTRPC.context<TestContext>().create();
 
 const listProcedure = testT.procedure
   .input(
-    (v: unknown) =>
-      v as { status?: string; limit?: number; cursor?: string },
+    (v: unknown) => v as { status?: string; limit?: number; cursor?: string },
   )
   .query(async ({ ctx, input }) => {
     const limit = input.limit ?? 20;
@@ -136,7 +135,10 @@ const getProcedure = testT.procedure
       where: { id: input.id, orgId: ctx.internalOrgId },
     });
     if (!proposal) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found." });
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Proposal not found.",
+      });
     }
     return proposal;
   });
@@ -157,7 +159,10 @@ const updateSectionProcedure = testT.procedure
       select: { id: true },
     });
     if (!proposal) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found." });
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Proposal not found.",
+      });
     }
     return ctx.db.proposalSection.update({
       where: { id: input.sectionId, proposalId: input.proposalId },

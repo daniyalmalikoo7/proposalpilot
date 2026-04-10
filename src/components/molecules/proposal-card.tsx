@@ -77,9 +77,7 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
       <div
         className={cn(
           "flex w-20 shrink-0 items-center gap-1 text-xs",
-          isOverdue
-            ? "text-pp-danger-text"
-            : "text-pp-foreground-muted",
+          isOverdue ? "text-pp-danger-text" : "text-pp-foreground-muted",
         )}
       >
         <Calendar className="h-3 w-3 shrink-0" />
