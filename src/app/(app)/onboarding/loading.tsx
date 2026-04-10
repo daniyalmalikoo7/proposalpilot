@@ -2,7 +2,12 @@ import { Skeleton } from "@/components/atoms/skeleton";
 
 export default function OnboardingLoading() {
   return (
-    <div className="mx-auto max-w-2xl" role="status" aria-label="Loading onboarding…" aria-busy="true">
+    <div
+      className="mx-auto max-w-2xl"
+      role="status"
+      aria-label="Loading onboarding…"
+      aria-busy="true"
+    >
       {/* Header */}
       <div className="mb-10 space-y-2">
         <Skeleton className="h-7 w-64" />

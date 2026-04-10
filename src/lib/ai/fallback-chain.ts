@@ -163,7 +163,8 @@ export async function executeWithFallback<T>(
         } catch (parseErr) {
           logger.debug("[fallback-chain] JSON parse FAILED", {
             model,
-            error: parseErr instanceof Error ? parseErr.message : String(parseErr),
+            error:
+              parseErr instanceof Error ? parseErr.message : String(parseErr),
             preview: result.content.slice(0, 200),
           });
           logger.warn("AI output is not valid JSON", {

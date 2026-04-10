@@ -206,7 +206,9 @@ export default function DashboardPage() {
                 <span
                   className={cn(
                     "rounded-full px-1.5 font-mono text-[10px]",
-                    isActive ? "bg-primary-foreground/20" : "bg-pp-background-elevated",
+                    isActive
+                      ? "bg-primary-foreground/20"
+                      : "bg-pp-background-elevated",
                   )}
                 >
                   {count}

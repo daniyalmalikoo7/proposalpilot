@@ -1,60 +1,121 @@
-# claude-workflow-rescue — Automated Codebase Rescue
+# ProposalPilot
 
-You are a Staff+ principal engineer operating a rescue team of 23 specialists across 5 phases. When a user points you at an existing codebase, you orchestrate the full rescue pipeline: audit it with real CLI tools, triage findings by severity, execute fixes in dependency order, validate everything, and ship to production.
+AI-powered proposal generation platform. Extracts requirements from uploaded RFPs, matches them against a knowledge base using semantic search, and generates tailored proposal sections with citation tracking.
 
-## Your team
+## Stack
 
-Phase 0 — Audit     (6 agents):  @.claude/agents/phase-0/
-Phase 1 — Triage    (2 agents):  @.claude/agents/phase-1/
-Phase 2 — Fix       (4 agents):  @.claude/agents/phase-2/
-Phase 3 — Validate  (5 agents):  @.claude/agents/phase-3/
-Phase 4 — Ship      (4 agents):  @.claude/agents/phase-4/
+- **Framework**: Next.js 16 (App Router, Turbopack)
+- **Language**: TypeScript (strict mode enabled)
+- **API**: tRPC with superjson transformer
+- **Database**: PostgreSQL (Supabase) via Prisma ORM + pgvector for embeddings
+- **Auth**: Clerk (multi-tenant, org-scoped)
+- **Payments**: Stripe (webhook-verified)
+- **AI**: Multi-model fallback chain (Google Gemini primary → Anthropic Claude fallback) + Voyage AI embeddings
+- **Testing**: Jest (unit) + Playwright (e2e)
+- **Deploy**: Vercel
 
-## Quality standards
+## Architecture
 
-All code:     @.claude/skills/engineering-standard.md
-All UI/UX:    @.claude/skills/uiux-standard.md
-Security:     @.claude/skills/security-patterns.md
-Audit tools:  @.claude/skills/audit-tools.md
-Assembly:     @.claude/skills/assembly-stack.md
+```
+src/
+├── app/
+│   ├── (app)/              # Authenticated routes (Clerk middleware)
+│   │   ├── dashboard/      # Proposal overview + stats
+│   │   ├── proposals/      # Proposal list
+│   │   ├── proposals/[id]/ # Tiptap editor + streaming AI generation
+│   │   ├── knowledge-base/ # Document upload + semantic search
+│   │   ├── onboarding/     # First-run wizard
+│   │   └── settings/       # Org settings + brand voice profiles
+│   ├── (auth)/             # Auth routes (sign-in, sign-up via Clerk)
+│   ├── (marketing)/        # Landing page
+│   └── api/
+│       ├── ai/stream-section/   # SSE streaming endpoint
+│       ├── upload/               # RFP + KB document ingestion
+│       ├── webhooks/stripe/      # Signature-verified webhook handler
+│       ├── health/               # Health check
+│       └── trpc/[trpc]/          # tRPC endpoint
+├── components/
+│   ├── atoms/              # Primitives (Button, Input, Skeleton)
+│   ├── molecules/          # Composed (ProposalCard, StatusBadge)
+│   ├── organisms/          # Complex (Sidebar, KBSearchPanel, RequirementsSidebar)
+│   └── templates/          # Layouts (AppShell)
+├── server/
+│   └── routers/            # tRPC routers: ai, billing, kb, proposal, settings
+└── lib/
+    ├── ai/                 # Fallback chain, prompt templates, services
+    │   └── prompts/base.ts # sanitizeForPrompt() lives here
+    ├── middleware/          # Auth, rate limiting
+    ├── services/           # Business logic
+    ├── trpc/               # tRPC client + server setup
+    ├── types/              # Shared TypeScript types
+    └── utils/              # Helpers (chunker, logger, etc.)
+```
 
-## The rescue principle
+## Data model (12 Prisma models)
 
-This workflow is fundamentally different from greenfield workflows. You are NOT building from scratch — you are assessing, triaging, and fixing an EXISTING codebase. The key rules:
+Core entities: `Organization` (tenant boundary, Clerk org + Stripe customer) → `User` → `Proposal` → `RFPSource` → `ExtractedRequirement` → `ProposalSection` (citations + confidence score).
 
-1. **Tool-first, not prose-first.** Phase 0 agents run actual CLI tools (tsc, ESLint, Knip, Semgrep, Playwright, Lighthouse) and parse their structured output. They never guess about codebase state — they measure it.
-2. **Deterministic fixes before LLM fixes.** Auto-fixers (prettier --fix, eslint --fix, knip --fix, npm audit fix) run BEFORE any LLM-powered changes. They're safe, fast, and free.
-3. **Fix in dependency order.** Build fixes before feature fixes. Security fixes before polish. Tests after features work. Never fix Layer 3 while Layer 1 is broken.
-4. **Verify after every fix layer.** Run the relevant tool again after each layer of fixes. Don't trust that it worked — measure it.
-5. **No new features during rescue.** Fix what exists. Don't add functionality. Scope creep during rescue is the #1 cause of rescue failure.
+Knowledge pipeline: `KnowledgeBaseItem` → `KbChunk` (vector(1024) embeddings via Voyage AI).
 
-## Operating mode
+Supporting: `BrandVoice` (per-org tone/style), `ComplianceMatrix`, `WinLossRecord`, `ProcessedWebhookEvent` (Stripe idempotency).
 
-When a user points you at a codebase:
-1. Confirm what you understood (1 sentence)
-2. Say exactly: "Run /audit to begin Phase 0 — automated codebase assessment."
+All data queries are org-scoped via `orgId` to prevent cross-tenant access.
 
-When running any phase command:
-- Activate each agent in sequence. Do not skip. Do not combine.
-- Do not proceed to the next phase without the current phase gate artifacts.
-- Surface two decisions to the user: Rescue/Rewrite/Abandon (Phase 0) and Fix Plan approval (Phase 1).
-- Everything else runs autonomously without asking permission.
+## Commands
 
-## Phase gates (enforced by hooks — cannot be bypassed)
+```bash
+npm run dev            # Dev server (Turbopack)
+npm run build          # Production build
+npm run typecheck      # tsc --noEmit
+npm run lint           # ESLint (src/ only)
+npm test               # Jest unit tests
+npm run test:unit      # Jest (src/ path only)
+npm run test:e2e       # Playwright E2E
+npm run test:coverage  # Jest with coverage
+npm run db:migrate     # Prisma migrate dev
+npm run db:seed        # Prisma seed
+npm run db:studio      # Prisma Studio GUI
+npm run db:generate    # Prisma generate
+```
 
-Phase 0 → Phase 1: docs/audit/06-rescue-decision.md must exist with Decision: RESCUE
-Phase 1 → Phase 2: docs/triage/02-fix-plan.md must exist with at least one work package
-Phase 2 → Phase 3: npm run build succeeds AND tsc --noEmit clean
-Phase 3 → Phase 4: all 5 validation reports complete, zero critical items open
+## Conventions
 
-## What you never do
+- **File naming**: kebab-case for all files
+- **Function naming**: camelCase
+- **Components**: Atomic design (atoms → molecules → organisms → templates)
+- **API security**: Every tRPC data procedure uses `orgProtectedProcedure` — never `publicProcedure` for data access
+- **Prompt security**: All user text entering LLM prompts goes through `sanitizeForPrompt()` from `src/lib/ai/prompts/base.ts`
+- **Error handling**: `TRPCError` with appropriate codes (NOT_FOUND, UNAUTHORIZED, BAD_REQUEST)
+- **Imports**: `@/` path alias maps to `src/`
+- **Test pattern**: Mock external deps at module level, inline procedures to avoid ESM issues, test org-scoping separately from business logic
 
-- Skip running a CLI tool because "it probably passes" — run it every time
-- Use @ts-ignore or `as any` to silence type errors — fix the actual type
-- Add new features during rescue — fix what exists, nothing more
-- Fix Layer 3 (features) while Layer 1 (build) is still broken
-- Declare a fix complete without re-running the verification tool
-- Commit all fixes in one commit — one commit per fix for easy revert
-- Skip the deterministic auto-fixers and jump straight to LLM fixes
-- Accept "we'll fix it later" for security or accessibility issues
-- Guess about what a tool would find — run it and read the output
+## Integrations
+
+| Service | Provider | Required |
+|---------|----------|----------|
+| Auth | Clerk | Yes |
+| Database | Supabase PostgreSQL | Yes |
+| Vector search | pgvector extension | Yes |
+| LLM | Google Gemini (primary) | Yes |
+| LLM fallback | Anthropic Claude | Optional |
+| Embeddings | Voyage AI | Optional (fallback to full-text) |
+| Payments | Stripe | Yes (webhook + prices) |
+| Error monitoring | Sentry | Optional |
+| Analytics | PostHog + Vercel Analytics | Optional |
+
+## Security invariants
+
+1. **Org-scoping**: Every `findFirst`/`findMany` on tenant data includes `orgId: ctx.internalOrgId`
+2. **Prompt sanitization**: All user text → `sanitizeForPrompt()` before LLM — strips XML injection tags, escapes `{{template}}` syntax
+3. **Webhook verification**: Stripe webhooks are signature-verified via `stripe.webhooks.constructEvent()`
+4. **No client secrets**: Only `NEXT_PUBLIC_*` vars are exposed to the browser
+
+## What you should never do
+
+- Skip org-scoping on any data query — every data access must filter by `orgId`
+- Pass unsanitized user input to LLM prompts — always use `sanitizeForPrompt()`
+- Use `as any` or `@ts-ignore` — fix the actual type
+- Add `NEXT_PUBLIC_` prefix to secret keys
+- Use `db push` in production — use `prisma migrate deploy`
+- Commit `.env` or any file containing secrets
+- Add new dependencies without checking if existing code already solves the problem
