@@ -80,23 +80,26 @@ npm run dev
 
 ## Current Status
 
-ProposalPilot is under active development. The core pipeline (RFP upload → requirement extraction → KB matching → proposal generation) is functional. Currently being rescued and hardened for production using [claude-workflow-rescue](https://github.com/daniyalmalikoo7/claude-workflow-rescue).
+ProposalPilot is under active development. The core pipeline (RFP upload → requirement extraction → KB matching → proposal generation) is functional.
+
+**Rescue hardening (merged to `master`):** A production-readiness pass using [claude-workflow-rescue](https://github.com/daniyalmalikoo7/claude-workflow-rescue) v2 is complete on the main branch. Highlights include stricter prompt sanitization on AI routes, additional unit tests for the AI router, ESLint scope fixes, dependency hygiene, and a project-specific `CLAUDE.md` (the repo no longer ships rescue workflow agent files—only the product).
+
+**Next focus:** UI/UX and visual polish (targeting production-grade design quality) via [claude-workflow-ui-uplift](https://github.com/daniyalmalikoo7/claude-workflow-ui-uplift), then continued validation (E2E, Lighthouse, accessibility) before ship.
 
 ### What works
 - RFP upload and text extraction (DOCX via mammoth)
 - AI requirement extraction (Gemini 2.5 Flash)
-- Proposal section generation with KB grounding
+- Proposal section generation with KB grounding (with sanitized prompt inputs on tRPC AI paths)
 - Tiptap rich text editor with streaming
 - PDF export
 - Clerk authentication
 - Supabase pgvector with HNSW index
 
-### What's being fixed
-- Knowledge base upload pipeline (being stabilized)
-- Confidence score accuracy
-- Section regeneration reliability
-- E2E test coverage (Playwright)
-- Production deployment hardening
+### In progress / next
+- UI/UX uplift (design system consistency, loading states, contrast, benchmark scores)
+- Knowledge base upload pipeline (stabilization)
+- Confidence score accuracy and section regeneration reliability
+- E2E test coverage (Playwright) and production deployment hardening
 
 ---
 
@@ -107,6 +110,8 @@ ProposalPilot is under active development. The core pipeline (RFP upload → req
 - [x] AI section generation with streaming
 - [x] Rich text editor (Tiptap)
 - [x] PDF export
+- [x] Rescue hardening merge (build, security, tests on `master`)
+- [ ] UI/UX uplift to production visual bar
 - [ ] Production deployment (Vercel)
 - [ ] Stripe billing ($49/mo Solo, $149/mo Team, $299/mo Agency)
 - [ ] DOCX export
@@ -123,7 +128,8 @@ ProposalPilot is built and maintained using automated SDLC workflows:
 | Workflow | Role |
 |----------|------|
 | [claude-workflow-ai-saas](https://github.com/daniyalmalikoo7/claude-workflow-ai-saas) | Original build (28 agents, 5 phases) |
-| [claude-workflow-rescue](https://github.com/daniyalmalikoo7/claude-workflow-rescue) | Current rescue & hardening (21 agents) |
+| [claude-workflow-rescue](https://github.com/daniyalmalikoo7/claude-workflow-rescue) | Rescue & hardening (24 agents, 5 phases; v2.x) — **applied; workflow files not committed to this repo** |
+| [claude-workflow-ui-uplift](https://github.com/daniyalmalikoo7/claude-workflow-ui-uplift) | **Next:** visual and interaction quality to a shippable bar |
 
 ---
 
