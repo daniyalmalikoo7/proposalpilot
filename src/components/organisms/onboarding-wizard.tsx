@@ -168,9 +168,9 @@ export function OnboardingWizard() {
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-colors",
                   step > s.id
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]"
                     : step === s.id
-                      ? "border-2 border-primary text-primary"
+                      ? "border-2 border-[hsl(var(--accent))] text-[hsl(var(--accent))]"
                       : "border-2 border-border text-muted-foreground",
                 )}
               >
@@ -255,7 +255,7 @@ export function OnboardingWizard() {
                     className={cn(
                       "flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
                       tone === opt
-                        ? "border-primary bg-primary text-primary-foreground"
+                        ? "border-primary bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]"
                         : "border-border bg-background hover:bg-accent",
                     )}
                   >
@@ -276,7 +276,7 @@ export function OnboardingWizard() {
                     className={cn(
                       "flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
                       length === opt
-                        ? "border-primary bg-primary text-primary-foreground"
+                        ? "border-primary bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]"
                         : "border-border bg-background hover:bg-accent",
                     )}
                   >
@@ -353,7 +353,7 @@ export function OnboardingWizard() {
             )}
             {isLoading && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <Loader2 className="h-4 w-4 animate-spin text-[hsl(var(--accent))]" />
                 Generating with your brand voice…
               </div>
             )}

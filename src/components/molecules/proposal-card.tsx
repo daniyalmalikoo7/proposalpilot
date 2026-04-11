@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { MoreHorizontal, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/atoms/progress";
@@ -9,13 +9,13 @@ import type { Proposal, ProposalStatus } from "@/lib/types/proposal";
 import { PROPOSAL_STATUS_LABELS } from "@/lib/types/proposal";
 
 const STATUS_STYLES: Readonly<Record<ProposalStatus, string>> = {
-  DRAFT: "bg-pp-background-elevated text-pp-foreground-muted",
-  IN_PROGRESS: "bg-blue-950 text-blue-400", // no pp-* blue token
-  REVIEW: "bg-purple-950 text-purple-400", // no pp-* purple token
-  SUBMITTED: "bg-pp-warning-bg text-pp-warning-text",
-  WON: "bg-pp-success-bg text-pp-success-text",
-  LOST: "bg-pp-danger-bg text-pp-danger-text",
-  ARCHIVED: "bg-pp-background-elevated text-pp-foreground-dim",
+  DRAFT: "bg-background-subtle text-foreground-muted",
+  IN_PROGRESS: "bg-info-bg text-info-foreground",
+  REVIEW: "bg-accent-muted text-[hsl(var(--accent))]",
+  SUBMITTED: "bg-warning-bg text-warning-foreground",
+  WON: "bg-success-bg text-success-foreground",
+  LOST: "bg-danger-bg text-danger-foreground",
+  ARCHIVED: "bg-background-subtle text-foreground-dim",
 };
 
 function formatDeadline(date: Date | null): string {
@@ -42,20 +42,23 @@ interface ProposalCardProps {
 }
 
 export function ProposalCard({ proposal }: ProposalCardProps) {
-  const router = useRouter();
   const isOverdue =
     proposal.deadline !== null && proposal.deadline < new Date();
 
   return (
-    <div
-      className="group flex cursor-pointer items-center gap-4 border-b border-pp-border px-4 py-3 transition-colors last:border-0 hover:bg-pp-background-elevated"
-      onClick={() => router.push(`/proposals/${proposal.id}`)}
+    <Link
+      href={`/proposals/${proposal.id}`}
+      className={cn(
+        "group flex cursor-pointer items-center gap-4 border-b border-border px-4 py-3 transition-colors last:border-0",
+        "hover:bg-background-subtle",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[hsl(var(--accent))]",
+      )}
     >
       {/* Title + client */}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{proposal.title}</p>
         {proposal.clientName && (
-          <p className="truncate text-xs text-pp-foreground-muted">
+          <p className="truncate text-xs text-foreground-muted">
             {proposal.clientName}
           </p>
         )}
@@ -77,7 +80,7 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
       <div
         className={cn(
           "flex w-20 shrink-0 items-center gap-1 text-xs",
-          isOverdue ? "text-pp-danger-text" : "text-pp-foreground-muted",
+          isOverdue ? "text-danger" : "text-foreground-muted",
         )}
       >
         <Calendar className="h-3 w-3 shrink-0" />
@@ -88,28 +91,29 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
       <div className="w-28 shrink-0">
         <div className="flex items-center gap-2">
           <Progress value={proposal.completionPct} className="flex-1" />
-          <span className="w-8 shrink-0 text-right font-mono text-xs text-pp-foreground-muted">
+          <span className="w-8 shrink-0 text-right font-mono text-xs text-foreground-muted">
             {proposal.completionPct}%
           </span>
         </div>
       </div>
 
       {/* Last edited */}
-      <div className="w-10 shrink-0 text-right font-mono text-xs text-pp-foreground-muted">
+      <div className="w-10 shrink-0 text-right font-mono text-xs text-foreground-muted">
         {formatRelativeTime(proposal.updatedAt)}
       </div>
 
-      {/* Actions — stopPropagation so the row click doesn't fire */}
-      <div className="relative z-10 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+      {/* Actions */}
+      <div className="relative z-10 w-7 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
         <Button
           variant="ghost"
           size="icon"
           className="h-7 w-7"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => e.preventDefault()}
+          aria-label={`More options for ${proposal.title}`}
         >
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </div>
-    </div>
+    </Link>
   );
 }

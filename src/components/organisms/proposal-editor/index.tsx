@@ -3,6 +3,7 @@
 // ProposalEditor — Tiptap-based rich text editor for a single proposal section.
 // Streams AI-generated content from /api/ai/stream-section via SSE.
 
+import { AnimatePresence, motion } from "framer-motion";
 import { Component, useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode, ErrorInfo } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -34,7 +35,6 @@ import type { SectionGeneratorOutput } from "@/lib/ai/validators/section-generat
 export type { ProposalSection, GenerateContext };
 
 // ── Error boundary ──────────────────────────────────────────────────────────
-// Wraps each section editor so one bad section can't crash the whole page.
 class EditorErrorBoundary extends Component<
   { readonly children: ReactNode; readonly title: string },
   { readonly hasError: boolean }
@@ -56,7 +56,7 @@ class EditorErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <div className="flex items-center gap-2 rounded-lg border border-danger/30 bg-danger-bg px-4 py-3 text-sm text-danger">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           <span>
             Section &ldquo;{this.props.title}&rdquo; could not be rendered.
@@ -79,35 +79,25 @@ interface ProposalEditorProps {
     html: string,
   ) => void;
   readonly autoSaveDelayMs?: number;
-  /** When true, starts generation automatically (once). Used by "Generate All". */
   readonly autoGenerate?: boolean;
 }
 
 function ConfidenceBadge({ score }: { readonly score: number }) {
   const pct = Math.round(score * 100);
-  const colorClass =
-    score > 0.7
-      ? "bg-pp-success-bg text-pp-success-text"
-      : score >= 0.4
-        ? "bg-pp-warning-bg text-pp-warning-text"
-        : "bg-pp-danger-bg text-pp-danger-text";
+  const variant =
+    score > 0.7 ? "success" : score >= 0.4 ? "warning" : "danger";
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-        colorClass,
-      )}
-    >
+    <Badge variant={variant} className="rounded-full px-2 py-0.5 text-xs font-medium">
       {pct}% confidence
-    </span>
+    </Badge>
   );
 }
 
 function getConfidenceBorderClass(score: number | null): string {
   if (score === null) return "border-l-4 border-l-transparent";
-  if (score > 0.7) return "border-l-4 border-l-pp-success";
-  if (score >= 0.4) return "border-l-4 border-l-pp-warning";
-  return "border-l-4 border-l-pp-danger";
+  if (score > 0.7) return "border-l-4 border-l-success";
+  if (score >= 0.4) return "border-l-4 border-l-warning";
+  return "border-l-4 border-l-danger";
 }
 
 function ProposalEditorInner({
@@ -122,8 +112,6 @@ function ProposalEditorInner({
     section.confidenceScore ?? null,
   );
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Tracks whether the auto-generate has already fired for this activation,
-  // preventing double-fires when deps change during an active generation.
   const autoGenerateFiredRef = useRef(false);
 
   const editor = useEditor({
@@ -134,8 +122,6 @@ function ProposalEditorInner({
         placeholder: `Write the "${section.title}" section…`,
       }),
     ],
-    // Detect format: DB-saved content starts with "<" (HTML from editor.getHTML()).
-    // AI-streamed content that hasn't been edited yet is markdown — convert it.
     content: section.content
       ? section.content.trimStart().startsWith("<")
         ? section.content
@@ -144,7 +130,7 @@ function ProposalEditorInner({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none focus:outline-none min-h-[200px] h-auto px-6 py-4 text-[15px] leading-[1.7]",
+          "prose prose-sm max-w-none focus:outline-none min-h-[200px] h-auto px-6 py-4 text-base leading-relaxed",
       },
     },
     onUpdate: ({ editor: ed }) => {
@@ -180,7 +166,6 @@ function ProposalEditorInner({
       onComplete: handleGenerateComplete,
     });
 
-  // Drive "Generate All" queue: fire once when autoGenerate flips to true.
   useEffect(() => {
     if (autoGenerate && !autoGenerateFiredRef.current && !isGenerating) {
       autoGenerateFiredRef.current = true;
@@ -194,17 +179,17 @@ function ProposalEditorInner({
   return (
     <div
       id={`section-${section.id}`}
+      role="region"
+      aria-label={section.title}
       className={cn(
-        "flex flex-col rounded-lg border border-pp-border bg-pp-background-card transition-shadow hover:shadow-md",
+        "flex flex-col rounded-lg border border-border bg-background-elevated transition-shadow hover:shadow-md",
         getConfidenceBorderClass(confidenceScore),
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-pp-border bg-pp-background-elevated/20 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-border bg-background-subtle/30 px-4 py-3">
         <div className="flex items-center gap-3">
-          <h3 className="text-lg font-semibold text-pp-foreground">
-            {section.title}
-          </h3>
+          <h3 className="text-lg font-semibold">{section.title}</h3>
           {confidenceScore !== null && (
             <ConfidenceBadge score={confidenceScore} />
           )}
@@ -217,81 +202,97 @@ function ProposalEditorInner({
         </div>
 
         <div className="flex items-center gap-2">
-          {isGenerating ? (
-            <>
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled
-                className="h-7 gap-1.5 text-xs opacity-40"
+          <AnimatePresence mode="wait">
+            {isGenerating ? (
+              <motion.div
+                key="generating"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex items-center gap-2"
               >
-                <RotateCcw className="h-3 w-3" />
-                Regenerate
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={cancel}
-                className="relative h-7 gap-1.5 overflow-hidden text-xs"
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled
+                  className="h-7 gap-1.5 text-xs opacity-40"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  Regenerate
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={cancel}
+                  className="relative h-7 gap-1.5 overflow-hidden text-xs"
+                >
+                  <span className="absolute inset-0 animate-pulse bg-[hsl(var(--accent))]/10" />
+                  <Zap className="relative h-3 w-3 text-[hsl(var(--accent))]" />
+                  <span className="relative">Generating…</span>
+                </Button>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="idle"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex items-center gap-2"
               >
-                <span className="absolute inset-0 animate-pulse bg-primary/10" />
-                <Zap className="relative h-3 w-3 text-primary" />
-                <span className="relative">Generating…</span>
-              </Button>
-            </>
-          ) : (
-            <>
-              {section.content && (
+                {section.content && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => void start()}
+                            className="h-7 gap-1.5 text-xs"
+                            disabled={generateContext.requirements.length === 0}
+                            aria-label="Regenerate this section"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            Regenerate
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      {generateContext.requirements.length === 0 && (
+                        <TooltipContent side="bottom">
+                          Upload an RFP or add requirements to regenerate content
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="inline-flex">
                         <Button
                           size="sm"
-                          variant="ghost"
                           onClick={() => void start()}
                           className="h-7 gap-1.5 text-xs"
                           disabled={generateContext.requirements.length === 0}
-                          title="Regenerate this section"
+                          aria-label="Generate this section"
                         >
-                          <RotateCcw className="h-3 w-3" />
-                          Regenerate
+                          <Sparkles className="h-3 w-3" />
+                          Generate
                         </Button>
                       </span>
                     </TooltipTrigger>
                     {generateContext.requirements.length === 0 && (
                       <TooltipContent side="bottom">
-                        Upload an RFP or add requirements to regenerate content
+                        Upload an RFP or add requirements to generate content
                       </TooltipContent>
                     )}
                   </Tooltip>
                 </TooltipProvider>
-              )}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    {/* span wrapper required — disabled buttons suppress mouse events needed for tooltip hover */}
-                    <span className="inline-flex">
-                      <Button
-                        size="sm"
-                        onClick={() => void start()}
-                        className="h-7 gap-1.5 text-xs"
-                        disabled={generateContext.requirements.length === 0}
-                      >
-                        <Sparkles className="h-3 w-3" />
-                        Generate
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  {generateContext.requirements.length === 0 && (
-                    <TooltipContent side="bottom">
-                      Upload an RFP or add requirements to generate content
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            </>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -299,52 +300,66 @@ function ProposalEditorInner({
 
       {/* Error banner */}
       {error && (
-        <div className="flex items-center gap-2 border-b border-destructive/20 bg-destructive/5 px-4 py-2 text-xs text-destructive">
+        <div className="flex items-center gap-2 border-b border-danger/20 bg-danger-bg px-4 py-2 text-xs text-danger">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
           <span>{error}</span>
           <button
             type="button"
             onClick={clearError}
-            className="ml-auto hover:underline"
+            className="ml-auto hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
           >
             Dismiss
           </button>
         </div>
       )}
 
-      {/* Stream preview */}
-      {isGenerating && streamBuffer && (
-        <div className="border-b border-pp-border bg-pp-background-elevated/50 px-6 py-2">
-          <p className="line-clamp-2 font-mono text-xs text-pp-foreground-muted">
-            {streamBuffer.slice(-200)}
-            <span className="animate-pulse">▋</span>
-          </p>
-        </div>
-      )}
+      {/* Streaming area — aria-live so screen readers announce updates */}
+      <div
+        aria-live="polite"
+        aria-busy={isGenerating}
+        aria-label={`${section.title} content`}
+      >
+        {/* Stream preview */}
+        <AnimatePresence>
+          {isGenerating && streamBuffer && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="border-b border-border bg-background-subtle/50 px-6 py-2"
+            >
+              <p className="line-clamp-2 font-mono text-xs text-foreground-muted">
+                {streamBuffer.slice(-200)}
+                <span className="animate-pulse">▋</span>
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Editor area */}
-      <div className="relative">
-        {isGenerating && !streamBuffer && (
-          <div className="space-y-3 px-6 py-4">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-11/12" />
-            <Skeleton className="h-4 w-4/5" />
-            <Skeleton className="mt-4 h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-5/6" />
-            <Skeleton className="mt-4 h-4 w-full" />
-            <Skeleton className="h-4 w-2/3" />
+        {/* Editor area */}
+        <div className="relative">
+          {isGenerating && !streamBuffer && (
+            <div className="space-y-3 px-6 py-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-11/12" />
+              <Skeleton className="h-4 w-4/5" />
+              <Skeleton className="mt-4 h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="mt-4 h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          )}
+          <div className={isGenerating && !streamBuffer ? "hidden" : undefined}>
+            <EditorContent editor={editor} />
           </div>
-        )}
-        <div className={isGenerating && !streamBuffer ? "hidden" : undefined}>
-          <EditorContent editor={editor} />
         </div>
       </div>
     </div>
   );
 }
 
-/** Public export — wraps the inner editor with a per-section error boundary. */
 export function ProposalEditor(props: ProposalEditorProps) {
   return (
     <EditorErrorBoundary title={props.section.title}>

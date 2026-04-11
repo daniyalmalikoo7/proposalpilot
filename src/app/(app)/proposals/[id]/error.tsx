@@ -18,7 +18,7 @@ export default function ProposalError({
 
   return (
     <div className="flex h-screen items-center justify-center bg-background">
-      <div className="mx-auto max-w-md rounded-lg border border-border bg-card p-8 text-center shadow-sm">
+      <div className="mx-auto max-w-md rounded-lg border border-border bg-background-elevated p-8 text-center shadow-sm">
         <AlertTriangle className="mx-auto h-10 w-10 text-destructive" />
         <h2 className="mt-4 text-lg font-semibold text-foreground">
           Failed to load proposal

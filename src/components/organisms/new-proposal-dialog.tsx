@@ -48,7 +48,6 @@ export function NewProposalDialog({
 
     setUploadError(null);
 
-    // Upload RFP if provided — fire and store text for later use in the editor.
     if (rfpFile) {
       const form = new FormData();
       form.append("file", rfpFile);
@@ -86,33 +85,37 @@ export function NewProposalDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-6 shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
-          aria-describedby={undefined}
+          className="fixed left-1/2 top-1/2 z-50 w-full max-w-[560px] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border bg-background-elevated p-6 shadow-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <Dialog.Title className="text-base font-semibold">
-              New Proposal
-            </Dialog.Title>
-            <Dialog.Close asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                disabled={isPending}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </Dialog.Close>
-          </div>
+          <Dialog.Title className="text-base font-semibold">
+            New Proposal
+          </Dialog.Title>
+          <Dialog.Description className="mt-1 text-sm text-foreground-muted">
+            Create a new proposal. You can attach an RFP document to extract
+            requirements automatically.
+          </Dialog.Description>
+
+          {/* Close button */}
+          <Dialog.Close asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-4 top-4 h-7 w-7"
+              disabled={isPending}
+              aria-label="Close dialog"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </Dialog.Close>
 
           {/* Form */}
           <div className="mt-5 space-y-4">
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium">
-                Title <span className="text-destructive">*</span>
+              <label htmlFor="proposal-title" className="block text-sm font-medium">
+                Title <span className="text-danger">*</span>
               </label>
               <Input
+                id="proposal-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Cloud Migration Strategy"
@@ -122,8 +125,11 @@ export function NewProposalDialog({
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium">Client name</label>
+              <label htmlFor="proposal-client" className="block text-sm font-medium">
+                Client name
+              </label>
               <Input
+                id="proposal-client"
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
                 placeholder="e.g. Acme Corporation"
@@ -132,15 +138,16 @@ export function NewProposalDialog({
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium">
+              <label htmlFor="proposal-rfp" className="block text-sm font-medium">
                 RFP document{" "}
-                <span className="text-xs font-normal text-muted-foreground">
+                <span className="text-xs font-normal text-foreground-muted">
                   optional
                 </span>
               </label>
               <button
+                id="proposal-rfp"
                 type="button"
-                className="flex w-full cursor-pointer items-center gap-3 rounded-md border border-dashed border-border px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full cursor-pointer items-center gap-3 rounded-md border border-dashed border-border px-4 py-3 text-sm text-foreground-muted transition-colors hover:border-[hsl(var(--accent-hover))] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isPending}
               >
@@ -163,7 +170,7 @@ export function NewProposalDialog({
             </div>
 
             {(uploadError ?? createProposal.error) && (
-              <p className="text-sm text-destructive">
+              <p className="text-sm text-danger">
                 {uploadError ?? createProposal.error?.message}
               </p>
             )}

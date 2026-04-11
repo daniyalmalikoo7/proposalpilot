@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { BookOpen, Check, Download, Loader2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/atoms/button";
 import { RequirementsSidebar } from "@/components/organisms/requirements-sidebar";
 import { KBSearchPanel } from "@/components/organisms/kb-search-panel";
@@ -50,7 +51,7 @@ export default function ProposalEditorPage() {
   if (proposalQuery.isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-pp-foreground-muted" />
+        <Loader2 className="h-6 w-6 animate-spin text-foreground-muted" />
       </div>
     );
   }
@@ -69,22 +70,22 @@ export default function ProposalEditorPage() {
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       {/* ── Top bar ────────────────────────────────────────────────────────────── */}
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-pp-border bg-pp-background-card px-6">
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background-elevated px-6">
         {/* Breadcrumb + title */}
         <div className="flex min-w-0 items-center gap-2">
           <Link
             href="/proposals"
-            className="shrink-0 text-xs text-pp-foreground-muted transition-colors hover:text-foreground"
+            className="shrink-0 text-xs text-foreground-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
           >
             ← Proposals
           </Link>
-          <span className="text-pp-foreground-muted">/</span>
+          <span className="text-foreground-dim">/</span>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold leading-tight">
               {proposal.title}
             </p>
             {proposal.clientName && (
-              <p className="truncate text-xs text-pp-foreground-muted">
+              <p className="truncate text-xs text-foreground-muted">
                 {proposal.clientName}
               </p>
             )}
@@ -93,18 +94,35 @@ export default function ProposalEditorPage() {
 
         {/* Save indicator + export buttons */}
         <div className="flex shrink-0 items-center gap-3">
-          {saveState === "saving" && (
-            <span className="flex items-center gap-1.5 text-xs text-pp-foreground-muted">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Saving…
-            </span>
-          )}
-          {saveState === "saved" && (
-            <span className="flex items-center gap-1.5 text-xs text-pp-success-text">
-              <Check className="h-3 w-3" />
-              Saved
-            </span>
-          )}
+          {/* Animated save state — fades between states */}
+          <AnimatePresence mode="wait">
+            {saveState === "saving" && (
+              <motion.span
+                key="saving"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex items-center gap-1.5 text-xs text-foreground-muted"
+              >
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Saving…
+              </motion.span>
+            )}
+            {saveState === "saved" && (
+              <motion.span
+                key="saved"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex items-center gap-1.5 text-xs text-success-foreground"
+              >
+                <Check className="h-3 w-3" />
+                Saved
+              </motion.span>
+            )}
+          </AnimatePresence>
           {/* KB panel toggle — shows selected count when items are active */}
           <Button
             size="sm"

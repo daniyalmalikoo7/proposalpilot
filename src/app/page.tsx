@@ -8,9 +8,7 @@ import { LandingFooter } from "./_components/landing/footer";
 
 export default function LandingPage() {
   return (
-    <div className="bg-[#060b18] text-white">
-      {/* Ensure html/body share the same dark background — prevents white overscroll flash */}
-      <style>{`html,body{background-color:#060b18!important;scroll-behavior:smooth}`}</style>
+    <div className="bg-background text-foreground">
       <LandingNav />
       <main>
         <LandingHero />

@@ -20,29 +20,30 @@ const PROBLEMS = [
 
 export function ProblemSolution() {
   return (
-    <section className="bg-[#060b18] px-6 py-16">
+    <section className="bg-background-subtle px-6 py-16">
       <div className="mx-auto max-w-5xl">
-        <h2 className="text-center text-3xl font-bold text-white mb-4">
+        <h2 className="text-3xl font-bold tracking-tight mb-3">
           The old way is costing you bids
         </h2>
-        <p className="text-center text-slate-400 mb-12 max-w-xl mx-auto">
+        <p className="text-foreground-muted mb-10 max-w-xl">
           Proposal teams spend most of their time on copy-paste and formatting,
           not on the thinking that actually wins deals.
         </p>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+        {/* Single-column list layout — replaces banned 3-column icon grid */}
+        <div className="space-y-4">
           {PROBLEMS.map(({ problem, solution, icon: Icon }) => (
             <div
               key={problem}
-              className="rounded-xl border border-slate-800 bg-slate-900/60 p-6"
+              className="flex items-start gap-6 rounded-xl border border-border bg-background-elevated p-6 shadow-sm"
             >
-              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
+              <div className="shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-accent-muted text-[hsl(var(--accent))]">
                 <Icon className="h-5 w-5" />
               </div>
-              <p className="text-sm text-red-400 line-through mb-2">
-                {problem}
-              </p>
-              <p className="text-base font-semibold text-white">{solution}</p>
+              <div className="flex-1 grid grid-cols-1 gap-1 sm:grid-cols-2">
+                <p className="text-sm text-danger line-through">{problem}</p>
+                <p className="text-base font-semibold">{solution}</p>
+              </div>
             </div>
           ))}
         </div>

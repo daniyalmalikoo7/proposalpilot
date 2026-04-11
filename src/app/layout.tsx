@@ -10,7 +10,7 @@ import { TRPCReactProvider } from "@/lib/trpc/provider";
 import { ThemeProvider } from "@/lib/theme";
 import "@/app/globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "ProposalPilot — AI-Powered Proposal Engine",
@@ -29,7 +29,7 @@ export default function RootLayout({
       signUpFallbackRedirectUrl="/onboarding"
     >
       <html lang="en" suppressHydrationWarning>
-        <body className={inter.className}>
+        <body className={`${inter.variable} font-sans antialiased`}>
           <TRPCReactProvider>
             <ThemeProvider>{children}</ThemeProvider>
           </TRPCReactProvider>

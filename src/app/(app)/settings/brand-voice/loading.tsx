@@ -15,7 +15,7 @@ export default function BrandVoiceLoading() {
       </div>
 
       {/* Upload area skeleton */}
-      <div className="rounded-lg border-2 border-dashed border-pp-border p-8 flex flex-col items-center gap-3">
+      <div className="rounded-lg border-2 border-dashed border-border p-8 flex flex-col items-center gap-3">
         <Skeleton className="h-10 w-10 rounded-md" />
         <Skeleton className="h-4 w-48" />
         <Skeleton className="h-3.5 w-64" />

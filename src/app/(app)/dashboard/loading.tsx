@@ -29,7 +29,7 @@ export default function DashboardLoading() {
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="rounded-lg border border-pp-border bg-pp-background-card p-4"
+            className="rounded-lg border border-border bg-background-elevated p-4"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 space-y-2">

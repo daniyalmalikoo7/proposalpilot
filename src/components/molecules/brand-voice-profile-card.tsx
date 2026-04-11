@@ -89,7 +89,7 @@ export function BrandVoiceProfileCard({ profile }: BrandVoiceProfileCardProps) {
                   key={i}
                   className="flex items-start gap-1.5 text-xs text-foreground"
                 >
-                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[hsl(var(--accent))]" />
                   {pattern}
                 </li>
               ))}

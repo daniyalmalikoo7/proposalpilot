@@ -1,9 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, TrendingUp, Clock, Target, Layers, Loader2 } from "lucide-react";
+import { Plus, TrendingUp, Clock, Target, Layers } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/atoms/button";
 import { ProposalCard } from "@/components/molecules/proposal-card";
+import { FilterTabBar } from "@/components/molecules/filter-tab-bar";
+import { ProposalTableSkeleton } from "@/components/molecules/proposal-table-skeleton";
 import { NewProposalDialog } from "@/components/organisms/new-proposal-dialog";
 import { trpc } from "@/lib/trpc/client";
 import type { Proposal, ProposalStatus } from "@/lib/types/proposal";
@@ -103,13 +106,21 @@ export default function DashboardPage() {
     setCursor(0);
   };
 
+  const filterTabsWithCounts = FILTER_TABS.map((tab) => ({
+    ...tab,
+    count:
+      tab.value === "ALL"
+        ? proposals.length
+        : proposals.filter((p) => p.status === tab.value).length,
+  }));
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-pp-foreground-muted">
+          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-foreground-muted">
             Your proposal pipeline.
           </p>
         </div>
@@ -122,7 +133,7 @@ export default function DashboardPage() {
       <NewProposalDialog open={dialogOpen} onOpenChange={setDialogOpen} />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {[
           {
             label: "Active",
@@ -159,9 +170,9 @@ export default function DashboardPage() {
           return (
             <div
               key={s.label}
-              className="rounded-lg border border-pp-border bg-pp-background-card px-4 py-4"
+              className="rounded-lg border border-border bg-background-elevated px-4 py-4 shadow-sm"
             >
-              <div className="flex items-center gap-1.5 text-pp-foreground-muted">
+              <div className="flex items-center gap-1.5 text-foreground-muted">
                 <Icon className="h-3.5 w-3.5" />
                 <span className="text-xs font-medium">{s.label}</span>
               </div>
@@ -169,57 +180,31 @@ export default function DashboardPage() {
                 className={cn(
                   "mt-1.5 tracking-tight",
                   s.value === "No data yet"
-                    ? "text-sm text-pp-foreground-muted"
+                    ? "text-sm text-foreground-muted"
                     : "font-mono text-2xl font-semibold",
                 )}
               >
                 {s.value}
               </p>
-              <p className="mt-0.5 text-xs text-pp-foreground-muted">{s.sub}</p>
+              <p className="mt-0.5 text-xs text-foreground-muted">{s.sub}</p>
             </div>
           );
         })}
       </div>
 
       {/* Proposal table */}
-      <div className="rounded-lg border border-pp-border bg-pp-background-card">
+      <div className="rounded-lg border border-border bg-background-elevated shadow-sm">
         {/* Filter tabs */}
-        <div className="flex flex-wrap items-center gap-0.5 border-b border-pp-border px-3 py-2">
-          {FILTER_TABS.map((tab) => {
-            const count =
-              tab.value === "ALL"
-                ? proposals.length
-                : proposals.filter((p) => p.status === tab.value).length;
-            const isActive = activeFilter === tab.value;
-            return (
-              <button
-                key={tab.value}
-                onClick={() => handleFilterChange(tab.value)}
-                className={cn(
-                  "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-pp-foreground-muted hover:bg-pp-background-elevated",
-                )}
-              >
-                {tab.label}
-                <span
-                  className={cn(
-                    "rounded-full px-1.5 font-mono text-[10px]",
-                    isActive
-                      ? "bg-primary-foreground/20"
-                      : "bg-pp-background-elevated",
-                  )}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+        <div className="border-b border-border px-3 py-2">
+          <FilterTabBar
+            tabs={filterTabsWithCounts}
+            activeTab={activeFilter}
+            onTabChange={handleFilterChange}
+          />
         </div>
 
         {/* Column headers */}
-        <div className="flex items-center gap-4 border-b border-pp-border px-4 py-2 text-xs font-medium text-pp-foreground-muted">
+        <div className="flex items-center gap-4 border-b border-border px-4 py-2 text-xs font-medium text-foreground-muted">
           <div className="flex-1">Title</div>
           <div className="w-24 shrink-0">Status</div>
           <div className="w-20 shrink-0">Deadline</div>
@@ -228,17 +213,12 @@ export default function DashboardPage() {
           <div className="w-7 shrink-0" />
         </div>
 
-        {/* Loading */}
-        {isLoading && (
-          <div className="flex items-center justify-center gap-2 px-4 py-10 text-sm text-pp-foreground-muted">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Loading proposals…
-          </div>
-        )}
+        {/* Loading — shape-matched skeleton */}
+        {isLoading && <ProposalTableSkeleton rows={5} />}
 
         {/* Error */}
         {error && !isLoading && (
-          <p className="px-4 py-8 text-center text-sm text-destructive">
+          <p className="px-4 py-8 text-center text-sm text-danger">
             {error.message}
           </p>
         )}
@@ -247,7 +227,7 @@ export default function DashboardPage() {
         {!isLoading && !error && proposals.length === 0 && (
           <div className="flex flex-col items-center gap-3 px-4 py-12 text-center">
             <p className="text-sm font-medium">No proposals yet</p>
-            <p className="text-sm text-pp-foreground-muted">
+            <p className="text-sm text-foreground-muted">
               Create your first proposal to start winning bids.
             </p>
             <Button size="sm" onClick={() => setDialogOpen(true)}>
@@ -259,22 +239,39 @@ export default function DashboardPage() {
 
         {/* Filter empty state */}
         {!isLoading && !error && proposals.length > 0 && page.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-pp-foreground-muted">
+          <p className="px-4 py-8 text-center text-sm text-foreground-muted">
             No proposals in this category.
           </p>
         )}
 
-        {/* Rows */}
-        {!isLoading &&
-          !error &&
-          page.map((proposal) => (
-            <ProposalCard key={proposal.id} proposal={proposal} />
-          ))}
+        {/* Rows — staggered reveal */}
+        {!isLoading && !error && (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.04 } },
+            }}
+          >
+            {page.map((proposal) => (
+              <motion.div
+                key={proposal.id}
+                variants={{
+                  hidden: { opacity: 0, y: 6 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
+                }}
+              >
+                <ProposalCard proposal={proposal} />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
 
         {/* Pagination */}
         {filtered.length > PAGE_SIZE && (
-          <div className="flex items-center justify-between border-t border-pp-border px-4 py-3">
-            <span className="font-mono text-xs text-pp-foreground-muted">
+          <div className="flex items-center justify-between border-t border-border px-4 py-3">
+            <span className="font-mono text-xs text-foreground-muted">
               {cursor + 1}–{Math.min(cursor + PAGE_SIZE, filtered.length)} of{" "}
               {filtered.length}
             </span>
