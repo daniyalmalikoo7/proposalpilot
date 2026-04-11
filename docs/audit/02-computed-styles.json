@@ -1,0 +1,421 @@
+{
+  "meta": {
+    "generated": "2026-04-11",
+    "method": "static-source-analysis",
+    "note": "No live browser available. All values derived from source code grep and file reading. Computed pixel values noted where Tailwind classes are deterministic."
+  },
+  "routes": {
+    "/": {
+      "components": ["LandingNav", "LandingHero", "ProblemSolution", "HowItWorks", "Features", "Pricing", "LandingFooter"],
+      "colors": {
+        "background": "#060b18 (hardcoded, 7 instances — NOT in token system)",
+        "foreground": "text-white (raw Tailwind)",
+        "muted-foreground": "text-slate-400 (raw Tailwind, not token)",
+        "accent": "bg-indigo-600 / text-indigo-400 (raw Tailwind)",
+        "card-background": "bg-slate-900/60 (raw Tailwind)",
+        "card-border": "border-slate-800 (raw Tailwind)",
+        "glow": "bg-indigo-600/20 (decorative, off-token)",
+        "cta-primary": "bg-indigo-600 hover:bg-indigo-500",
+        "cta-secondary": "bg-slate-800/60 border-slate-700",
+        "gradient-text": "from-indigo-400 to-violet-400 (anti-slop violation)"
+      },
+      "fontSizes": {
+        "hero-h1": "text-5xl (48px) sm:text-6xl (60px) lg:text-7xl (72px)",
+        "section-h2": "text-3xl (30px)",
+        "sub-heading-h3": "text-base (16px)",
+        "body": "text-sm (14px) / text-lg (18px) for hero body",
+        "badge": "text-sm (14px)",
+        "price-display": "text-4xl (36px)"
+      },
+      "spacing": {
+        "hero-padding-top": "pt-32 (128px)",
+        "section-padding-y": "py-16 (64px)",
+        "card-padding": "p-6 (24px) / p-8 (32px) for pricing",
+        "section-gap": "gap-6 (24px)"
+      },
+      "borderRadii": {
+        "cards": "rounded-xl (12px)",
+        "buttons": "rounded-lg (8px)",
+        "badge-pill": "rounded-full",
+        "icon-container": "rounded-lg (8px)"
+      },
+      "shadows": {
+        "cta-primary": "shadow-lg shadow-indigo-500/25 (off-token color)",
+        "pricing-pro-card": "shadow-lg shadow-indigo-500/10 (off-token color)"
+      },
+      "transitions": ["transition (default — no property or duration specified)"],
+      "motion": "none — no animations beyond CSS transition",
+      "issues": {
+        "slop-patterns": ["centered-hero", "three-column-icon-grid", "gradient-headline-text", "indigo-blob-glow"],
+        "token-violations": "40+ raw Tailwind color classes; zero pp-* or CSS var token usage",
+        "arbitrary-values": ["h-[600px]", "w-[600px]", "blur-[120px]"]
+      }
+    },
+    "/sign-in": {
+      "components": ["Clerk SignIn widget"],
+      "colors": {
+        "page-background": "bg-background (CSS var → hsl(222.2 84% 4.9%) in dark)",
+        "widget": "Clerk-managed"
+      },
+      "fontSizes": "Clerk-managed",
+      "spacing": "full-screen flex center — no custom spacing",
+      "borderRadii": "Clerk-managed",
+      "shadows": "Clerk-managed",
+      "transitions": [],
+      "motion": "none",
+      "issues": {
+        "custom-branding": "No ProposalPilot logo or context visible in wrapper",
+        "token-usage": "bg-background is the only token used — Clerk handles rest"
+      }
+    },
+    "/sign-up": {
+      "components": ["Clerk SignUp widget"],
+      "colors": {
+        "page-background": "bg-background (CSS var)"
+      },
+      "fontSizes": "Clerk-managed",
+      "spacing": "full-screen flex center",
+      "borderRadii": "Clerk-managed",
+      "shadows": "Clerk-managed",
+      "transitions": [],
+      "motion": "none",
+      "issues": {
+        "custom-branding": "No ProposalPilot logo or context in wrapper"
+      }
+    },
+    "/onboarding": {
+      "components": ["OnboardingWizard", "UploadDropzone", "Button", "Input"],
+      "colors": {
+        "page-background": "bg-background (CSS var — via AppShell? No — standalone page)",
+        "text-muted": "text-muted-foreground (Shadcn CSS var — inconsistent with app which uses text-pp-foreground-muted)",
+        "wizard-step-active": "bg-pp-accent/10 text-pp-accent (pp-* token)",
+        "error-border": "border-destructive/40 bg-destructive/10 (CSS var)",
+        "card-background": "bg-card border-border (Shadcn CSS vars)",
+        "button": "bg-primary text-primary-foreground (CSS var)"
+      },
+      "fontSizes": {
+        "page-h1": "text-2xl (24px)",
+        "subtitle": "text-sm (14px)",
+        "step-indicator": "text-xs (12px)",
+        "body": "text-sm (14px)"
+      },
+      "spacing": {
+        "page-container": "max-w-2xl mx-auto",
+        "header-margin-bottom": "mb-10 (40px)",
+        "card-padding": "p-5 (20px)"
+      },
+      "borderRadii": {
+        "step-circles": "rounded-full",
+        "cards": "rounded-lg (8px)",
+        "buttons": "rounded-md (6px)"
+      },
+      "shadows": "none on cards",
+      "transitions": ["transition-colors on buttons and step indicators"],
+      "motion": "none — step changes are instant renders",
+      "issues": {
+        "token-mixing": "text-muted-foreground (Shadcn) mixed with pp-* tokens",
+        "step-animation": "Step transitions are instant — no AnimatePresence",
+        "touch-targets": "Step indicator circles are h-7 w-7 (28px) — below 44px minimum"
+      }
+    },
+    "/dashboard": {
+      "components": ["AppShell", "Sidebar", "StatCards (×4)", "ProposalCard", "NewProposalDialog", "FilterTabs"],
+      "colors": {
+        "page-background": "bg-pp-background (pp-* token via AppShell)",
+        "card-background": "bg-pp-background-card border-pp-border (pp-* tokens)",
+        "stat-value": "font-mono text-2xl (pp-foreground via text-foreground inherit)",
+        "muted-text": "text-pp-foreground-muted",
+        "filter-tab-active": "bg-primary text-primary-foreground (Shadcn CSS var — inconsistency)",
+        "filter-tab-inactive": "text-pp-foreground-muted hover:bg-pp-background-elevated (pp-* token)",
+        "status-in-progress": "bg-blue-950 text-blue-400 (raw Tailwind — no token)",
+        "status-review": "bg-purple-950 text-purple-400 (raw Tailwind — no token)",
+        "status-won": "bg-pp-success-bg text-pp-success-text (pp-* token)",
+        "status-lost": "bg-pp-danger-bg text-pp-danger-text (pp-* token)",
+        "error-text": "text-destructive (Shadcn CSS var)"
+      },
+      "fontSizes": {
+        "page-h1": "text-xl (20px) — inconsistent with /proposals which uses text-2xl",
+        "subtitle": "text-sm (14px)",
+        "stat-value": "text-2xl (24px) font-mono",
+        "filter-tab": "text-xs (12px)",
+        "count-badge": "text-[10px] (10px — arbitrary)",
+        "column-header": "text-xs (12px)",
+        "proposal-title": "text-sm (14px) font-medium",
+        "client-name": "text-xs (12px)"
+      },
+      "spacing": {
+        "page-spacing": "space-y-5 (20px) — inconsistent with /proposals space-y-6",
+        "stats-grid-gap": "gap-3 (12px)",
+        "card-padding": "px-4 py-4 (16px both)",
+        "tab-padding": "px-2.5 py-1.5 (10px/6px — off 8px grid)",
+        "row-padding": "px-4 py-3 (16px/12px)"
+      },
+      "borderRadii": {
+        "stat-cards": "rounded-lg (8px)",
+        "proposal-table": "rounded-lg (8px)",
+        "filter-tabs": "rounded-md (6px)",
+        "status-badges": "rounded-md (6px)"
+      },
+      "shadows": "none",
+      "transitions": ["transition-colors on filter tabs and proposal rows"],
+      "motion": "Loader2 animate-spin for loading; no skeleton for proposal list; no page transition",
+      "issues": {
+        "loading-state": "spinner + text — not a skeleton matching the table layout",
+        "token-mixing": "bg-primary for active tabs (Shadcn) vs bg-pp-background-elevated for inactive (pp-*)",
+        "status-colors": "blue-950/400 and purple-950/400 not in token system",
+        "aria": "filter buttons missing role=tab and aria-selected"
+      }
+    },
+    "/proposals": {
+      "components": ["AppShell", "Sidebar", "ProposalList", "Skeleton", "NewProposalDialog"],
+      "colors": {
+        "page-background": "bg-pp-background (via AppShell)",
+        "card-background": "bg-pp-background-card border-pp-border",
+        "status-badge": "bg-pp-background-elevated text-pp-foreground-muted (flat — no color per status)",
+        "row-hover": "hover:bg-pp-background-elevated/40",
+        "muted-text": "text-pp-foreground-muted"
+      },
+      "fontSizes": {
+        "page-h1": "text-2xl (24px) — inconsistent with /dashboard text-xl",
+        "subtitle": "text-sm (14px)",
+        "proposal-title": "text-sm (14px) font-medium",
+        "client-name": "text-xs (12px)",
+        "status-badge": "text-xs (12px)",
+        "date": "text-xs (12px)"
+      },
+      "spacing": {
+        "page-spacing": "space-y-6 (24px)",
+        "list-header-padding": "px-6 py-4 (24px/16px)",
+        "row-padding": "px-6 py-4 (24px/16px) — different from /dashboard px-4 py-3",
+        "empty-state-padding": "px-6 py-16"
+      },
+      "borderRadii": {
+        "card": "rounded-lg (8px)",
+        "status-badge": "rounded-full",
+        "skeleton": "rounded-full on status skeleton"
+      },
+      "shadows": "none",
+      "transitions": ["transition-colors on rows"],
+      "motion": "Skeleton atoms with animate-shimmer on loading",
+      "issues": {
+        "h1-inconsistency": "text-2xl here vs text-xl on /dashboard",
+        "row-element": "Proposal rows are <button> (correct here) vs <div onClick> in ProposalCard (/dashboard)",
+        "status-display": "All proposals show same flat grey badge regardless of status — no color coding on this view"
+      }
+    },
+    "/proposals/[id]": {
+      "components": ["custom top-bar", "RequirementsSidebar", "EditorCenterPanel", "KBSearchPanel", "TipTap editor"],
+      "colors": {
+        "top-bar": "bg-pp-background-card border-pp-border",
+        "sidebar-bg": "bg-pp-background-card",
+        "save-saving": "text-pp-foreground-muted",
+        "save-saved": "text-pp-success-text",
+        "breadcrumb": "text-pp-foreground-muted hover:text-foreground (mixed — hover uses CSS var)",
+        "editor-text": "prose-sm (TipTap default)"
+      },
+      "fontSizes": {
+        "proposal-title": "text-sm (14px) font-semibold",
+        "breadcrumb": "text-xs (12px)",
+        "save-state": "text-xs (12px)",
+        "editor-body": "text-[15px] (15px — arbitrary, between text-sm 14px and text-base 16px)",
+        "requirement-text": "text-[13px] (13px — arbitrary)",
+        "requirement-priority": "text-[11px] (11px — arbitrary)",
+        "section-label": "not explicitly found — TipTap default"
+      },
+      "spacing": {
+        "top-bar-height": "h-14 (56px)",
+        "top-bar-padding": "px-6 (24px)",
+        "sidebar-width": "w-72 (288px)",
+        "kb-panel-width": "w-64 (256px)"
+      },
+      "borderRadii": {
+        "section-cards": "rounded-lg (8px)",
+        "error-alerts": "rounded-lg (8px)"
+      },
+      "shadows": "hover:shadow-md on section cards",
+      "transitions": ["transition-colors on breadcrumb", "transition-shadow on section cards"],
+      "motion": "Loader2 animate-spin for loading/saving/exporting; NO AnimatePresence on KB panel show/hide",
+      "issues": {
+        "loading-state": "full-screen centered spinner — no layout skeleton",
+        "kb-panel-toggle": "show/hide is instant render/unmount — no animation",
+        "save-state": "instant text swap — no aria-live",
+        "arbitrary-font-sizes": ["text-[15px]", "text-[13px]", "text-[11px]", "text-[10px]"],
+        "touch-targets": "h-7 buttons on section cards (28px)"
+      }
+    },
+    "/knowledge-base": {
+      "components": ["AppShell", "Sidebar", "KBItemCard", "KBUploadForm", "Skeleton", "TypeFilterTabs"],
+      "colors": {
+        "page-background": "bg-pp-background (via AppShell)",
+        "card-background": "bg-pp-background-card border-pp-border",
+        "type-badge-case-study": "bg-pp-warning-bg text-pp-warning-text",
+        "type-badge-past-proposal": "bg-blue-950 text-blue-400 (off-token)",
+        "type-badge-methodology": "bg-purple-950 text-purple-400 (off-token)",
+        "type-badge-team-bio": "bg-pp-success-bg text-pp-success-text",
+        "type-badge-capability": "bg-cyan-950 text-cyan-400 (off-token)",
+        "filter-tab-active": "bg-primary text-primary-foreground (Shadcn CSS var — same inconsistency as /dashboard)",
+        "search-icon": "text-pp-foreground-muted"
+      },
+      "fontSizes": {
+        "page-h1": "text-xl (20px)",
+        "subtitle": "text-sm (14px)",
+        "filter-tab": "text-xs (12px)",
+        "count-badge": "text-[10px] (10px — arbitrary)",
+        "card-title": "text-sm (14px) font-medium",
+        "card-meta": "text-xs (12px)"
+      },
+      "spacing": {
+        "page-spacing": "space-y-5 (20px)",
+        "filter-gap": "gap-1.5 (6px — off 8px grid)",
+        "card-padding": "p-4 (16px)",
+        "skeleton-gap": "gap-3 (12px)"
+      },
+      "borderRadii": {
+        "cards": "rounded-lg (8px)",
+        "type-badges": "rounded-md (6px)",
+        "empty-state-icon-container": "rounded-full",
+        "skeleton-badge": "rounded-full"
+      },
+      "shadows": "hover:shadow-sm on KB item cards",
+      "transitions": ["transition-shadow on KB cards", "transition-opacity on MoreHorizontal button"],
+      "motion": "animate-shimmer on skeleton cards (CSS keyframe, linear, 1.5s)",
+      "issues": {
+        "off-token-colors": "blue-950, purple-950, cyan-950 badge backgrounds",
+        "token-mixing": "bg-primary for active filter tab",
+        "aria": "filter buttons missing role=tab, aria-selected",
+        "menu-accessibility": "KBItemCard dropdown is custom <button> list without Radix DropdownMenu",
+        "touch-target": "h-6 w-6 MoreHorizontal button (24px) — critically below 44px minimum"
+      }
+    },
+    "/settings": {
+      "components": ["AppShell", "Sidebar", "TabBar", "OrgForm", "TeamPlaceholder", "BillingCard"],
+      "colors": {
+        "page-background": "bg-pp-background (via AppShell)",
+        "tab-active": "border-b-2 border-primary (Shadcn CSS var — near-white in dark mode)",
+        "tab-inactive": "text-pp-foreground-muted hover:text-pp-foreground (pp-* tokens)",
+        "card-background": "bg-pp-background-card border-pp-border",
+        "save-success": "text-pp-success-text",
+        "error": "text-destructive (Shadcn CSS var)",
+        "active-badge": "bg-pp-success-bg text-pp-success-text",
+        "billing-plan-text": "font-mono text-2xl"
+      },
+      "fontSizes": {
+        "page-h1": "text-xl (20px)",
+        "subtitle": "text-sm (14px)",
+        "tab-labels": "text-sm (14px)",
+        "form-labels": "text-sm (14px) font-medium",
+        "plan-name": "text-2xl (24px) font-mono",
+        "plan-meta": "text-xs (12px) uppercase tracking-wider",
+        "billing-body": "text-sm (14px)"
+      },
+      "spacing": {
+        "page-spacing": "space-y-6 (24px)",
+        "tab-padding": "px-4 py-2.5 (16px/10px — py off 8px grid)",
+        "form-max-width": "max-w-lg",
+        "form-spacing": "space-y-5 (20px)",
+        "card-padding": "p-5 (20px) / p-6 (24px)"
+      },
+      "borderRadii": {
+        "cards": "rounded-lg (8px)"
+      },
+      "shadows": "none",
+      "transitions": ["transition-colors on tab buttons"],
+      "motion": "none — tab switching is instant",
+      "issues": {
+        "tab-active-color": "border-primary resolves to near-white in dark mode — not the indigo accent",
+        "tab-animation": "no shared-layout animation on tab indicator",
+        "save-feedback": "2.5s auto-dismiss text — no toast, no animation"
+      }
+    },
+    "/settings/brand-voice": {
+      "components": ["BrandVoiceClient", "SampleCard", "BrandVoiceProfileCard", "UploadDropzone"],
+      "colors": {
+        "page-context": "max-w-2xl column in AppShell",
+        "sample-card-bg": "bg-pp-background-card border-pp-border",
+        "dropzone-idle": "border-dashed border-pp-border",
+        "dropzone-hover": "border-pp-accent/60",
+        "error-bg": "bg-destructive/5 border-destructive/20 (Shadcn CSS var)",
+        "profile-card-bg": "bg-card border-border (Shadcn CSS vars — inconsistency)",
+        "dot-accent": "bg-primary (Shadcn CSS var — resolves to near-white in dark)"
+      },
+      "fontSizes": {
+        "sample-filename": "text-sm (14px) font-medium",
+        "sample-meta": "text-xs (12px)",
+        "error-text": "text-xs (12px)",
+        "profile-section-labels": "text-sm (14px)"
+      },
+      "spacing": {
+        "sample-card-padding": "p-3 (12px) — inconsistent with other cards at p-4 or p-5",
+        "dropzone-padding": "p-6 (24px)"
+      },
+      "borderRadii": {
+        "sample-cards": "rounded-lg (8px)",
+        "dropzone": "rounded-lg (8px)",
+        "profile-card": "rounded-lg (8px)"
+      },
+      "shadows": "none",
+      "transitions": ["transition-colors on dropzone"],
+      "motion": "Loader2 animate-spin during analysis; no progress stages",
+      "issues": {
+        "token-mixing": "bg-card / border-border (Shadcn) on profile card vs bg-pp-background-card on sample cards",
+        "bg-primary-dot": "bg-primary accent dot appears white in dark mode",
+        "card-padding": "p-3 on sample cards vs p-4/p-5 elsewhere — smallest card padding in the app"
+      }
+    }
+  },
+  "global": {
+    "tokenSystem": "DUAL — Shadcn CSS variables (--background, --card, --border, --primary etc.) + custom pp-* hex tokens (#0a0f1a, #111827 etc.) — values overlap but are NOT identical",
+    "uniqueColors": {
+      "ppTokenSystem": 19,
+      "shadcnCssVars": 12,
+      "offTokenRaw": 14,
+      "total": 45,
+      "critical": true,
+      "note": "14+ colors not in either token system (blue-950, purple-950, cyan-950, slate-*, indigo-*, #060b18)"
+    },
+    "uniqueFontSizes": {
+      "onTailwindScale": 11,
+      "arbitrary": 4,
+      "total": 15,
+      "arbitraryValues": ["text-[10px]", "text-[11px]", "text-[13px]", "text-[15px]"],
+      "critical": true
+    },
+    "uniqueSpacingValues": {
+      "onGrid": ["p-2","p-3","p-4","p-5","p-6","p-8","gap-2","gap-3","gap-4","gap-6","space-y-4","space-y-5","space-y-6"],
+      "offGrid": ["gap-0.5 (2px)","gap-1.5 (6px)","px-2.5 (10px)","py-0.5 (2px)","py-1.5 (6px)","py-2.5 (10px)"],
+      "offGridCount": 6,
+      "high": true
+    },
+    "borderRadii": {
+      "values": ["rounded-full (pill)", "rounded-xl (12px)", "rounded-lg (8px)", "rounded-md (6px)", "rounded-sm (4px)"],
+      "landingUsesXl": true,
+      "appUsesLg": true,
+      "inconsistency": "landing cards use rounded-xl, app cards use rounded-lg — different levels for same semantic element"
+    },
+    "motion": {
+      "frameworkInstalled": false,
+      "cssTransitionsOnly": true,
+      "shimmerKeyframe": true,
+      "pageTransitions": false,
+      "animatePresence": false,
+      "springPhysics": false,
+      "skeletonLoadingRoutes": ["/proposals", "/knowledge-base"],
+      "spinnerLoadingRoutes": ["/dashboard", "/proposals/[id]", "/settings/brand-voice"]
+    },
+    "accessibility": {
+      "skipLink": false,
+      "ariaLandmarks": "partial — main, header, nav, aside present; no aria-labels on sidebars",
+      "ariaLive": "partial — loading states have role=status on loading.tsx files; save state and error states missing",
+      "focusVisible": "present on Button and Input atoms; absent on custom filter tab buttons",
+      "touchTargetViolations": ["h-6 w-6 KB card menu button (24px)", "h-7 w-7 icon buttons (28px — 6 instances)", "filter tabs py-1.5 (~28px height)"],
+      "colorAsOnlyIndicator": ["dashboard error (text-destructive, no icon)", "proposal editor error (text-destructive, no icon)", "settings error (text-destructive, no icon)"]
+    },
+    "frameworkVersions": {
+      "nextjs": "15 (App Router)",
+      "tailwind": "v3",
+      "framerMotion": "NOT INSTALLED",
+      "radixUI": "Dialog, DropdownMenu, Label, ScrollArea, Separator, Slot, Toast, Tooltip",
+      "shadcnCLI": "NOT INSTALLED (components hand-rolled)"
+    }
+  }
+}
