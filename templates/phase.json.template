@@ -1,0 +1,22 @@
+{
+  "workflowVersion": "1.1.0",
+  "currentPhase": -1,
+  "phases": {
+    "0": { "name": "Visual Audit", "status": "not-started", "startedAt": null, "completedAt": null, "gatePassedAt": null, "artifacts": [] },
+    "1": { "name": "Design System", "status": "not-started", "startedAt": null, "completedAt": null, "gatePassedAt": null, "artifacts": [] },
+    "2": { "name": "Execute Uplift", "status": "not-started", "startedAt": null, "completedAt": null, "gatePassedAt": null, "artifacts": [] },
+    "3": { "name": "Validate", "status": "not-started", "startedAt": null, "completedAt": null, "gatePassedAt": null, "artifacts": [] },
+    "4": { "name": "Ship", "status": "not-started", "startedAt": null, "completedAt": null, "gatePassedAt": null, "artifacts": [] }
+  },
+  "projectProfile": {
+    "appType": null,
+    "visualTone": null,
+    "motionLevel": null,
+    "density": null,
+    "brandPersonality": null
+  },
+  "qualityScores": {
+    "before": null,
+    "after": null
+  }
+}

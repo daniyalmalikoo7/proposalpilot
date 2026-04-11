@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read", "Edit", "MultiEdit", "Write",
+      "Bash(npm run *)", "Bash(npx *)", "Bash(node *)",
+      "Bash(git status)", "Bash(git diff *)", "Bash(git add *)", "Bash(git commit *)", "Bash(git log *)",
+      "Bash(ls *)", "Bash(cat *)", "Bash(find *)", "Bash(wc *)", "Bash(grep *)", "Bash(head *)", "Bash(tail *)",
+      "Bash(mkdir *)", "Bash(cp *)", "Bash(mv *)", "Bash(python3 *)",
+      "Grep", "Glob", "LS"
+    ],
+    "deny": [
+      "Bash(rm -rf /)", "Bash(rm -rf ~)", "Bash(rm -rf .)",
+      "Bash(git push *)", "Bash(curl *)", "Bash(wget *)", "Bash(sudo *)",
+      "Edit(.env*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": ".claude/hooks/security-scanner.sh" }]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": ".claude/hooks/quality-gate.sh" },
+          { "type": "command", "command": ".claude/hooks/artifact-validate.sh" },
+          { "type": "command", "command": ".claude/hooks/session-end.sh" },
+          { "type": "command", "command": ".claude/hooks/auto-commit.sh" }
+        ]
+      }
+    ]
+  }
+}
