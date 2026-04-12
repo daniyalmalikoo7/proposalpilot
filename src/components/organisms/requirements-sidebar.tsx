@@ -1,7 +1,8 @@
 "use client";
 
-import { CheckCircle2, FileSearch } from "lucide-react";
+import { CheckCircle2, FileSearch, X } from "lucide-react";
 import { Badge } from "@/components/atoms/badge";
+import { Button } from "@/components/atoms/button";
 import { Skeleton } from "@/components/atoms/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,10 @@ interface RequirementsSidebarProps {
   readonly selectedRequirementIds: ReadonlySet<string>;
   readonly onToggleRequirement: (id: string) => void;
   readonly isLoading?: boolean;
+  /** Override the aside element's className (e.g. w-full for mobile overlay) */
+  readonly className?: string;
+  /** When provided, shows a close button in the header (used in mobile overlay) */
+  readonly onClose?: () => void;
 }
 
 const PRIORITY_VARIANTS: Record<
@@ -34,6 +39,8 @@ export function RequirementsSidebar({
   selectedRequirementIds,
   onToggleRequirement,
   isLoading = false,
+  className,
+  onClose,
 }: RequirementsSidebarProps) {
   const grouped = requirements.reduce<Record<string, Requirement[]>>(
     (acc, req) => {
@@ -47,9 +54,14 @@ export function RequirementsSidebar({
 
   if (isLoading) {
     return (
-      <aside aria-label="Requirements" className="flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle">
-        <div className="border-b border-border px-4 py-3">
+      <aside aria-label="Requirements" className={cn("flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle", className)}>
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <h2 className="text-sm font-semibold">Requirements</h2>
+          {onClose && (
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} aria-label="Close requirements">
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         <div className="flex-1 space-y-2 overflow-y-auto p-3">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -69,9 +81,14 @@ export function RequirementsSidebar({
 
   if (requirements.length === 0) {
     return (
-      <aside aria-label="Requirements" className="flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle">
-        <div className="border-b border-border px-4 py-3">
+      <aside aria-label="Requirements" className={cn("flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle", className)}>
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <h2 className="text-sm font-semibold">Requirements</h2>
+          {onClose && (
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} aria-label="Close requirements">
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         <div className="flex flex-col items-center justify-center gap-3 p-6 text-center">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background-elevated">
@@ -88,12 +105,19 @@ export function RequirementsSidebar({
   const addressedCount = requirements.filter((r) => r.addressed).length;
 
   return (
-    <aside aria-label="Requirements" className="flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle">
-      <div className="border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold">Requirements</h2>
-        <p className="mt-0.5 text-xs text-foreground-muted">
-          {addressedCount} / {requirements.length} addressed
-        </p>
+    <aside aria-label="Requirements" className={cn("flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle", className)}>
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div>
+          <h2 className="text-sm font-semibold">Requirements</h2>
+          <p className="mt-0.5 text-xs text-foreground-muted">
+            {addressedCount} / {requirements.length} addressed
+          </p>
+        </div>
+        {onClose && (
+          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onClose} aria-label="Close requirements">
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto">

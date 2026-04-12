@@ -76,10 +76,10 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
         </span>
       </div>
 
-      {/* Deadline */}
+      {/* Deadline — hidden on mobile to avoid overflow */}
       <div
         className={cn(
-          "flex w-20 shrink-0 items-center gap-1 text-xs",
+          "hidden w-20 shrink-0 items-center gap-1 text-xs md:flex",
           isOverdue ? "text-danger" : "text-foreground-muted",
         )}
       >
@@ -91,8 +91,8 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
         {formatDeadline(proposal.deadline)}
       </div>
 
-      {/* Completion */}
-      <div className="w-28 shrink-0">
+      {/* Completion — hidden on mobile to avoid overflow */}
+      <div className="hidden w-28 shrink-0 md:block">
         <div className="flex items-center gap-2">
           <Progress value={proposal.completionPct} className="flex-1" />
           <span className="w-8 shrink-0 text-right font-mono text-xs text-foreground-muted">

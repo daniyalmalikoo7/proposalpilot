@@ -168,4 +168,27 @@
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) hsl(var(--background));
   }
+
+  /* ── Clerk UserButton popover — dark mode overrides ─────────────────────── */
+  /* Ensures hover states and text remain readable in both light and dark mode.  */
+  /* Clerk renders into a portal so Tailwind classes can't reach these elements. */
+  .cl-userButtonPopoverActionButton:hover {
+    background-color: rgba(128, 128, 128, 0.12) !important;
+  }
+  .dark .cl-userButtonPopoverCard {
+    background-color: hsl(30 8% 9%) !important;
+    border-color: hsl(30 7% 17%) !important;
+  }
+  .dark .cl-userButtonPopoverActionButton {
+    color: hsl(30 21% 93%) !important;
+  }
+  .dark .cl-userButtonPopoverActionButton:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  .dark .cl-userButtonPopoverActionButtonText {
+    color: hsl(30 21% 93%) !important;
+  }
+  .dark .cl-userButtonPopoverActionButtonIcon {
+    color: hsl(25 6% 59%) !important;
+  }
 }

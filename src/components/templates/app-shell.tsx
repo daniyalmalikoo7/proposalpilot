@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Menu } from "lucide-react";
-import { UserButton } from "@clerk/nextjs";
 import { Sidebar } from "@/components/organisms/sidebar";
 import { ThemeToggle } from "@/components/molecules/theme-toggle";
+import { ThemedUserButton } from "@/components/molecules/themed-user-button";
 import { Button } from "@/components/atoms/button";
 
 export function AppShell({ children }: { readonly children: React.ReactNode }) {
@@ -37,7 +37,7 @@ export function AppShell({ children }: { readonly children: React.ReactNode }) {
             <div className="flex-1 md:hidden" />
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <UserButton signInUrl="/sign-in" />
+              <ThemedUserButton />
             </div>
           </header>
           <main id="main-content" className="flex-1 overflow-y-auto p-6">

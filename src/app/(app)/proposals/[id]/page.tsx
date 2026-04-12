@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { BookOpen, Check, Download, Loader2 } from "lucide-react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { BookOpen, Check, ChevronDown, Download, ListChecks, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Skeleton } from "@/components/atoms/skeleton";
 import { Button } from "@/components/atoms/button";
@@ -14,7 +15,11 @@ import { useProposalEditor } from "./_components/use-proposal-editor";
 
 export default function ProposalEditorPage() {
   const { id: proposalId } = useParams<{ id: string }>();
+  // Desktop: KB panel shown inline by default
   const [showKbPanel, setShowKbPanel] = useState(true);
+  // Mobile overlays — both closed by default so editor fills the screen
+  const [showReqOverlay, setShowReqOverlay] = useState(false);
+  const [showKbOverlay, setShowKbOverlay] = useState(false);
 
   const {
     proposalQuery,
@@ -133,9 +138,9 @@ export default function ProposalEditorPage() {
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       {/* ── Top bar ────────────────────────────────────────────────────────────── */}
-      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background-elevated px-6">
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background-elevated px-3 md:px-6">
         {/* Breadcrumb + title */}
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
           <Link
             href="/proposals"
             className="shrink-0 text-xs text-foreground-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
@@ -156,7 +161,7 @@ export default function ProposalEditorPage() {
         </div>
 
         {/* Save indicator + export buttons */}
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-1.5 md:gap-3">
           {/* Animated save state — fades between states */}
           <AnimatePresence mode="wait">
             {saveState === "saving" && (
@@ -166,7 +171,7 @@ export default function ProposalEditorPage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="flex items-center gap-1.5 text-xs text-foreground-muted"
+                className="hidden items-center gap-1.5 text-xs text-foreground-muted sm:flex"
               >
                 <Loader2 className="h-3 w-3 animate-spin" />
                 Saving…
@@ -179,19 +184,44 @@ export default function ProposalEditorPage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="flex items-center gap-1.5 text-xs text-success-foreground"
+                className="hidden items-center gap-1.5 text-xs text-success-foreground sm:flex"
               >
                 <Check className="h-3 w-3" />
                 Saved
               </motion.span>
             )}
           </AnimatePresence>
-          {/* KB panel toggle — shows selected count when items are active */}
+
+          {/* Requirements toggle — mobile only */}
+          <Button
+            size="sm"
+            variant={showReqOverlay ? "secondary" : "ghost"}
+            onClick={() => setShowReqOverlay((v) => !v)}
+            className="h-8 gap-1 text-xs md:hidden"
+            aria-label={showReqOverlay ? "Hide requirements" : "Show requirements"}
+          >
+            <ListChecks className="h-3.5 w-3.5" />
+            Req
+          </Button>
+
+          {/* KB toggle — mobile only (opens overlay) */}
+          <Button
+            size="sm"
+            variant={showKbOverlay ? "secondary" : "ghost"}
+            onClick={() => setShowKbOverlay((v) => !v)}
+            className="h-8 gap-1 text-xs md:hidden"
+            aria-label={showKbOverlay ? "Hide knowledge base" : "Show knowledge base"}
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            {selectedKbIds.size > 0 ? `${selectedKbIds.size}` : "KB"}
+          </Button>
+
+          {/* KB panel toggle — desktop only (inline panel) */}
           <Button
             size="sm"
             variant={showKbPanel ? "secondary" : "ghost"}
             onClick={() => setShowKbPanel((v) => !v)}
-            className="h-8 gap-1.5 text-xs"
+            className="hidden h-8 gap-1.5 text-xs md:flex"
             aria-label={
               showKbPanel
                 ? "Hide knowledge base panel"
@@ -203,47 +233,65 @@ export default function ProposalEditorPage() {
               ? `${selectedKbIds.size} KB selected`
               : "KB"}
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => void handleExport("docx")}
-            disabled={isExporting || !hasAnyContent}
-            className="h-8 gap-1.5 text-xs"
-          >
-            {isExporting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Download className="h-3.5 w-3.5" />
-            )}
-            DOCX
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => void handleExport("pdf")}
-            disabled={isExporting || !hasAnyContent}
-            className="h-8 gap-1.5 text-xs"
-          >
-            {isExporting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Download className="h-3.5 w-3.5" />
-            )}
-            PDF
-          </Button>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isExporting || !hasAnyContent}
+                className="h-8 gap-1.5 text-xs"
+                aria-label="Export proposal"
+              >
+                {isExporting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Download className="h-3.5 w-3.5" />
+                )}
+                Export
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content
+                className="z-50 min-w-[100px] rounded-lg border border-border bg-background-elevated py-1 shadow-md"
+                align="end"
+                sideOffset={4}
+              >
+                <DropdownMenu.Item
+                  className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs text-foreground outline-none hover:bg-background-subtle focus:bg-background-subtle disabled:pointer-events-none disabled:opacity-50"
+                  onSelect={() => void handleExport("docx")}
+                  disabled={isExporting || !hasAnyContent}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  DOCX
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
+                  className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-xs text-foreground outline-none hover:bg-background-subtle focus:bg-background-subtle disabled:pointer-events-none disabled:opacity-50"
+                  onSelect={() => void handleExport("pdf")}
+                  disabled={isExporting || !hasAnyContent}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  PDF
+                </DropdownMenu.Item>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
         </div>
       </div>
 
       {/* ── 3-panel body ───────────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: Requirements sidebar */}
-        <RequirementsSidebar
-          requirements={requirements}
-          selectedRequirementIds={selectedReqIds}
-          onToggleRequirement={handleToggleRequirement}
-          isLoading={isExtracting}
-        />
+        {/* Left: Requirements sidebar — desktop inline (hidden on mobile via wrapper) */}
+        <div className="hidden md:contents">
+          <RequirementsSidebar
+            requirements={requirements}
+            selectedRequirementIds={selectedReqIds}
+            onToggleRequirement={handleToggleRequirement}
+            isLoading={isExtracting}
+          />
+        </div>
 
-        {/* Center: context-sensitive content */}
+        {/* Center: editor — takes full width on mobile when sidebars are overlays */}
         <EditorCenterPanel
           hasRequirements={hasRequirements}
           hasSections={hasSections}
@@ -268,15 +316,88 @@ export default function ProposalEditorPage() {
           }
         />
 
-        {/* Right: Knowledge base search (collapsible via top-bar toggle) */}
+        {/* Right: Knowledge base search — desktop inline (collapsible via top-bar toggle) */}
         {showKbPanel && (
-          <KBSearchPanel
-            selectedKbItemIds={selectedKbIds}
-            onToggleKbItem={handleToggleKbItem}
-            onSearch={handleKbSearch}
-          />
+          <div className="hidden md:contents">
+            <KBSearchPanel
+              selectedKbItemIds={selectedKbIds}
+              onToggleKbItem={handleToggleKbItem}
+              onSearch={handleKbSearch}
+            />
+          </div>
         )}
       </div>
+
+      {/* ── Mobile Requirements overlay ──────────────────────────────────────── */}
+      <AnimatePresence>
+        {showReqOverlay && (
+          <motion.div
+            key="req-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 md:hidden"
+            onClick={() => setShowReqOverlay(false)}
+          >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/50" />
+            {/* Slide-in panel from left */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.8 }}
+              className="absolute left-0 top-0 h-full w-[min(320px,85vw)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <RequirementsSidebar
+                requirements={requirements}
+                selectedRequirementIds={selectedReqIds}
+                onToggleRequirement={handleToggleRequirement}
+                isLoading={isExtracting}
+                className="w-full shadow-xl"
+                onClose={() => setShowReqOverlay(false)}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Mobile KB overlay ────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showKbOverlay && (
+          <motion.div
+            key="kb-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 md:hidden"
+            onClick={() => setShowKbOverlay(false)}
+          >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/50" />
+            {/* Slide-in panel from right */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.8 }}
+              className="absolute right-0 top-0 h-full w-[min(320px,85vw)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <KBSearchPanel
+                selectedKbItemIds={selectedKbIds}
+                onToggleKbItem={handleToggleKbItem}
+                onSearch={handleKbSearch}
+                className="w-full shadow-xl border-l"
+                onClose={() => setShowKbOverlay(false)}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

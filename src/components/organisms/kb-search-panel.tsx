@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Search, BookOpen, Check } from "lucide-react";
+import { Search, BookOpen, Check, X } from "lucide-react";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { cn } from "@/lib/utils";
@@ -27,12 +27,18 @@ interface KBSearchPanelProps {
   readonly selectedKbItemIds: ReadonlySet<string>;
   readonly onToggleKbItem: (id: string) => void;
   readonly onSearch: (query: string) => Promise<KBItem[]>;
+  /** Override the aside element's className (e.g. w-full for mobile overlay) */
+  readonly className?: string;
+  /** When provided, shows a close button in the header (used in mobile overlay) */
+  readonly onClose?: () => void;
 }
 
 export function KBSearchPanel({
   selectedKbItemIds,
   onToggleKbItem,
   onSearch,
+  className,
+  onClose,
 }: KBSearchPanelProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<KBItem[]>([]);
@@ -61,12 +67,19 @@ export function KBSearchPanel({
   );
 
   return (
-    <aside aria-label="Knowledge base search" className="flex h-full w-64 flex-shrink-0 flex-col border-l border-border bg-background-subtle">
-      <div className="border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold">Knowledge Base</h2>
-        <p className="mt-0.5 text-xs text-foreground-muted">
-          {selectedKbItemIds.size} selected for context
-        </p>
+    <aside aria-label="Knowledge base search" className={cn("flex h-full w-64 flex-shrink-0 flex-col border-l border-border bg-background-subtle", className)}>
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div>
+          <h2 className="text-sm font-semibold">Knowledge Base</h2>
+          <p className="mt-0.5 text-xs text-foreground-muted">
+            {selectedKbItemIds.size} selected for context
+          </p>
+        </div>
+        {onClose && (
+          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onClose} aria-label="Close knowledge base">
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* Search input */}

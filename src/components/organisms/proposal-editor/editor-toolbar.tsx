@@ -22,7 +22,7 @@ function ToolbarButton({ label, title, isActive, onClick }: ToolbarButtonProps) 
         onClick();
       }}
       className={cn(
-        "rounded px-2 py-1 text-xs font-medium transition-colors",
+        "inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded px-2 py-1 text-xs font-medium transition-colors",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] focus-visible:ring-offset-1",
         "active:scale-[0.97]",
         isActive

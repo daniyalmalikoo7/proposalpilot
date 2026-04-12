@@ -207,8 +207,8 @@ export default function DashboardPage() {
         <div className="flex items-center gap-4 border-b border-border px-4 py-2 text-xs font-medium text-foreground-muted">
           <div className="flex-1">Title</div>
           <div className="w-24 shrink-0">Status</div>
-          <div className="w-20 shrink-0">Deadline</div>
-          <div className="w-28 shrink-0">Progress</div>
+          <div className="hidden w-20 shrink-0 md:block">Deadline</div>
+          <div className="hidden w-28 shrink-0 md:block">Progress</div>
           <div className="w-10 shrink-0 text-right">Edited</div>
           <div className="w-7 shrink-0" />
         </div>

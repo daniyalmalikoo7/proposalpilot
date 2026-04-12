@@ -11,7 +11,7 @@ import type { Appearance } from "@clerk/types";
 const shared = {
   fontFamily:
     'var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  borderRadius: "0.75rem",
+  borderRadius: "0.5rem",
 } as const;
 
 export const clerkAppearanceLight: Appearance = {

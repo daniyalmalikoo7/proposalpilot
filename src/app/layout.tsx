@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { clerkAppearanceLight } from "@/lib/clerk-appearance";
 import { TRPCReactProvider } from "@/lib/trpc/provider";
 import { ThemeProvider } from "@/lib/theme";
 import "@/app/globals.css";
@@ -27,6 +28,7 @@ export default function RootLayout({
     <ClerkProvider
       signInFallbackRedirectUrl="/dashboard"
       signUpFallbackRedirectUrl="/onboarding"
+      appearance={clerkAppearanceLight}
     >
       <html lang="en" suppressHydrationWarning>
         <body className={`${inter.variable} font-sans antialiased`}>
