@@ -132,8 +132,8 @@ export default function DashboardPage() {
 
       <NewProposalDialog open={dialogOpen} onOpenChange={setDialogOpen} />
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      {/* Stats — hidden when no proposals to avoid "No data yet" noise */}
+      <div className={cn("grid grid-cols-2 gap-4 md:grid-cols-4", !isLoading && proposals.length === 0 && "hidden")}>
         {[
           {
             label: "Active",

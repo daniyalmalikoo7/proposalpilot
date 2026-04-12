@@ -74,7 +74,7 @@ export function FilterTabBar<T extends string>({
             onClick={() => onTabChange(tab.value)}
             onKeyDown={(e) => handleKeyDown(e, index)}
             className={cn(
-              "relative flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
+              "relative flex min-h-[44px] items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] focus-visible:ring-offset-1",
               isActive
                 ? "text-[hsl(var(--accent-foreground))]"

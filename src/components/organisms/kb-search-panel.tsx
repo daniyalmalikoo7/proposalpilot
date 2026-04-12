@@ -61,7 +61,7 @@ export function KBSearchPanel({
   );
 
   return (
-    <aside className="flex h-full w-64 flex-shrink-0 flex-col border-l border-border bg-background-subtle">
+    <aside aria-label="Knowledge base search" className="flex h-full w-64 flex-shrink-0 flex-col border-l border-border bg-background-subtle">
       <div className="border-b border-border px-4 py-3">
         <h2 className="text-sm font-semibold">Knowledge Base</h2>
         <p className="mt-0.5 text-xs text-foreground-muted">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink, Loader2, Plus } from "lucide-react";
+import { CheckCircle2, ExternalLink, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { FilterTabBar } from "@/components/molecules/filter-tab-bar";
@@ -155,7 +155,8 @@ export default function SettingsPage() {
                 </p>
               </div>
               {org?.stripeCustomerId && (
-                <span className="rounded-full bg-success-bg px-3 py-1 text-xs font-medium text-success-foreground">
+                <span className="inline-flex items-center gap-1 rounded-full bg-success-bg px-3 py-1 text-xs font-medium text-success-foreground">
+                  <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
                   Active
                 </span>
               )}

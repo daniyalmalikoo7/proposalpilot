@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { BookOpen, Check, Download, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Skeleton } from "@/components/atoms/skeleton";
 import { Button } from "@/components/atoms/button";
 import { RequirementsSidebar } from "@/components/organisms/requirements-sidebar";
 import { KBSearchPanel } from "@/components/organisms/kb-search-panel";
@@ -50,8 +51,70 @@ export default function ProposalEditorPage() {
   // ── Loading / error ───────────────────────────────────────────────────────────
   if (proposalQuery.isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-foreground-muted" />
+      <div className="flex h-screen flex-col overflow-hidden" aria-busy="true" aria-label="Loading proposal">
+        {/* Top bar skeleton */}
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background-elevated px-6">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-3 w-px" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-7 w-14" />
+            <Skeleton className="h-7 w-16" />
+            <Skeleton className="h-7 w-14" />
+          </div>
+        </div>
+        {/* 3-panel body skeleton */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left: requirements sidebar */}
+          <div className="flex h-full w-72 shrink-0 flex-col border-r border-border bg-background-subtle">
+            <div className="border-b border-border px-4 py-3">
+              <Skeleton className="h-4 w-28" />
+            </div>
+            <div className="space-y-2 p-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="space-y-1.5 rounded-md border border-border p-3">
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-4/5" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Center: editor */}
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex items-center justify-between border-b border-border bg-background-elevated/50 px-4 py-2">
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <div className="space-y-4 overflow-y-auto p-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="space-y-3 rounded-lg border border-border p-4">
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-3/4" />
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-2/3" />
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Right: KB panel */}
+          <div className="flex h-full w-64 shrink-0 flex-col border-l border-border bg-background-subtle">
+            <div className="border-b border-border px-4 py-3">
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <div className="p-3">
+              <Skeleton className="h-8 w-full rounded-md" />
+            </div>
+            <div className="space-y-2 p-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full rounded-md" />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -129,7 +192,7 @@ export default function ProposalEditorPage() {
             variant={showKbPanel ? "secondary" : "ghost"}
             onClick={() => setShowKbPanel((v) => !v)}
             className="h-8 gap-1.5 text-xs"
-            title={
+            aria-label={
               showKbPanel
                 ? "Hide knowledge base panel"
                 : "Show knowledge base panel"

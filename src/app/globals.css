@@ -143,4 +143,29 @@
   .skip-to-content:focus {
     @apply not-sr-only fixed left-4 top-4 z-50 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground;
   }
+
+  /* Scrollbar theming — adapts to light/dark via CSS vars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--foreground-dim));
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) hsl(var(--background));
+  }
 }

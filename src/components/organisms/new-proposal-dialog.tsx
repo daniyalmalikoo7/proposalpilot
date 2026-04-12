@@ -100,7 +100,7 @@ export function NewProposalDialog({
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-4 top-4 h-7 w-7"
+              className="absolute right-4 top-4 h-9 w-9"
               disabled={isPending}
               aria-label="Close dialog"
             >

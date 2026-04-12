@@ -1,9 +1,9 @@
-import { SignUp } from "@clerk/nextjs";
+import { ClerkThemedSignUp } from "@/components/molecules/clerk-themed-auth";
 
 export default function SignUpPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <SignUp />
+      <ClerkThemedSignUp />
     </div>
   );
 }

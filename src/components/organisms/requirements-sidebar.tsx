@@ -47,7 +47,7 @@ export function RequirementsSidebar({
 
   if (isLoading) {
     return (
-      <aside className="flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle">
+      <aside aria-label="Requirements" className="flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle">
         <div className="border-b border-border px-4 py-3">
           <h2 className="text-sm font-semibold">Requirements</h2>
         </div>
@@ -69,7 +69,7 @@ export function RequirementsSidebar({
 
   if (requirements.length === 0) {
     return (
-      <aside className="flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle">
+      <aside aria-label="Requirements" className="flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle">
         <div className="border-b border-border px-4 py-3">
           <h2 className="text-sm font-semibold">Requirements</h2>
         </div>
@@ -88,7 +88,7 @@ export function RequirementsSidebar({
   const addressedCount = requirements.filter((r) => r.addressed).length;
 
   return (
-    <aside className="flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle">
+    <aside aria-label="Requirements" className="flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle">
       <div className="border-b border-border px-4 py-3">
         <h2 className="text-sm font-semibold">Requirements</h2>
         <p className="mt-0.5 text-xs text-foreground-muted">

@@ -1,9 +1,9 @@
-import { SignIn } from "@clerk/nextjs";
+import { ClerkThemedSignIn } from "@/components/molecules/clerk-themed-auth";
 
 export default function SignInPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <SignIn />
+      <ClerkThemedSignIn />
     </div>
   );
 }

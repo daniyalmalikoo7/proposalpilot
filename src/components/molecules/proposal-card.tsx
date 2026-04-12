@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MoreHorizontal, Calendar } from "lucide-react";
+import { MoreHorizontal, Calendar, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/atoms/progress";
 import { Button } from "@/components/atoms/button";
@@ -83,7 +83,11 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
           isOverdue ? "text-danger" : "text-foreground-muted",
         )}
       >
-        <Calendar className="h-3 w-3 shrink-0" />
+        {isOverdue ? (
+          <AlertCircle className="h-3 w-3 shrink-0" aria-hidden="true" />
+        ) : (
+          <Calendar className="h-3 w-3 shrink-0" aria-hidden="true" />
+        )}
         {formatDeadline(proposal.deadline)}
       </div>
 
