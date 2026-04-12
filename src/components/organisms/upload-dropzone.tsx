@@ -78,14 +78,16 @@ export function UploadDropzone({
         className={cn(
           "relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed px-6 py-10 transition-colors",
           isDragging
-            ? "border-primary bg-primary/5"
-            : "border-border bg-muted/30 hover:border-muted-foreground/40 hover:bg-muted/50",
+            ? "border-[hsl(var(--accent))] bg-accent-muted"
+            : "border-border bg-background-subtle hover:border-foreground-dim hover:bg-background-elevated",
         )}
       >
-        <Upload className="mb-3 h-8 w-8 text-muted-foreground" />
+        <Upload className="mb-3 h-8 w-8 text-foreground-muted" />
         <p className="text-sm font-medium">
           Drop files here or{" "}
-          <label className="cursor-pointer text-primary hover:underline">
+          <label
+            className="cursor-pointer text-[hsl(var(--accent))] hover:underline has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-[hsl(var(--accent))] has-[:focus-visible]:outline-offset-2 rounded"
+          >
             browse
             <input
               type="file"
@@ -96,7 +98,7 @@ export function UploadDropzone({
             />
           </label>
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="mt-1 text-xs text-foreground-muted">
           PDF, DOCX, or TXT · up to {maxFiles} files
         </p>
       </div>
@@ -106,17 +108,17 @@ export function UploadDropzone({
           {files.map((f) => (
             <li
               key={f.id}
-              className="flex items-center gap-3 rounded-md border border-border bg-card px-3 py-2"
+              className="flex items-center gap-3 rounded-md border border-border bg-background-elevated px-3 py-2"
             >
-              <File className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <File className="h-4 w-4 shrink-0 text-foreground-muted" />
               <span className="min-w-0 flex-1 truncate text-sm">{f.name}</span>
-              <span className="shrink-0 font-mono text-xs text-muted-foreground">
+              <span className="shrink-0 font-mono text-xs text-foreground-muted">
                 {formatSize(f.size)}
               </span>
               <button
                 type="button"
                 onClick={() => removeFile(f.id)}
-                className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+                className="shrink-0 text-foreground-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
                 aria-label={`Remove ${f.name}`}
               >
                 <X className="h-3.5 w-3.5" />

@@ -1,0 +1,23 @@
+{
+  "workflowVersion": "1.1.0",
+  "currentPhase": 0,
+  "phases": {
+    "0": { "name": "Visual Audit", "status": "complete", "startedAt": "2026-04-11T00:00:00Z", "completedAt": "2026-04-11T01:00:00Z", "gatePassedAt": "2026-04-11T01:00:00Z", "artifacts": ["docs/audit/00-surface-map.md","docs/audit/01-route-manifest.md","docs/audit/02-visual-quality-report.md","docs/audit/02-computed-styles.json","docs/audit/03-interaction-report.md"] },
+    "1": { "name": "Design System", "status": "complete", "startedAt": "2026-04-11T01:30:00Z", "completedAt": "2026-04-11T03:00:00Z", "gatePassedAt": "2026-04-11T03:00:00Z", "artifacts": ["docs/design/04a-aesthetic-direction.md","docs/design/04-design-tokens.md","docs/design/05-component-strategy.md","docs/design/06-motion-spec.md","docs/design/07-migration-plan.md"] },
+    "2": { "name": "Execute Uplift", "status": "complete", "startedAt": "2026-04-11T03:00:00Z", "completedAt": "2026-04-11T07:00:00Z", "gatePassedAt": "2026-04-11T07:00:00Z", "artifacts": ["docs/build/token-implementation-log.md","docs/build/component-migration-log.md","docs/build/layout-migration-log.md","docs/build/motion-implementation-log.md","docs/build/polish-log.md"] },
+    "3": { "name": "Validate", "status": "complete", "startedAt": "2026-04-12T05:00:00Z", "completedAt": "2026-04-12T05:15:00Z", "gatePassedAt": "2026-04-12T05:15:00Z", "artifacts": ["docs/validation/08-visual-regression-report.md","docs/validation/09-quality-scorecard.md","docs/validation/10-interaction-validation.md"] },
+    "3.5": { "name": "Retro", "status": "complete", "startedAt": "2026-04-12T06:00:00Z", "completedAt": "2026-04-12T06:30:00Z", "gatePassedAt": "2026-04-12T06:30:00Z", "shipDecision": "SHIP WITH CONDITIONS", "conditions": ["Editor toolbar touch targets (HIGH) — add min-h-[44px] to ToolbarButton", "Editor top-bar density (HIGH) — combine DOCX+PDF into Export dropdown"], "artifacts": ["docs/build/fix-log.md","docs/validation/11-retro-report.md"] },
+    "4": { "name": "Ship", "status": "complete", "startedAt": "2026-04-12T07:00:00Z", "completedAt": "2026-04-12T07:30:00Z", "gatePassedAt": "2026-04-12T07:30:00Z", "artifacts": ["docs/design-system/token-reference.md","docs/design-system/component-catalog.md","docs/design-system/motion-library.md","docs/design-system/maintenance-guide.md","docs/ship/uplift-summary.md","docs/ship/deployment-verification.md",".github/workflows/visual-quality.yml"] }
+  },
+  "projectProfile": {
+    "appType": "saas-dashboard",
+    "visualTone": "warm-refined",
+    "motionLevel": "standard",
+    "density": "balanced",
+    "brandPersonality": "professional, intelligent, trustworthy"
+  },
+  "qualityScores": {
+    "before": 5.5,
+    "after": 7.5
+  }
+}

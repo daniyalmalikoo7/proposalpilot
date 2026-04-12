@@ -6,11 +6,12 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { clerkAppearanceLight } from "@/lib/clerk-appearance";
 import { TRPCReactProvider } from "@/lib/trpc/provider";
 import { ThemeProvider } from "@/lib/theme";
 import "@/app/globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "ProposalPilot — AI-Powered Proposal Engine",
@@ -27,9 +28,10 @@ export default function RootLayout({
     <ClerkProvider
       signInFallbackRedirectUrl="/dashboard"
       signUpFallbackRedirectUrl="/onboarding"
+      appearance={clerkAppearanceLight}
     >
       <html lang="en" suppressHydrationWarning>
-        <body className={inter.className}>
+        <body className={`${inter.variable} font-sans antialiased`}>
           <TRPCReactProvider>
             <ThemeProvider>{children}</ThemeProvider>
           </TRPCReactProvider>

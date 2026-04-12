@@ -1,10 +1,8 @@
 "use client";
 
-// RequirementsSidebar — left panel of the proposal editor.
-// Displays extracted requirements grouped by section with priority badges.
-
-import { FileSearch } from "lucide-react";
+import { CheckCircle2, FileSearch, X } from "lucide-react";
 import { Badge } from "@/components/atoms/badge";
+import { Button } from "@/components/atoms/button";
 import { Skeleton } from "@/components/atoms/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +19,10 @@ interface RequirementsSidebarProps {
   readonly selectedRequirementIds: ReadonlySet<string>;
   readonly onToggleRequirement: (id: string) => void;
   readonly isLoading?: boolean;
+  /** Override the aside element's className (e.g. w-full for mobile overlay) */
+  readonly className?: string;
+  /** When provided, shows a close button in the header (used in mobile overlay) */
+  readonly onClose?: () => void;
 }
 
 const PRIORITY_VARIANTS: Record<
@@ -37,8 +39,9 @@ export function RequirementsSidebar({
   selectedRequirementIds,
   onToggleRequirement,
   isLoading = false,
+  className,
+  onClose,
 }: RequirementsSidebarProps) {
-  // Group by section
   const grouped = requirements.reduce<Record<string, Requirement[]>>(
     (acc, req) => {
       const section = req.section || "General";
@@ -51,17 +54,20 @@ export function RequirementsSidebar({
 
   if (isLoading) {
     return (
-      <aside className="flex h-full w-72 flex-shrink-0 flex-col border-r border-pp-border bg-pp-background-card">
-        <div className="border-b border-pp-border px-4 py-3">
-          <h2 className="text-sm font-semibold text-pp-foreground">
-            Requirements
-          </h2>
+      <aside aria-label="Requirements" className={cn("flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle", className)}>
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h2 className="text-sm font-semibold">Requirements</h2>
+          {onClose && (
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} aria-label="Close requirements">
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         <div className="flex-1 space-y-2 overflow-y-auto p-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="space-y-1.5 rounded-md border border-pp-border p-3"
+              className="space-y-1.5 rounded-md border border-border p-3"
             >
               <Skeleton className="h-3 w-full" />
               <Skeleton className="h-3 w-4/5" />
@@ -75,17 +81,20 @@ export function RequirementsSidebar({
 
   if (requirements.length === 0) {
     return (
-      <aside className="flex h-full w-72 flex-shrink-0 flex-col border-r border-pp-border bg-pp-background-card">
-        <div className="border-b border-pp-border px-4 py-3">
-          <h2 className="text-sm font-semibold text-pp-foreground">
-            Requirements
-          </h2>
+      <aside aria-label="Requirements" className={cn("flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle", className)}>
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h2 className="text-sm font-semibold">Requirements</h2>
+          {onClose && (
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} aria-label="Close requirements">
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         <div className="flex flex-col items-center justify-center gap-3 p-6 text-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pp-background-elevated">
-            <FileSearch className="h-5 w-5 text-pp-foreground-muted" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background-elevated">
+            <FileSearch className="h-5 w-5 text-foreground-muted" />
           </div>
-          <p className="text-[13px] text-pp-foreground-muted">
+          <p className="text-xs text-foreground-muted">
             Upload an RFP to extract requirements automatically.
           </p>
         </div>
@@ -96,21 +105,26 @@ export function RequirementsSidebar({
   const addressedCount = requirements.filter((r) => r.addressed).length;
 
   return (
-    <aside className="flex h-full w-72 flex-shrink-0 flex-col border-r border-pp-border bg-pp-background-card">
-      <div className="border-b border-pp-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-pp-foreground">
-          Requirements
-        </h2>
-        <p className="mt-0.5 text-xs text-pp-foreground-muted">
-          {addressedCount} / {requirements.length} addressed
-        </p>
+    <aside aria-label="Requirements" className={cn("flex h-full w-72 flex-shrink-0 flex-col border-r border-border bg-background-subtle", className)}>
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div>
+          <h2 className="text-sm font-semibold">Requirements</h2>
+          <p className="mt-0.5 text-xs text-foreground-muted">
+            {addressedCount} / {requirements.length} addressed
+          </p>
+        </div>
+        {onClose && (
+          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onClose} aria-label="Close requirements">
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {Object.entries(grouped).map(([section, reqs]) => (
           <div key={section}>
-            <div className="sticky top-0 z-10 bg-pp-background-elevated/60 px-4 py-2 backdrop-blur-sm">
-              <p className="text-xs font-medium uppercase tracking-wide text-pp-foreground-muted">
+            <div className="sticky top-0 z-10 bg-background-subtle/80 px-4 py-2 backdrop-blur-sm">
+              <p className="text-2xs font-medium uppercase tracking-wide text-foreground-muted">
                 {section}
               </p>
             </div>
@@ -122,11 +136,13 @@ export function RequirementsSidebar({
                     <button
                       type="button"
                       onClick={() => onToggleRequirement(req.id)}
+                      aria-pressed={isSelected}
                       className={cn(
-                        "w-full rounded-md border px-3 py-1.5 text-left text-[13px] leading-snug transition-colors",
+                        "w-full rounded-md border px-3 py-1.5 text-left text-sm leading-snug transition-colors",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
                         isSelected
-                          ? "border-primary/40 bg-primary/5 text-pp-foreground"
-                          : "border-transparent bg-transparent text-pp-foreground-muted hover:border-pp-border hover:bg-accent hover:text-pp-foreground",
+                          ? "border-[hsl(var(--accent))]/40 bg-accent-muted text-foreground"
+                          : "border-transparent bg-transparent text-foreground-muted hover:border-border hover:bg-background-elevated hover:text-foreground",
                         req.addressed && "opacity-60",
                       )}
                     >
@@ -136,14 +152,15 @@ export function RequirementsSidebar({
                         </span>
                         <Badge
                           variant={PRIORITY_VARIANTS[req.priority]}
-                          className="shrink-0 capitalize text-[11px]"
+                          className="shrink-0 capitalize text-2xs"
                         >
                           {req.priority}
                         </Badge>
                       </div>
                       {req.addressed && (
-                        <span className="mt-1 block text-[10px] text-pp-success-text">
-                          ✓ addressed
+                        <span className="mt-1 flex items-center gap-1 text-2xs text-success-foreground">
+                          <CheckCircle2 className="h-3 w-3" />
+                          addressed
                         </span>
                       )}
                     </button>

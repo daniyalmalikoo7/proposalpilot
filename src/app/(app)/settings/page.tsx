@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink, Loader2, Plus } from "lucide-react";
+import { CheckCircle2, ExternalLink, Loader2, Plus } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
+import { FilterTabBar } from "@/components/molecules/filter-tab-bar";
 import { trpc } from "@/lib/trpc/client";
-import { cn } from "@/lib/utils";
 
 type SettingsTab = "organization" | "team" | "billing";
 
@@ -22,7 +22,6 @@ export default function SettingsPage() {
 
   const { data: org, isLoading: orgLoading } = trpc.settings.getOrg.useQuery();
 
-  // Sync fetched org name into local state once loaded.
   useEffect(() => {
     if (org?.name) setOrgName(org.name);
   }, [org?.name]);
@@ -56,38 +55,32 @@ export default function SettingsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-sm text-pp-foreground-muted">
+        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+        <p className="text-sm text-foreground-muted">
           Manage your organisation, team, and billing.
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-pp-border">
-        {TABS.map((t) => (
-          <button
-            key={t.value}
-            onClick={() => setTab(t.value)}
-            className={cn(
-              "px-4 py-2.5 text-sm font-medium transition-colors",
-              tab === t.value
-                ? "border-b-2 border-primary text-pp-foreground"
-                : "text-pp-foreground-muted hover:text-pp-foreground",
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="border-b border-border">
+        <FilterTabBar
+          tabs={TABS}
+          activeTab={tab}
+          onTabChange={setTab}
+          showCounts={false}
+          className="gap-0 pb-px"
+        />
       </div>
 
       {/* Organization */}
       {tab === "organization" && (
         <div className="max-w-lg space-y-5">
           <div className="space-y-1.5">
-            <label className="block text-sm font-medium">
+            <label htmlFor="org-name" className="block text-sm font-medium">
               Organisation name
             </label>
             <Input
+              id="org-name"
               value={orgName}
               onChange={(e) => setOrgName(e.target.value)}
               disabled={orgLoading || updateOrg.isPending}
@@ -96,9 +89,7 @@ export default function SettingsPage() {
           </div>
 
           {updateOrg.error && (
-            <p className="text-sm text-destructive">
-              {updateOrg.error.message}
-            </p>
+            <p className="text-sm text-danger">{updateOrg.error.message}</p>
           )}
 
           <div className="flex items-center gap-3">
@@ -118,17 +109,17 @@ export default function SettingsPage() {
               Save changes
             </Button>
             {saveSuccess && (
-              <span className="text-sm text-pp-success-text">Saved!</span>
+              <span className="text-sm text-success-foreground">Saved!</span>
             )}
           </div>
         </div>
       )}
 
-      {/* Team (display-only for now — Clerk manages invitations) */}
+      {/* Team */}
       {tab === "team" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-pp-foreground-muted">
+            <p className="text-sm text-foreground-muted">
               Team members are managed through Clerk.
             </p>
             <Button size="sm" disabled>
@@ -136,8 +127,8 @@ export default function SettingsPage() {
               Invite member
             </Button>
           </div>
-          <div className="rounded-lg border border-pp-border bg-pp-background-card p-6 text-center">
-            <p className="text-sm text-pp-foreground-muted">
+          <div className="rounded-lg border border-border bg-background-elevated p-6 text-center shadow-sm">
+            <p className="text-sm text-foreground-muted">
               Use your Clerk organisation dashboard to invite and manage team
               members.
             </p>
@@ -148,30 +139,31 @@ export default function SettingsPage() {
       {/* Billing */}
       {tab === "billing" && (
         <div className="max-w-lg space-y-4">
-          <div className="rounded-lg border border-pp-border bg-pp-background-card p-5">
+          <div className="rounded-lg border border-border bg-background-elevated p-5 shadow-sm">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-pp-foreground-muted">
+                <p className="text-xs font-medium uppercase tracking-wider text-foreground-muted">
                   Current plan
                 </p>
                 <p className="mt-1 font-mono text-2xl font-semibold capitalize tracking-tight">
                   {orgLoading ? "—" : (org?.plan ?? "starter")}
                 </p>
-                <p className="mt-0.5 text-sm text-pp-foreground-muted">
+                <p className="mt-0.5 text-sm text-foreground-muted">
                   {org?.monthlyProposalLimit
                     ? `${org.monthlyProposalLimit} proposals / month`
                     : ""}
                 </p>
               </div>
               {org?.stripeCustomerId && (
-                <span className="rounded-full bg-pp-success-bg px-3 py-1 text-xs font-medium text-pp-success-text">
+                <span className="inline-flex items-center gap-1 rounded-full bg-success-bg px-3 py-1 text-xs font-medium text-success-foreground">
+                  <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
                   Active
                 </span>
               )}
             </div>
 
             {createPortal.error && (
-              <p className="mt-3 text-sm text-destructive">
+              <p className="mt-3 text-sm text-danger">
                 {createPortal.error.message}
               </p>
             )}
@@ -195,8 +187,8 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-pp-border bg-pp-background-card p-5">
-            <p className="text-sm text-pp-foreground-muted">
+          <div className="rounded-lg border border-border bg-background-elevated p-5 shadow-sm">
+            <p className="text-sm text-foreground-muted">
               Billing is managed through Stripe. Click &quot;Manage
               billing&quot; to update your payment method, download invoices, or
               cancel your subscription.

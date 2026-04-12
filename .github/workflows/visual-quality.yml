@@ -1,0 +1,245 @@
+name: Visual Quality Gate
+
+on:
+  pull_request:
+    branches: [master, main]
+    paths:
+      - 'src/**'
+      - 'tailwind.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+  push:
+    branches: [master, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 1: TypeScript + Lint + Build
+  # Engineering Standard Rules R1-R3
+  # ─────────────────────────────────────────────────────────────────────────────
+  code-quality:
+    name: Code Quality (tsc + lint + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check (R1 — zero errors required)
+        run: npx tsc --noEmit
+
+      - name: Lint check (R2 — zero errors required)
+        run: npm run lint
+
+      - name: Production build (R3 — must succeed)
+        run: npm run build
+
+      - name: Check for hardcoded hex colors (token coverage)
+        run: |
+          echo "Scanning for non-tokenized hex values in src/..."
+          # Allow hex in comments and in CSS var definitions only
+          VIOLATIONS=$(grep -rn 'className=.*#[0-9a-fA-F]\{3,6\}' src/ --include="*.tsx" --include="*.ts" | grep -v '//' | wc -l)
+          echo "Hex in className: $VIOLATIONS"
+          if [ "$VIOLATIONS" -gt 0 ]; then
+            grep -rn 'className=.*#[0-9a-fA-F]\{3,6\}' src/ --include="*.tsx" --include="*.ts" | grep -v '//'
+            echo "ERROR: Hardcoded hex colors found in className attributes. Use semantic tokens."
+            exit 1
+          fi
+          echo "✅ No hardcoded hex in classNames"
+
+      - name: Check for retired pp-* token namespace
+        run: |
+          echo "Scanning for retired pp-* token references..."
+          VIOLATIONS=$(grep -rn 'pp-background\|pp-foreground\|pp-accent\|pp-border\|pp-primary' src/ --include="*.tsx" --include="*.ts" --include="*.css" | wc -l)
+          if [ "$VIOLATIONS" -gt 0 ]; then
+            grep -rn 'pp-background\|pp-foreground\|pp-accent\|pp-border\|pp-primary' src/ --include="*.tsx" --include="*.ts" --include="*.css"
+            echo "ERROR: Retired pp-* token namespace found. Use semantic tokens (bg-background, text-foreground, etc.)."
+            exit 1
+          fi
+          echo "✅ No pp-* references found"
+
+      - name: Check for arbitrary spacing values
+        run: |
+          echo "Scanning for arbitrary Tailwind spacing values..."
+          VIOLATIONS=$(grep -rn 'p-\[[0-9]\|m-\[[0-9]\|gap-\[[0-9]\|px-\[[0-9]\|py-\[[0-9]\|pt-\[[0-9]\|pb-\[[0-9]\|pl-\[[0-9]\|pr-\[[0-9]\|w-\[[0-9]\|h-\[[0-9]' src/ --include="*.tsx" | grep -v 'min-h-\|max-h-\|min-w-\|max-w-' | wc -l)
+          if [ "$VIOLATIONS" -gt 0 ]; then
+            grep -rn 'p-\[[0-9]\|m-\[[0-9]\|gap-\[[0-9]\|px-\[[0-9]\|py-\[[0-9]' src/ --include="*.tsx" | grep -v 'min-h-\|max-h-\|min-w-\|max-w-'
+            echo "WARNING: Arbitrary Tailwind spacing values found. Use the design system spacing scale."
+            # Warning only — not a hard failure yet
+          fi
+          echo "✅ Arbitrary spacing check complete"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 2: Accessibility (axe-core via Playwright)
+  # Principle 7 — zero Critical/Serious violations
+  # ─────────────────────────────────────────────────────────────────────────────
+  accessibility:
+    name: Accessibility (axe-core)
+    runs-on: ubuntu-latest
+    needs: code-quality
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build app
+        run: npm run build
+
+      - name: Start app and run axe-core
+        run: |
+          npm run start &
+          APP_PID=$!
+          sleep 5
+
+          cat > axe-check.js << 'EOF'
+          const { chromium } = require('@playwright/test');
+          const { default: AxeBuilder } = require('@axe-core/playwright');
+
+          const ROUTES = [
+            'http://localhost:3000',
+          ];
+
+          (async () => {
+            const browser = await chromium.launch();
+            let totalCritical = 0;
+            let totalSerious = 0;
+            let hasFailures = false;
+
+            for (const url of ROUTES) {
+              const page = await browser.newPage();
+              await page.goto(url, { waitUntil: 'networkidle' });
+
+              const results = await new AxeBuilder({ page })
+                .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+                .analyze();
+
+              const critical = results.violations.filter(v => v.impact === 'critical');
+              const serious  = results.violations.filter(v => v.impact === 'serious');
+
+              totalCritical += critical.length;
+              totalSerious  += serious.length;
+
+              if (critical.length > 0 || serious.length > 0) {
+                hasFailures = true;
+                console.log(`\n❌ ${url}`);
+                [...critical, ...serious].forEach(v => {
+                  console.log(`  [${v.impact.toUpperCase()}] ${v.id}: ${v.description}`);
+                  v.nodes.slice(0, 2).forEach(n => console.log(`    → ${n.html.substring(0, 100)}`));
+                });
+              } else {
+                console.log(`✅ ${url} — zero Critical/Serious`);
+              }
+
+              await page.close();
+            }
+
+            await browser.close();
+
+            console.log(`\nSummary: Critical=${totalCritical}, Serious=${totalSerious}`);
+            if (hasFailures) {
+              console.log('\nFAIL: axe-core found Critical or Serious violations.');
+              console.log('Zero Critical/Serious is required. Fix before merging.');
+              process.exit(1);
+            }
+          })();
+          EOF
+
+          node axe-check.js
+          kill $APP_PID 2>/dev/null || true
+        env:
+          NODE_ENV: production
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 3: Token Coverage Report
+  # Ensures the design system stays clean over time
+  # ─────────────────────────────────────────────────────────────────────────────
+  token-coverage:
+    name: Token Coverage Report
+    runs-on: ubuntu-latest
+    needs: code-quality
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Design token coverage report
+        run: |
+          echo "=== Design Token Coverage Report ==="
+          echo ""
+
+          # Count semantic token usages
+          BG_TOKENS=$(grep -rn 'bg-background\|bg-foreground\|bg-accent\|bg-success\|bg-warning\|bg-danger\|bg-info\|bg-border' src/ --include="*.tsx" | wc -l)
+          TEXT_TOKENS=$(grep -rn 'text-foreground\|text-accent\|text-success\|text-warning\|text-danger\|text-info\|text-muted' src/ --include="*.tsx" | wc -l)
+          BORDER_TOKENS=$(grep -rn 'border-border\|border-accent\|border-success\|border-warning\|border-danger\|border-info' src/ --include="*.tsx" | wc -l)
+
+          echo "Semantic token usages:"
+          echo "  Background tokens: $BG_TOKENS"
+          echo "  Text tokens:       $TEXT_TOKENS"
+          echo "  Border tokens:     $BORDER_TOKENS"
+          echo "  Total:             $((BG_TOKENS + TEXT_TOKENS + BORDER_TOKENS))"
+          echo ""
+
+          # Check for raw Tailwind color utilities (warning, not failure)
+          RAW_COLORS=$(grep -rn 'bg-gray-\|bg-slate-\|bg-zinc-\|bg-neutral-\|text-gray-\|text-slate-\|text-zinc-\|border-gray-\|border-slate-' src/ --include="*.tsx" | grep -v '//' | wc -l)
+          if [ "$RAW_COLORS" -gt 0 ]; then
+            echo "⚠️  Raw Tailwind color utilities found: $RAW_COLORS instances"
+            echo "   Consider migrating to semantic tokens:"
+            grep -rn 'bg-gray-\|bg-slate-\|bg-zinc-\|text-gray-\|text-slate-\|text-zinc-\|border-gray-\|border-slate-' src/ --include="*.tsx" | grep -v '//' | head -20
+          else
+            echo "✅ No raw Tailwind color utilities found"
+          fi
+
+          echo ""
+          echo "=== Report complete ==="
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Job 4: Motion Compliance
+  # Checks for banned animation patterns
+  # ─────────────────────────────────────────────────────────────────────────────
+  motion-compliance:
+    name: Motion Compliance
+    runs-on: ubuntu-latest
+    needs: code-quality
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for banned animation properties
+        run: |
+          echo "=== Motion Compliance Check ==="
+
+          # Check for width/height animations (triggers layout)
+          LAYOUT_ANIMS=$(grep -rn 'animate.*width\|animate.*height\|transition.*width\|transition.*height' src/ --include="*.tsx" --include="*.css" | grep -v 'max-width\|min-width\|max-height\|min-height\|100%\|auto' | wc -l)
+          if [ "$LAYOUT_ANIMS" -gt 0 ]; then
+            echo "⚠️  Possible layout-triggering animations detected:"
+            grep -rn 'animate.*width\|animate.*height\|transition.*width\|transition.*height' src/ --include="*.tsx" --include="*.css" | grep -v 'max-width\|min-width\|max-height\|min-height'
+          else
+            echo "✅ No layout-triggering animation properties found"
+          fi
+
+          # Check for linear easing on interactive elements
+          LINEAR_EASE=$(grep -rn 'linear.*transition\|transition.*linear\|ease: .linear' src/ --include="*.tsx" | grep -v 'shimmer\|loading\|animate-spin\|linearGradient' | wc -l)
+          if [ "$LINEAR_EASE" -gt 0 ]; then
+            echo "⚠️  Linear easing on (possibly) interactive elements — verify these are loading indicators only:"
+            grep -rn 'linear.*transition\|transition.*linear' src/ --include="*.tsx" | grep -v 'shimmer\|loading\|animate-spin'
+          else
+            echo "✅ No linear easing on non-loading animations"
+          fi
+
+          echo ""
+          echo "=== Motion check complete ==="

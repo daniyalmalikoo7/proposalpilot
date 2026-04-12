@@ -21,80 +21,74 @@ const PRO_FEATURES = [
 
 export function Pricing() {
   return (
-    <section id="pricing" className="bg-[#060b18] px-6 py-16 scroll-mt-16">
+    <section id="pricing" className="bg-background px-6 py-16 scroll-mt-16">
       <div className="mx-auto max-w-4xl">
-        <h2 className="text-center text-3xl font-bold text-white mb-4">
+        <h2 className="text-3xl font-bold tracking-tight mb-3">
           Simple, transparent pricing
         </h2>
-        <p className="text-center text-slate-400 mb-12 max-w-xl mx-auto">
+        <p className="text-foreground-muted mb-10 max-w-xl">
           Start for free. Upgrade when you need it.
         </p>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {/* Free */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-8">
+          <div className="rounded-xl border border-border bg-background-elevated p-8 shadow-sm">
             <div className="mb-6">
-              <p className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-foreground-muted mb-2">
                 Free
               </p>
-              <p className="text-4xl font-bold text-white">
+              <p className="text-4xl font-bold">
                 $0
-                <span className="text-base font-normal text-slate-400">
+                <span className="text-base font-normal text-foreground-muted">
                   /month
                 </span>
               </p>
             </div>
             <ul className="space-y-3 mb-8">
               {FREE_FEATURES.map((f) => (
-                <li
-                  key={f}
-                  className="flex items-start gap-3 text-sm text-slate-300"
-                >
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-indigo-400" />
+                <li key={f} className="flex items-start gap-3 text-sm">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                   {f}
                 </li>
               ))}
             </ul>
             <Link
               href={"/sign-up" as any}
-              className="block w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:border-slate-600 hover:bg-slate-700"
+              className="block w-full rounded-lg border border-border bg-background px-4 py-2.5 text-center text-sm font-semibold transition-colors hover:bg-background-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"
             >
               Get started free
             </Link>
           </div>
 
-          {/* Pro */}
-          <div className="relative rounded-xl border border-indigo-500/50 bg-indigo-950/40 p-8 shadow-lg shadow-indigo-500/10">
+          {/* Pro — elevated with accent border */}
+          <div className="relative rounded-xl border-2 border-[hsl(var(--accent))]/40 bg-accent-muted p-8 shadow-md">
             <div className="absolute -top-3 right-6">
-              <span className="rounded-full bg-indigo-600 px-3 py-1 text-xs font-semibold text-white">
+              <span className="rounded-full bg-[hsl(var(--accent))] px-3 py-1 text-xs font-semibold text-[hsl(var(--accent-foreground))]">
                 Most popular
               </span>
             </div>
             <div className="mb-6">
-              <p className="text-sm font-semibold uppercase tracking-wider text-indigo-300 mb-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[hsl(var(--accent))] mb-2">
                 Pro
               </p>
-              <p className="text-4xl font-bold text-white">
+              <p className="text-4xl font-bold">
                 $29
-                <span className="text-base font-normal text-slate-400">
+                <span className="text-base font-normal text-foreground-muted">
                   /month
                 </span>
               </p>
             </div>
             <ul className="space-y-3 mb-8">
               {PRO_FEATURES.map((f) => (
-                <li
-                  key={f}
-                  className="flex items-start gap-3 text-sm text-slate-300"
-                >
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-indigo-400" />
+                <li key={f} className="flex items-start gap-3 text-sm">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(var(--accent))]" />
                   {f}
                 </li>
               ))}
             </ul>
             <Link
               href={"/sign-up" as any}
-              className="block w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-center text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:bg-indigo-500"
+              className="block w-full rounded-lg bg-[hsl(var(--accent))] px-4 py-2.5 text-center text-sm font-semibold text-[hsl(var(--accent-foreground))] transition-colors hover:bg-[hsl(var(--accent-hover))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] focus-visible:ring-offset-2"
             >
               Start Pro trial
             </Link>

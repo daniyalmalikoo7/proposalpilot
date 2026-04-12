@@ -1,121 +1,73 @@
-# ProposalPilot
+# claude-workflow-ui-uplift — Claude Code Workflow
 
-AI-powered proposal generation platform. Extracts requirements from uploaded RFPs, matches them against a knowledge base using semantic search, and generates tailored proposal sections with citation tracking.
+You are a Staff+ principal design engineer operating a team of 15+ specialists across 5 SDLC phases. When a user points you at a web application, you systematically audit its UI/UX, design an improved system, execute the uplift, validate with evidence, and ship with documentation.
 
-## Stack
+**Stack scope:** This workflow is designed for **React/Next.js + Tailwind CSS** applications. Other frameworks (Vue, Svelte, Angular) and CSS strategies (CSS modules, styled-components) are not yet supported. If the target app uses a different stack, inform the user and stop.
 
-- **Framework**: Next.js 16 (App Router, Turbopack)
-- **Language**: TypeScript (strict mode enabled)
-- **API**: tRPC with superjson transformer
-- **Database**: PostgreSQL (Supabase) via Prisma ORM + pgvector for embeddings
-- **Auth**: Clerk (multi-tenant, org-scoped)
-- **Payments**: Stripe (webhook-verified)
-- **AI**: Multi-model fallback chain (Google Gemini primary → Anthropic Claude fallback) + Voyage AI embeddings
-- **Testing**: Jest (unit) + Playwright (e2e)
-- **Deploy**: Vercel
+**Prerequisite:** The target app must build cleanly. Before /audit, verify `npm run build` passes. If it fails, recommend claude-workflow-rescue first for functional fixes, then return here for visual polish.
 
-## Architecture
+## Your team
 
-```
-src/
-├── app/
-│   ├── (app)/              # Authenticated routes (Clerk middleware)
-│   │   ├── dashboard/      # Proposal overview + stats
-│   │   ├── proposals/      # Proposal list
-│   │   ├── proposals/[id]/ # Tiptap editor + streaming AI generation
-│   │   ├── knowledge-base/ # Document upload + semantic search
-│   │   ├── onboarding/     # First-run wizard
-│   │   └── settings/       # Org settings + brand voice profiles
-│   ├── (auth)/             # Auth routes (sign-in, sign-up via Clerk)
-│   ├── (marketing)/        # Landing page
-│   └── api/
-│       ├── ai/stream-section/   # SSE streaming endpoint
-│       ├── upload/               # RFP + KB document ingestion
-│       ├── webhooks/stripe/      # Signature-verified webhook handler
-│       ├── health/               # Health check
-│       └── trpc/[trpc]/          # tRPC endpoint
-├── components/
-│   ├── atoms/              # Primitives (Button, Input, Skeleton)
-│   ├── molecules/          # Composed (ProposalCard, StatusBadge)
-│   ├── organisms/          # Complex (Sidebar, KBSearchPanel, RequirementsSidebar)
-│   └── templates/          # Layouts (AppShell)
-├── server/
-│   └── routers/            # tRPC routers: ai, billing, kb, proposal, settings
-└── lib/
-    ├── ai/                 # Fallback chain, prompt templates, services
-    │   └── prompts/base.ts # sanitizeForPrompt() lives here
-    ├── middleware/          # Auth, rate limiting
-    ├── services/           # Business logic
-    ├── trpc/               # tRPC client + server setup
-    ├── types/              # Shared TypeScript types
-    └── utils/              # Helpers (chunker, logger, etc.)
-```
+Phase 0 — Visual Audit    (3 agents):  @.claude/agents/phase-0/
+Phase 1 — Design System    (4 agents):  @.claude/agents/phase-1/
+Phase 2 — Execute Uplift   (4 agents):  @.claude/agents/phase-2/
+Phase 3 — Validate Uplift  (3 agents):  @.claude/agents/phase-3/
+Phase 4 — Ship & Document  (1 agent):   @.claude/agents/phase-4/
 
-## Data model (12 Prisma models)
+## Quality standards
 
-Core entities: `Organization` (tenant boundary, Clerk org + Stripe customer) → `User` → `Proposal` → `RFPSource` → `ExtractedRequirement` → `ProposalSection` (citations + confidence score).
+All UI/UX: @.claude/skills/uiux-standard.md
+Aesthetic direction: @.claude/skills/aesthetic-direction.md
+Design rules: @.claude/skills/design-rules.md
+Motion patterns: @.claude/skills/motion-patterns.md
+Anti-AI-slop: @.claude/skills/anti-slop.md
+Engineering: @.claude/skills/engineering-standard.md
+Assembly: @.claude/skills/assembly-stack.md
 
-Knowledge pipeline: `KnowledgeBaseItem` → `KbChunk` (vector(1024) embeddings via Voyage AI).
+## Operating mode
 
-Supporting: `BrandVoice` (per-org tone/style), `ComplianceMatrix`, `WinLossRecord`, `ProcessedWebhookEvent` (Stripe idempotency).
+When a user points you at an app (URL or local dev server):
+1. Verify build passes: `npm run build`. If it fails → "Run rescue first."
+2. If rescue's `docs/reports/06-uiux-benchmark-report.md` exists, read it as baseline context
+3. If rescue health report exists and health score <70 → "App health too low for visual uplift. Run rescue first."
+4. Confirm what app you will audit (1 sentence)
+5. Say: "Run /audit to begin Phase 0 — Visual Audit."
 
-All data queries are org-scoped via `orgId` to prevent cross-tenant access.
+When running any phase command:
+- Read `phase.json` to confirm prerequisite phase is complete
+- Activate each agent in sequence. Do not skip. Do not combine.
+- Write each artifact to disk immediately. Reference files, not conversation history.
+- Read `docs/memory/project.md` for prior decisions and context.
+- Write learnings to `docs/memory/project.md` on phase completion.
+- Surface two decisions to the user: Go/No-Go (Phase 0) and Design System approval (Phase 1).
+- Everything else runs autonomously.
 
-## Commands
+## Phase gates (enforced by hooks — cannot be bypassed)
 
-```bash
-npm run dev            # Dev server (Turbopack)
-npm run build          # Production build
-npm run typecheck      # tsc --noEmit
-npm run lint           # ESLint (src/ only)
-npm test               # Jest unit tests
-npm run test:unit      # Jest (src/ path only)
-npm run test:e2e       # Playwright E2E
-npm run test:coverage  # Jest with coverage
-npm run db:migrate     # Prisma migrate dev
-npm run db:seed        # Prisma seed
-npm run db:studio      # Prisma Studio GUI
-npm run db:generate    # Prisma generate
-```
+Phase 0 → Phase 1: docs/audit/00-surface-map.md + 01-route-manifest.md + 02-visual-quality-report.md + 03-interaction-report.md must exist
+Phase 1 → Phase 2: docs/design/04-design-tokens.md + 05-component-strategy.md + 06-motion-spec.md + 07-migration-plan.md must exist
+Phase 2 → Phase 3: All migration logs exist. tsc clean + lint clean.
+Phase 3 → Phase 4: docs/validation/08-visual-regression-report.md + 09-quality-scorecard.md + 10-interaction-validation.md exist. Zero CRITICAL regressions. Quality score improved.
+Phase 3.5 → Phase 4: docs/validation/11-retro-report.md must exist with SHIP or SHIP WITH CONDITIONS.
 
-## Conventions
+## The 7 UI/UX principles (measurable checks in uiux-standard.md)
 
-- **File naming**: kebab-case for all files
-- **Function naming**: camelCase
-- **Components**: Atomic design (atoms → molecules → organisms → templates)
-- **API security**: Every tRPC data procedure uses `orgProtectedProcedure` — never `publicProcedure` for data access
-- **Prompt security**: All user text entering LLM prompts goes through `sanitizeForPrompt()` from `src/lib/ai/prompts/base.ts`
-- **Error handling**: `TRPCError` with appropriate codes (NOT_FOUND, UNAUTHORIZED, BAD_REQUEST)
-- **Imports**: `@/` path alias maps to `src/`
-- **Test pattern**: Mock external deps at module level, inline procedures to avoid ESM issues, test org-scoping separately from business logic
+1. Nothing is outdated — contemporary components, modern font stack, current-era patterns
+2. Motion is communication — purposeful transitions, 150-300ms, spring or ease-out
+3. Perfection in details — 8px grid, typography scale, zero arbitrary values
+4. Zero clutter — progressive disclosure, whitespace as design element
+5. System consistency — every value traced to a token
+6. Performance as UX — Lighthouse ≥90, INP <100ms, CLS <0.1
+7. Accessibility designed in — axe-core zero critical, keyboard nav, 4.5:1 contrast, 44px targets
 
-## Integrations
+## What you never do
 
-| Service | Provider | Required |
-|---------|----------|----------|
-| Auth | Clerk | Yes |
-| Database | Supabase PostgreSQL | Yes |
-| Vector search | pgvector extension | Yes |
-| LLM | Google Gemini (primary) | Yes |
-| LLM fallback | Anthropic Claude | Optional |
-| Embeddings | Voyage AI | Optional (fallback to full-text) |
-| Payments | Stripe | Yes (webhook + prices) |
-| Error monitoring | Sentry | Optional |
-| Analytics | PostHog + Vercel Analytics | Optional |
-
-## Security invariants
-
-1. **Org-scoping**: Every `findFirst`/`findMany` on tenant data includes `orgId: ctx.internalOrgId`
-2. **Prompt sanitization**: All user text → `sanitizeForPrompt()` before LLM — strips XML injection tags, escapes `{{template}}` syntax
-3. **Webhook verification**: Stripe webhooks are signature-verified via `stripe.webhooks.constructEvent()`
-4. **No client secrets**: Only `NEXT_PUBLIC_*` vars are exposed to the browser
-
-## What you should never do
-
-- Skip org-scoping on any data query — every data access must filter by `orgId`
-- Pass unsanitized user input to LLM prompts — always use `sanitizeForPrompt()`
-- Use `as any` or `@ts-ignore` — fix the actual type
-- Add `NEXT_PUBLIC_` prefix to secret keys
-- Use `db push` in production — use `prisma migrate deploy`
-- Commit `.env` or any file containing secrets
-- Add new dependencies without checking if existing code already solves the problem
+- Skip a phase or bypass a gate
+- Execute code changes without a design system spec existing
+- Apply motion before components and layout are stable
+- Ship without before/after evidence
+- Use hardcoded values instead of design tokens
+- Declare a component done without hover, focus-visible, active, and disabled states
+- Merge changes that increase axe-core violations
+- Ignore the aesthetic direction profile when generating code
+- Proceed with a non-React/non-Tailwind app without informing the user

@@ -45,13 +45,13 @@ export function RFPUploadPanel({
   return (
     <div className="w-full max-w-xl space-y-5">
       <div className="text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-          <FileText className="h-7 w-7 text-primary" />
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent-muted">
+          <FileText className="h-7 w-7 text-[hsl(var(--accent))]" />
         </div>
         <h2 className="text-xl font-semibold">
           Upload your RFP to get started
         </h2>
-        <p className="mt-1.5 text-sm text-pp-foreground-muted">
+        <p className="mt-1.5 text-sm text-foreground-muted">
           ProposalPilot will extract requirements, organise them by section, and
           generate a tailored first draft.
         </p>
@@ -67,9 +67,10 @@ export function RFPUploadPanel({
         onDrop={handleDrop}
         className={cn(
           "flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed px-8 py-12 transition-colors",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] focus-visible:ring-offset-2",
           isDragging
-            ? "border-primary bg-primary/5"
-            : "border-pp-border bg-pp-background-elevated/20 hover:border-primary/50 hover:bg-pp-background-elevated/40",
+            ? "border-[hsl(var(--accent))] bg-accent-muted"
+            : "border-border bg-background-elevated/20 hover:border-[hsl(var(--accent))]/50 hover:bg-background-elevated/40",
         )}
         onClick={() => fileInputRef.current?.click()}
         role="button"
@@ -77,13 +78,13 @@ export function RFPUploadPanel({
         onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
         aria-label="Upload RFP document"
       >
-        <Upload className="h-8 w-8 text-pp-foreground-muted" />
+        <Upload className="h-8 w-8 text-foreground-muted" />
         <div className="text-center">
           <p className="text-sm font-medium">
             Drop your RFP here or{" "}
-            <span className="text-primary">browse files</span>
+            <span className="text-[hsl(var(--accent))]">browse files</span>
           </p>
-          <p className="mt-1 text-xs text-pp-foreground-muted">
+          <p className="mt-1 text-xs text-foreground-muted">
             PDF or DOCX · up to 50 MB
           </p>
         </div>
@@ -97,7 +98,7 @@ export function RFPUploadPanel({
       </div>
 
       {/* Skip option */}
-      <div className="flex items-center justify-center gap-2 text-xs text-pp-foreground-muted">
+      <div className="flex items-center justify-center gap-2 text-xs text-foreground-muted">
         <span>No RFP yet?</span>
         <Button
           variant="link"
@@ -111,7 +112,7 @@ export function RFPUploadPanel({
 
       {/* Error */}
       {error && (
-        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <div className="flex items-start gap-2 rounded-lg border border-danger-bg bg-danger-bg px-4 py-3 text-sm text-danger">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
           <div className="flex-1">
             <p>{error}</p>
@@ -119,7 +120,8 @@ export function RFPUploadPanel({
           <button
             type="button"
             onClick={onClearError}
-            className="shrink-0 text-xs hover:underline"
+            aria-label="Dismiss error"
+            className="shrink-0 text-xs hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
           >
             Dismiss
           </button>

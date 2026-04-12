@@ -15,14 +15,14 @@ export default function SettingsLoading() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-pp-border pb-0">
+      <div className="flex gap-1 border-b border-border pb-0">
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className="h-8 w-28 rounded-b-none" />
         ))}
       </div>
 
       {/* Form section */}
-      <div className="rounded-lg border border-pp-border bg-pp-background-card p-6 space-y-4 max-w-lg">
+      <div className="rounded-lg border border-border bg-background-elevated p-6 space-y-4 max-w-lg">
         <div className="space-y-1.5">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-3.5 w-64" />

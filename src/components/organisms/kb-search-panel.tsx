@@ -1,10 +1,7 @@
 "use client";
 
-// KBSearchPanel — right panel of the proposal editor.
-// Allows semantic search over the knowledge base and selecting KB items for AI context.
-
 import { useState, useCallback } from "react";
-import { Search, BookOpen, Check } from "lucide-react";
+import { Search, BookOpen, Check, X } from "lucide-react";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { cn } from "@/lib/utils";
@@ -29,14 +26,19 @@ export interface KBItem {
 interface KBSearchPanelProps {
   readonly selectedKbItemIds: ReadonlySet<string>;
   readonly onToggleKbItem: (id: string) => void;
-  /** Called when user submits a search query — returns items to display */
   readonly onSearch: (query: string) => Promise<KBItem[]>;
+  /** Override the aside element's className (e.g. w-full for mobile overlay) */
+  readonly className?: string;
+  /** When provided, shows a close button in the header (used in mobile overlay) */
+  readonly onClose?: () => void;
 }
 
 export function KBSearchPanel({
   selectedKbItemIds,
   onToggleKbItem,
   onSearch,
+  className,
+  onClose,
 }: KBSearchPanelProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<KBItem[]>([]);
@@ -65,28 +67,34 @@ export function KBSearchPanel({
   );
 
   return (
-    <aside className="flex h-full w-64 flex-shrink-0 flex-col border-l border-pp-border bg-pp-background-card">
-      <div className="border-b border-pp-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-pp-foreground">
-          Knowledge Base
-        </h2>
-        <p className="mt-0.5 text-xs text-pp-foreground-muted">
-          {selectedKbItemIds.size} selected for context
-        </p>
+    <aside aria-label="Knowledge base search" className={cn("flex h-full w-64 flex-shrink-0 flex-col border-l border-border bg-background-subtle", className)}>
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div>
+          <h2 className="text-sm font-semibold">Knowledge Base</h2>
+          <p className="mt-0.5 text-xs text-foreground-muted">
+            {selectedKbItemIds.size} selected for context
+          </p>
+        </div>
+        {onClose && (
+          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onClose} aria-label="Close knowledge base">
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* Search input */}
-      <div className="border-b border-pp-border p-3">
+      <div className="border-b border-border p-3">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-pp-foreground-muted" />
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-foreground-muted" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search knowledge base…"
-              className="w-full rounded-md border border-pp-border bg-pp-background py-1.5 pl-8 pr-2 text-xs placeholder:text-pp-foreground-muted focus:outline-none focus:ring-1 focus:ring-ring"
+              aria-label="Search knowledge base"
+              className="w-full rounded-md border border-border bg-background py-1.5 pl-8 pr-2 text-xs placeholder:text-foreground-dim focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"
             />
           </div>
           <Button
@@ -105,8 +113,8 @@ export function KBSearchPanel({
       <div className="flex-1 overflow-y-auto">
         {!hasSearched && (
           <div className="flex flex-col items-center justify-center gap-2 p-6 text-center">
-            <BookOpen className="h-8 w-8 text-pp-foreground-muted/40" />
-            <p className="text-xs text-pp-foreground-muted">
+            <BookOpen className="h-8 w-8 text-foreground-dim" />
+            <p className="text-xs text-foreground-muted">
               Search past proposals, case studies, and capabilities.
             </p>
           </div>
@@ -114,11 +122,9 @@ export function KBSearchPanel({
 
         {hasSearched && results.length === 0 && (
           <div className="flex flex-col items-center justify-center gap-2 p-6 text-center">
-            <Search className="h-6 w-6 text-pp-foreground-muted/40" />
-            <p className="text-xs font-medium text-pp-foreground">
-              No results found
-            </p>
-            <p className="text-[11px] text-pp-foreground-muted">
+            <Search className="h-6 w-6 text-foreground-dim" />
+            <p className="text-xs font-medium">No results found</p>
+            <p className="text-xs text-foreground-muted">
               Try different keywords or upload more documents.
             </p>
           </div>
@@ -133,11 +139,13 @@ export function KBSearchPanel({
                   <button
                     type="button"
                     onClick={() => onToggleKbItem(item.id)}
+                    aria-pressed={isSelected}
                     className={cn(
                       "w-full rounded-md border px-3 py-2 text-left text-xs transition-colors",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]",
                       isSelected
-                        ? "border-primary/40 bg-primary/5"
-                        : "border-transparent hover:border-pp-border hover:bg-accent",
+                        ? "border-[hsl(var(--accent))]/40 bg-accent-muted"
+                        : "border-transparent hover:border-border hover:bg-background-elevated",
                     )}
                   >
                     <div className="flex items-start gap-2">
@@ -145,22 +153,22 @@ export function KBSearchPanel({
                         <div className="flex items-center gap-1.5">
                           <Badge
                             variant="outline"
-                            className="shrink-0 text-[10px]"
+                            className="shrink-0 text-2xs"
                           >
                             {KB_TYPE_LABELS[item.type] ?? item.type}
                           </Badge>
                         </div>
-                        <p className="mt-1 line-clamp-2 font-medium text-pp-foreground">
+                        <p className="mt-1 line-clamp-2 font-medium">
                           {item.title}
                         </p>
                         {item.content && (
-                          <p className="mt-0.5 line-clamp-2 text-pp-foreground-muted">
+                          <p className="mt-0.5 line-clamp-2 text-foreground-muted">
                             {item.content.slice(0, 120)}
                           </p>
                         )}
                       </div>
                       {isSelected && (
-                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[hsl(var(--accent))]" />
                       )}
                     </div>
                   </button>

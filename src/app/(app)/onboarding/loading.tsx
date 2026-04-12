@@ -25,7 +25,7 @@ export default function OnboardingLoading() {
       </div>
 
       {/* Wizard card */}
-      <div className="rounded-lg border border-pp-border bg-pp-background-card p-6 space-y-4">
+      <div className="rounded-lg border border-border bg-background-elevated p-6 space-y-4">
         <Skeleton className="h-5 w-48" />
         <Skeleton className="h-4 w-full max-w-sm" />
         <div className="space-y-3 pt-2">
