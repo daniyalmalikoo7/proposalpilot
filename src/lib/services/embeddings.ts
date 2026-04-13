@@ -144,9 +144,14 @@ export async function upsertChunkEmbeddingVector(
   });
 }
 
+// Max texts per Voyage AI embedBatch call. Voyage free tier is 10K TPM;
+// a 500-token chunk × 20 = 10K tokens per batch, staying within limits.
+const EMBED_BATCH_SIZE = 20;
+
 /**
  * Batch-embed an array of chunks and persist their vectors.
- * Uses the provider's batch API — one network round-trip regardless of chunk count.
+ * Splits into sub-batches of EMBED_BATCH_SIZE to avoid Voyage AI TPM quota
+ * failures when ingesting large documents (previously sent all at once).
  */
 export async function embedAndStoreChunks(
   db: PrismaClient,
@@ -155,18 +160,25 @@ export async function embedAndStoreChunks(
 ): Promise<void> {
   if (chunks.length === 0) return;
 
-  const texts = chunks.map((c) => c.text);
-  const vectors = await provider.embedBatch(texts);
+  for (let i = 0; i < chunks.length; i += EMBED_BATCH_SIZE) {
+    const batch = chunks.slice(i, i + EMBED_BATCH_SIZE);
+    const texts = batch.map((c) => c.text);
+    const vectors = await provider.embedBatch(texts);
 
-  await Promise.all(
-    vectors.map((vector, i) => {
-      const chunk = chunks[i];
-      if (!chunk) return Promise.resolve();
-      return upsertChunkEmbeddingVector(db, chunk.id, vector);
-    }),
-  );
+    await Promise.all(
+      vectors.map((vector, j) => {
+        const chunk = batch[j];
+        if (!chunk) return Promise.resolve();
+        return upsertChunkEmbeddingVector(db, chunk.id, vector);
+      }),
+    );
 
-  logger.debug("Batch chunk embeddings stored", { count: chunks.length });
+    logger.debug("Batch chunk embeddings stored", {
+      batchStart: i,
+      batchSize: batch.length,
+      totalChunks: chunks.length,
+    });
+  }
 }
 
 // ── Semantic search ────────────────────────────────────────────────────────────
@@ -198,7 +210,12 @@ export async function searchSimilar(
   options: { limit?: number; minSimilarity?: number } = {},
 ): Promise<SimilarItem[]> {
   const limit = options.limit ?? 5;
-  const minSim = options.minSimilarity ?? 0.5;
+  // 0.3 is intentionally lenient: surface cross-domain KB content that is
+  // directionally relevant. Callers that need tighter relevance can pass a
+  // higher value. The previous default of 0.5 was filtering out valid results
+  // for queries whose domain differed slightly from the stored documents
+  // (e.g. cloud-migration query against a case-study corpus scored 0.46).
+  const minSim = options.minSimilarity ?? 0.3;
 
   validateVector(queryEmbedding);
   const vectorLiteral = `[${queryEmbedding.join(",")}]`;
