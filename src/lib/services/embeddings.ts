@@ -30,7 +30,7 @@ export interface EmbeddingProvider {
 // Set VOYAGE_API_KEY in .env. Falls back gracefully if unset (full-text search).
 
 export class VoyageEmbeddingProvider implements EmbeddingProvider {
-  readonly dimensions = 1024; // voyage-large-2
+  readonly dimensions = 1024; // voyage-3
 
   async embed(text: string): Promise<number[]> {
     const key = env.VOYAGE_API_KEY;
@@ -47,9 +47,12 @@ export class VoyageEmbeddingProvider implements EmbeddingProvider {
         "Content-Type": "application/json",
         Authorization: `Bearer ${key}`,
       },
+      // input_type: 'query' tells Voyage to optimize the vector for retrieval
+      // (asymmetric search). Documents are stored with input_type: 'document'.
       body: JSON.stringify({
         model: "voyage-3",
         input: text,
+        input_type: "query",
       }),
     });
 
@@ -92,9 +95,11 @@ export class VoyageEmbeddingProvider implements EmbeddingProvider {
         "Content-Type": "application/json",
         Authorization: `Bearer ${key}`,
       },
+      // input_type: 'document' optimizes vectors for being retrieved (stored side).
       body: JSON.stringify({
         model: "voyage-3",
         input: texts,
+        input_type: "document",
       }),
     });
 
