@@ -8,7 +8,10 @@ export const maxDuration = 60;
 
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+  GoogleGenerativeAI,
+  type GenerateContentStreamResult,
+} from "@google/generative-ai";
 import { z } from "zod";
 import {
   loadPrompt,
@@ -33,6 +36,12 @@ function getGenAI(): GoogleGenerativeAI {
   if (!_genAI) _genAI = new GoogleGenerativeAI(env.GOOGLE_GEMINI_API_KEY);
   return _genAI;
 }
+
+// Ordered model list for streaming: try the most capable first, fall back on
+// 503/quota errors. gemini-2.5-flash is a preview model that can be
+// temporarily unavailable under high demand; gemini-2.5-flash-lite is the
+// stable fallback confirmed available on this API key.
+const STREAM_MODEL_CHAIN = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
 
 let _voyageProvider: VoyageEmbeddingProvider | null = null;
 function getVoyageProvider(): VoyageEmbeddingProvider {
@@ -204,8 +213,6 @@ export async function POST(req: NextRequest): Promise<Response> {
   });
 
   const encoder = new TextEncoder();
-  // Keep in sync with src/lib/ai/fallback-chain.ts FALLBACK_CHAIN[0]
-  const MODEL_NAME = "gemini-2.5-flash";
 
   const readable = new ReadableStream({
     async start(controller) {
@@ -213,18 +220,43 @@ export async function POST(req: NextRequest): Promise<Response> {
       let fullContent = "";
 
       try {
-        const model = getGenAI().getGenerativeModel({
-          model: MODEL_NAME,
-          systemInstruction: prompt.systemMessage,
-          generationConfig: {
-            maxOutputTokens: prompt.metadata.max_tokens,
-            temperature: prompt.metadata.temperature,
-          },
-        });
+        // Try each model in order; stop at the first that accepts the request.
+        // generateContentStream throws immediately on 503 / quota errors, so
+        // we can safely catch and fall through to the next model.
+        let streamResult: GenerateContentStreamResult | null = null;
+        let activeModel = "";
 
-        const streamResult = await model.generateContentStream({
-          contents: [{ role: "user", parts: [{ text: userMessage }] }],
-        });
+        for (const modelName of STREAM_MODEL_CHAIN) {
+          try {
+            const candidate = getGenAI().getGenerativeModel({
+              model: modelName,
+              systemInstruction: prompt.systemMessage,
+              generationConfig: {
+                maxOutputTokens: prompt.metadata.max_tokens,
+                temperature: prompt.metadata.temperature,
+              },
+            });
+            streamResult = await candidate.generateContentStream({
+              contents: [{ role: "user", parts: [{ text: userMessage }] }],
+            });
+            activeModel = modelName;
+            break;
+          } catch (modelErr) {
+            logger.warn("stream-section model unavailable, trying next", {
+              model: modelName,
+              error:
+                modelErr instanceof Error
+                  ? modelErr.message.slice(0, 120)
+                  : String(modelErr),
+            });
+          }
+        }
+
+        if (!streamResult) {
+          throw new Error("All generation models are currently unavailable");
+        }
+
+        logger.info("stream-section using model", { model: activeModel });
 
         for await (const chunk of streamResult.stream) {
           const delta = chunk.text();
@@ -250,10 +282,10 @@ export async function POST(req: NextRequest): Promise<Response> {
             usage: {
               inputTokens,
               outputTokens,
-              cost: calculateCost(MODEL_NAME, inputTokens, outputTokens),
+              cost: calculateCost(activeModel, inputTokens, outputTokens),
             },
             latencyMs: Date.now() - t0,
-            model: MODEL_NAME,
+            model: activeModel,
             cached: false,
           },
           "section-generator",
