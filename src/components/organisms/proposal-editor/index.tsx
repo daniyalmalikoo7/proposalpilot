@@ -100,6 +100,30 @@ function getConfidenceBorderClass(score: number | null): string {
   return "border-l-4 border-l-danger";
 }
 
+/**
+ * Extracts the `content` field value from a partially-streamed JSON buffer.
+ * The model streams a JSON object; this peeks inside the incomplete JSON to
+ * show live content in the editor before the stream finishes.
+ */
+function unescapeJson(s: string): string {
+  return s
+    .replace(/\\n/g, "\n")
+    .replace(/\\t/g, "\t")
+    .replace(/\\r/g, "\r")
+    .replace(/\\"/g, '"')
+    .replace(/\\\\/g, "\\");
+}
+
+function extractStreamingContent(rawBuffer: string): string {
+  // Try to match complete "content": "..." value first
+  const completeMatch = rawBuffer.match(/"content"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  if (completeMatch?.[1]) return unescapeJson(completeMatch[1]);
+  // Fall back to incomplete value (stream cut mid-string)
+  const incompleteMatch = rawBuffer.match(/"content"\s*:\s*"((?:[^"\\]|\\.)*)/);
+  if (incompleteMatch?.[1]) return unescapeJson(incompleteMatch[1]);
+  return "";
+}
+
 function ProposalEditorInner({
   section,
   generateContext,
@@ -113,6 +137,8 @@ function ProposalEditorInner({
   );
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoGenerateFiredRef = useRef(false);
+  // Tracks generating state synchronously so the onUpdate closure can read it
+  const isGeneratingRef = useRef(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -134,6 +160,8 @@ function ProposalEditorInner({
       },
     },
     onUpdate: ({ editor: ed }) => {
+      // Skip auto-save while streaming — content changes every chunk
+      if (isGeneratingRef.current) return;
       const html = ed.getHTML();
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
       autoSaveTimer.current = setTimeout(() => {
@@ -165,6 +193,18 @@ function ProposalEditorInner({
       generateContext,
       onComplete: handleGenerateComplete,
     });
+
+  // Keep ref in sync so the stale onUpdate closure always reads the latest value
+  isGeneratingRef.current = isGenerating;
+
+  // Stream content progressively into the editor as SSE delta chunks arrive.
+  // emitUpdate=false skips triggering onUpdate (and thus auto-save) per-chunk.
+  useEffect(() => {
+    if (!isGenerating || !streamBuffer || !editor) return;
+    const content = extractStreamingContent(streamBuffer);
+    if (!content) return;
+    editor.commands.setContent(markdownToHtml(content));
+  }, [isGenerating, streamBuffer, editor]);
 
   useEffect(() => {
     if (autoGenerate && !autoGenerateFiredRef.current && !isGenerating) {
@@ -313,47 +353,34 @@ function ProposalEditorInner({
         </div>
       )}
 
-      {/* Streaming area — aria-live so screen readers announce updates */}
+      {/* Editor area — aria-live so screen readers announce streaming updates */}
       <div
         aria-live="polite"
         aria-busy={isGenerating}
         aria-label={`${section.title} content`}
+        className="relative"
       >
-        {/* Stream preview */}
-        <AnimatePresence>
-          {isGenerating && streamBuffer && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="border-b border-border bg-background-subtle/50 px-6 py-2"
-            >
-              <p className="line-clamp-2 font-mono text-xs text-foreground-muted">
-                {streamBuffer.slice(-200)}
-                <span className="animate-pulse">▋</span>
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Editor area */}
-        <div className="relative">
-          {isGenerating && !streamBuffer && (
-            <div className="space-y-3 px-6 py-4">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-11/12" />
-              <Skeleton className="h-4 w-4/5" />
-              <Skeleton className="mt-4 h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-5/6" />
-              <Skeleton className="mt-4 h-4 w-full" />
-              <Skeleton className="h-4 w-2/3" />
-            </div>
-          )}
-          <div className={isGenerating && !streamBuffer ? "hidden" : undefined}>
-            <EditorContent editor={editor} />
+        {/* Skeleton while waiting for first chunk (before "content" key arrives) */}
+        {isGenerating && !extractStreamingContent(streamBuffer) && (
+          <div className="space-y-3 px-6 py-4">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-11/12" />
+            <Skeleton className="h-4 w-4/5" />
+            <Skeleton className="mt-4 h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="mt-4 h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
           </div>
+        )}
+        <div
+          className={
+            isGenerating && !extractStreamingContent(streamBuffer)
+              ? "hidden"
+              : undefined
+          }
+        >
+          <EditorContent editor={editor} />
         </div>
       </div>
     </div>
