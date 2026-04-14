@@ -112,13 +112,13 @@ export function useProposalEditor(proposalId: string) {
   const generateContext: GenerateContext = useMemo(
     () => ({
       proposalId,
-      requirements: selectedRequirementTexts,
+      requirements: requirements.map((r) => r.requirement),
       requirementsBySection,
       kbItemIds: Array.from(selectedKbIds),
     }),
     [
       proposalId,
-      selectedRequirementTexts,
+      requirements,
       requirementsBySection,
       selectedKbIds,
     ],
