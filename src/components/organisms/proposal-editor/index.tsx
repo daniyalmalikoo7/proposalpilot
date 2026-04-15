@@ -35,6 +35,14 @@ import type { SectionGeneratorOutput } from "@/lib/ai/validators/section-generat
 
 export type { ProposalSection, GenerateContext };
 
+const GENERATION_STEPS = [
+  "Analyzing requirements…",
+  "Searching knowledge base…",
+  "Drafting section content…",
+  "Refining with brand voice…",
+  "Finalizing response…",
+] as const;
+
 const ERROR_MESSAGES: Record<string, string> = {
   "Output blocked by safety guard":
     "The AI safety filter flagged this content. Try simplifying the requirements or rephrasing.",
@@ -151,6 +159,12 @@ function ProposalEditorInner({
     section.confidenceScore ?? null,
   );
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showSlowWarning, setShowSlowWarning] = useState(false);
+  const [secondsElapsed, setSecondsElapsed] = useState(0);
+  const slowWarningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const elapsedIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const statusIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const utils = trpc.useUtils();
   const deleteSectionMutation = trpc.proposal.deleteSection.useMutation({
     onSuccess: () => {
@@ -167,6 +181,10 @@ function ProposalEditorInner({
   const revealedLengthRef = useRef(0);
   const typewriterRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const streamBufferRef = useRef("");
+  // Tracks whether the loading placeholder is currently shown in the editor.
+  // Used to restore prior content when generation stops before any tokens arrive.
+  const placeholderActiveRef = useRef(false);
+  const priorContentRef = useRef<string>("");
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -233,6 +251,38 @@ function ProposalEditorInner({
   isGeneratingRef.current = isGenerating;
   streamBufferRef.current = streamBuffer;
 
+  // Slow-generation UX: track elapsed seconds, show reassurance at 15s,
+  // make Cancel visible at 10s.
+  useEffect(() => {
+    if (!isGenerating) {
+      if (slowWarningTimerRef.current) clearTimeout(slowWarningTimerRef.current);
+      if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
+      if (elapsedIntervalRef.current) clearInterval(elapsedIntervalRef.current);
+      slowWarningTimerRef.current = null;
+      cancelTimerRef.current = null;
+      elapsedIntervalRef.current = null;
+      setShowSlowWarning(false);
+      setSecondsElapsed(0);
+      return;
+    }
+    setShowSlowWarning(false);
+    setSecondsElapsed(0);
+
+    elapsedIntervalRef.current = setInterval(() => {
+      setSecondsElapsed((s) => s + 1);
+    }, 1000);
+
+    slowWarningTimerRef.current = setTimeout(() => {
+      setShowSlowWarning(true);
+    }, 15_000);
+
+    return () => {
+      if (slowWarningTimerRef.current) clearTimeout(slowWarningTimerRef.current);
+      if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
+      if (elapsedIntervalRef.current) clearInterval(elapsedIntervalRef.current);
+    };
+  }, [isGenerating]);
+
   // Typewriter animation: reveals streamed content character-by-character (~30 chars
   // per frame at 60fps = ~1800 chars/s) regardless of how large Gemini's chunks are.
   //
@@ -250,17 +300,58 @@ function ProposalEditorInner({
         clearInterval(typewriterRef.current);
         typewriterRef.current = null;
       }
+      if (statusIntervalRef.current) {
+        clearInterval(statusIntervalRef.current);
+        statusIntervalRef.current = null;
+      }
       revealedLengthRef.current = 0;
+      // ISSUE 1: If generation stopped (error or cancel) before any tokens
+      // arrived, the placeholder is still in the editor. Restore prior content.
+      if (placeholderActiveRef.current && editor) {
+        placeholderActiveRef.current = false;
+        editor.commands.setContent(priorContentRef.current);
+      }
       return;
     }
 
     if (!streamBuffer) {
-      // Generation started but no tokens yet — show placeholder once
+      // Generation started but no tokens yet — show animated loading placeholder.
+      // Save current content so we can restore it if generation fails.
+      if (!placeholderActiveRef.current) {
+        priorContentRef.current = editor.getHTML();
+        placeholderActiveRef.current = true;
+        // Set animated placeholder
+        editor.commands.setContent(
+          `<div style="padding:20px 0">` +
+          `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">` +
+          `<div id="gen-spinner" style="width:18px;height:18px;border:2px solid hsl(var(--accent));border-top-color:transparent;border-radius:50%;animation:pp-spin 0.8s linear infinite;flex-shrink:0"></div>` +
+          `<span id="gen-status" style="color:hsl(var(--foreground-muted));font-size:14px;font-weight:500">${GENERATION_STEPS[0]}</span>` +
+          `</div>` +
+          `<div style="height:3px;background:hsl(var(--border));border-radius:99px;overflow:hidden">` +
+          `<div style="height:100%;width:5%;background:hsl(var(--accent));border-radius:99px;animation:pp-progress 20s ease-in-out forwards"></div>` +
+          `</div>` +
+          `<style>@keyframes pp-spin{to{transform:rotate(360deg)}}@keyframes pp-progress{0%{width:5%}50%{width:65%}100%{width:85%}}</style>` +
+          `</div>`,
+        );
+        // Rotate status messages every 5 seconds
+        let stepIndex = 0;
+        statusIntervalRef.current = setInterval(() => {
+          stepIndex = (stepIndex + 1) % GENERATION_STEPS.length;
+          const el = document.getElementById("gen-status");
+          if (el) el.textContent = GENERATION_STEPS[stepIndex];
+        }, 5_000);
+      }
       revealedLengthRef.current = 0;
-      editor.commands.setContent(
-        '<p class="animate-pulse text-foreground-muted">✦ Generating proposal content…</p>',
-      );
       return;
+    }
+
+    // First real token arrived — clear placeholder and status rotator.
+    if (placeholderActiveRef.current) {
+      placeholderActiveRef.current = false;
+      if (statusIntervalRef.current) {
+        clearInterval(statusIntervalRef.current);
+        statusIntervalRef.current = null;
+      }
     }
 
     // Interval already running — it will pick up new content via streamBufferRef
@@ -298,10 +389,10 @@ function ProposalEditorInner({
         getConfidenceBorderClass(confidenceScore),
       )}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-border bg-background-subtle/30 px-4 py-3">
-        <div className="flex items-center gap-3">
-          <h3 className="text-lg font-semibold">{section.title}</h3>
+      {/* Header — flex-col on mobile, flex-row on sm+ */}
+      <div className="flex flex-col gap-2 border-b border-border bg-background-subtle/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2 flex-wrap">
+          <h3 className="truncate text-base font-semibold sm:text-lg">{section.title}</h3>
           {confidenceScore !== null && (
             <ConfidenceBadge score={confidenceScore} />
           )}
@@ -313,12 +404,12 @@ function ProposalEditorInner({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <Button
             size="sm"
             variant="ghost"
             onClick={() => setConfirmDelete(true)}
-            className="h-7 w-7 p-0 text-foreground-muted opacity-0 transition-opacity group-hover:opacity-100 hover:text-danger"
+            className="h-7 w-7 p-0 text-foreground-muted opacity-40 transition-opacity hover:opacity-100 hover:text-danger"
             aria-label={`Delete ${section.title} section`}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -418,6 +509,26 @@ function ProposalEditorInner({
       </div>
 
       <EditorToolbar editor={editor} />
+
+      {/* Slow generation: cancel link after 10s, reassurance message after 15s */}
+      {isGenerating && (secondsElapsed > 10 || showSlowWarning) && (
+        <div className="flex items-center justify-between border-b border-border/50 bg-background-subtle/40 px-4 py-2 text-xs text-foreground-muted">
+          {showSlowWarning ? (
+            <span>This can take up to 60 seconds for complex sections — the AI is analyzing your requirements.</span>
+          ) : (
+            <span>Generating…</span>
+          )}
+          {secondsElapsed > 10 && (
+            <button
+              type="button"
+              onClick={cancel}
+              className="ml-4 shrink-0 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Error banner */}
       {error && (
