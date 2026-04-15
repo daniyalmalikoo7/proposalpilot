@@ -2,12 +2,31 @@
 
 import { useEffect, useState } from "react";
 import { CheckCircle2, ExternalLink, Loader2, Plus } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/atoms/tooltip";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { FilterTabBar } from "@/components/molecules/filter-tab-bar";
 import { trpc } from "@/lib/trpc/client";
 
 type SettingsTab = "organization" | "team" | "billing";
+
+const PLAN_DISPLAY: Record<string, string> = {
+  starter: "Free",
+  free: "Free",
+  growth: "Growth",
+  scale: "Scale",
+  enterprise: "Enterprise",
+};
+
+const PLAN_LIMIT_DISPLAY: Record<string, string> = {
+  starter: "5 proposals per month",
+  free: "5 proposals per month",
+};
 
 const TABS: ReadonlyArray<{ value: SettingsTab; label: string }> = [
   { value: "organization", label: "Organization" },
@@ -19,6 +38,7 @@ export default function SettingsPage() {
   const [tab, setTab] = useState<SettingsTab>("organization");
   const [orgName, setOrgName] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [upgradeNotice, setUpgradeNotice] = useState(false);
 
   const { data: org, isLoading: orgLoading } = trpc.settings.getOrg.useQuery();
 
@@ -145,13 +165,11 @@ export default function SettingsPage() {
                 <p className="text-xs font-medium uppercase tracking-wider text-foreground-muted">
                   Current plan
                 </p>
-                <p className="mt-1 font-mono text-2xl font-semibold capitalize tracking-tight">
-                  {orgLoading ? "—" : (org?.plan ?? "starter")}
+                <p className="mt-1 font-mono text-2xl font-semibold tracking-tight">
+                  {orgLoading ? "—" : (PLAN_DISPLAY[org?.plan ?? "starter"] ?? org?.plan ?? "Free")}
                 </p>
                 <p className="mt-0.5 text-sm text-foreground-muted">
-                  {org?.monthlyProposalLimit
-                    ? `${org.monthlyProposalLimit} proposals / month`
-                    : ""}
+                  {orgLoading ? "" : (PLAN_LIMIT_DISPLAY[org?.plan ?? "starter"] ?? (org?.monthlyProposalLimit ? `${org.monthlyProposalLimit} proposals per month` : ""))}
                 </p>
               </div>
               {org?.stripeCustomerId && (
@@ -168,22 +186,50 @@ export default function SettingsPage() {
               </p>
             )}
 
-            <div className="mt-5 flex gap-3">
-              <Button
-                size="sm"
-                onClick={handleManageBilling}
-                disabled={createPortal.isPending || !org?.stripeCustomerId}
-              >
-                {createPortal.isPending ? (
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-                )}
-                Manage billing
-              </Button>
-              <Button variant="outline" size="sm" disabled>
-                Upgrade plan
-              </Button>
+            <div className="mt-5 flex flex-col gap-3">
+              <div className="flex gap-3">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span tabIndex={0} className="inline-flex">
+                        <Button
+                          size="sm"
+                          onClick={handleManageBilling}
+                          disabled={createPortal.isPending || !org?.stripeCustomerId}
+                          style={!org?.stripeCustomerId ? { pointerEvents: "none" } : undefined}
+                        >
+                          {createPortal.isPending ? (
+                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                          )}
+                          Manage billing
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    {!org?.stripeCustomerId && (
+                      <TooltipContent>
+                        Available after upgrading to a paid plan
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setUpgradeNotice(true);
+                    setTimeout(() => setUpgradeNotice(false), 4000);
+                  }}
+                >
+                  Upgrade plan
+                </Button>
+              </div>
+              {upgradeNotice && (
+                <p className="text-sm text-foreground-muted">
+                  Pro plan coming soon! You&apos;re currently on the Free plan.
+                </p>
+              )}
             </div>
           </div>
 
