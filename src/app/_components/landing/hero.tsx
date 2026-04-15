@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, ChevronRight, Sparkles } from "lucide-react";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
 
 export function LandingHero() {
   return (
@@ -26,13 +27,24 @@ export function LandingHero() {
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <Link
-                href={"/sign-up" as any}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[hsl(var(--accent))] px-6 py-3 text-sm font-semibold text-[hsl(var(--accent-foreground))] transition-colors hover:bg-[hsl(var(--accent-hover))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] focus-visible:ring-offset-2"
-              >
-                Get Started Free
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <SignedOut>
+                <Link
+                  href={"/sign-up" as any}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[hsl(var(--accent))] px-6 py-3 text-sm font-semibold text-[hsl(var(--accent-foreground))] transition-colors hover:bg-[hsl(var(--accent-hover))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] focus-visible:ring-offset-2"
+                >
+                  Get Started Free
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </SignedOut>
+              <SignedIn>
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[hsl(var(--accent))] px-6 py-3 text-sm font-semibold text-[hsl(var(--accent-foreground))] transition-colors hover:bg-[hsl(var(--accent-hover))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] focus-visible:ring-offset-2"
+                >
+                  Go to Dashboard
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </SignedIn>
               <a
                 href="#how-it-works"
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground-muted transition-colors hover:bg-background-subtle hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"

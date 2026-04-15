@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Zap } from "lucide-react";
+import { SignedIn, SignedOut } from "@clerk/nextjs";
 
 export function LandingFooter() {
   return (
@@ -29,12 +30,22 @@ export function LandingFooter() {
           >
             Pricing
           </a>
-          <Link
-            href={"/sign-in" as any}
-            className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
-          >
-            Sign in
-          </Link>
+          <SignedOut>
+            <Link
+              href={"/sign-in" as any}
+              className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
+            >
+              Sign in
+            </Link>
+          </SignedOut>
+          <SignedIn>
+            <Link
+              href="/dashboard"
+              className="transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
+            >
+              Dashboard
+            </Link>
+          </SignedIn>
         </nav>
 
         <p className="text-sm text-foreground-dim">

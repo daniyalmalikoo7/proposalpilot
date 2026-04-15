@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Zap } from "lucide-react";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export function LandingNav() {
   return (
@@ -35,18 +36,29 @@ export function LandingNav() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Link
-            href={"/sign-in" as any}
-            className="text-sm text-foreground-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
-          >
-            Sign in
-          </Link>
-          <Link
-            href={"/sign-up" as any}
-            className="rounded-lg bg-[hsl(var(--accent))] px-4 py-2 text-sm font-semibold text-[hsl(var(--accent-foreground))] transition-colors hover:bg-[hsl(var(--accent-hover))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] focus-visible:ring-offset-2"
-          >
-            Get started
-          </Link>
+          <SignedOut>
+            <Link
+              href={"/sign-in" as any}
+              className="text-sm text-foreground-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
+            >
+              Sign in
+            </Link>
+            <Link
+              href={"/sign-up" as any}
+              className="rounded-lg bg-[hsl(var(--accent))] px-4 py-2 text-sm font-semibold text-[hsl(var(--accent-foreground))] transition-colors hover:bg-[hsl(var(--accent-hover))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] focus-visible:ring-offset-2"
+            >
+              Get started
+            </Link>
+          </SignedOut>
+          <SignedIn>
+            <Link
+              href="/dashboard"
+              className="text-sm text-foreground-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
+            >
+              Dashboard
+            </Link>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
         </div>
       </div>
     </header>
