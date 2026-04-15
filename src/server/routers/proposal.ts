@@ -245,6 +245,22 @@ export const proposalRouter = router({
     }),
 
   /**
+   * Delete a proposal and all its related data.
+   */
+  delete: orgProtectedProcedure
+    .input(z.object({ id: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const proposal = await ctx.db.proposal.findFirst({
+        where: { id: input.id, orgId: ctx.internalOrgId },
+        select: { id: true },
+      });
+      if (!proposal) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found." });
+      }
+      return ctx.db.proposal.delete({ where: { id: input.id } });
+    }),
+
+  /**
    * Delete a single proposal section.
    */
   deleteSection: orgProtectedProcedure

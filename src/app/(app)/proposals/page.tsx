@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FileText, FilePlus2, Plus } from "lucide-react";
+import { FileText, FilePlus2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Skeleton } from "@/components/atoms/skeleton";
 import { NewProposalDialog } from "@/components/organisms/new-proposal-dialog";
@@ -21,8 +21,20 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default function ProposalsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const { data, isLoading } = trpc.proposal.list.useQuery({});
+  const utils = trpc.useUtils();
+  const deleteMutation = trpc.proposal.delete.useMutation({
+    onMutate: ({ id }) => setDeletingId(id),
+    onSuccess: async () => {
+      setDeletingId(null);
+      setConfirmDeleteId(null);
+      await utils.proposal.list.invalidate();
+    },
+    onError: () => setDeletingId(null),
+  });
 
   return (
     <div className="space-y-6">
@@ -78,11 +90,11 @@ export default function ProposalsPage() {
         ) : (
           <ul className="divide-y divide-border">
             {data.items.map((proposal) => (
-              <li key={proposal.id}>
+              <li key={proposal.id} className="group relative flex items-center">
                 <Link
                   href={`/proposals/${proposal.id}`}
                   className={cn(
-                    "flex w-full items-center gap-4 px-6 py-4 text-left transition-colors",
+                    "flex flex-1 items-center gap-4 px-6 py-4 text-left transition-colors",
                     "hover:bg-background-subtle",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[hsl(var(--accent))]",
                   )}
@@ -105,6 +117,17 @@ export default function ProposalsPage() {
                     {new Date(proposal.updatedAt).toLocaleDateString()}
                   </span>
                 </Link>
+                <div className="shrink-0 pr-4">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(proposal.id); }}
+                    className="rounded p-1 text-foreground-muted opacity-0 transition-opacity group-hover:opacity-100 hover:text-danger focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]"
+                    aria-label={`Delete ${proposal.title}`}
+                    disabled={deletingId === proposal.id}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -112,6 +135,30 @@ export default function ProposalsPage() {
       </div>
 
       <NewProposalDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-xl border border-border bg-background-elevated p-6 shadow-xl">
+            <h3 className="text-base font-semibold">Delete proposal?</h3>
+            <p className="mt-2 text-sm text-foreground-muted">
+              All sections and requirements will be permanently deleted. This cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button variant="outline" size="sm" onClick={() => setConfirmDeleteId(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                disabled={deleteMutation.isPending}
+                onClick={() => deleteMutation.mutate({ id: confirmDeleteId })}
+              >
+                {deleteMutation.isPending ? "Deleting…" : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
