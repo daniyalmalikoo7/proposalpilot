@@ -27,14 +27,8 @@ export function NewProposalDialog({
 
   const utils = trpc.useUtils();
 
-  const createProposal = trpc.proposal.create.useMutation({
-    onSuccess: (proposal) => {
-      void utils.proposal.list.invalidate();
-      onOpenChange(false);
-      resetForm();
-      router.push(`/proposals/${proposal.id}`);
-    },
-  });
+  const createProposal = trpc.proposal.create.useMutation();
+  const extractRequirements = trpc.ai.extractRequirements.useMutation();
 
   function resetForm() {
     setTitle("");
@@ -48,6 +42,8 @@ export function NewProposalDialog({
 
     setUploadError(null);
 
+    // 1. Extract text from RFP (if attached)
+    let rfpText: string | undefined;
     if (rfpFile) {
       const form = new FormData();
       form.append("file", rfpFile);
@@ -55,25 +51,53 @@ export function NewProposalDialog({
         const res = await fetch("/api/upload", { method: "POST", body: form });
         const json = (await res.json()) as {
           ok: boolean;
+          data?: { chunks: { text: string }[] };
           error?: { message: string };
         };
-        if (!json.ok) {
+        if (!json.ok || !json.data) {
           setUploadError(json.error?.message ?? "File upload failed.");
           return;
         }
+        rfpText = json.data.chunks.map((c) => c.text).join("\n\n");
       } catch {
         setUploadError("Network error uploading file. Please try again.");
         return;
       }
     }
 
-    createProposal.mutate({
-      title: title.trim(),
-      clientName: clientName.trim() || undefined,
-    });
+    // 2. Create proposal
+    let proposal: { id: string };
+    try {
+      proposal = await createProposal.mutateAsync({
+        title: title.trim(),
+        clientName: clientName.trim() || undefined,
+      });
+    } catch {
+      // createProposal.error is already set by the mutation
+      return;
+    }
+
+    // 3. Extract requirements from RFP text (if we have any)
+    if (rfpText) {
+      try {
+        await extractRequirements.mutateAsync({
+          proposalId: proposal.id,
+          rfpText,
+        });
+      } catch {
+        // Non-fatal — redirect anyway; user can re-upload from the editor
+      }
+    }
+
+    // 4. Navigate to editor
+    void utils.proposal.list.invalidate();
+    onOpenChange(false);
+    resetForm();
+    router.push(`/proposals/${proposal.id}`);
   }
 
-  const isPending = createProposal.isPending;
+  const isPending =
+    createProposal.isPending || extractRequirements.isPending;
 
   return (
     <Dialog.Root
