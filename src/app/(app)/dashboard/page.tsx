@@ -35,7 +35,7 @@ type DbProposal = {
   deadline: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  sections: ReadonlyArray<{ content: string | null }> | null | undefined;
+  _count: { sections: number };
 };
 
 const containerVariants = {
@@ -53,10 +53,9 @@ const rowVariants = {
 };
 
 function mapProposal(p: DbProposal): Proposal {
-  const sections = p.sections ?? [];
-  const total = sections.length;
-  const filled = sections.filter((s) => (s.content ?? "").trim().length > 0).length;
-  const completionPct = total > 0 ? Math.round((filled / total) * 100) : 0;
+  // Section count available but per-section content is not fetched in the list
+  // query (too expensive). Progress is computed in the editor from proposal.get.
+  const completionPct = 0;
   return {
     id: p.id,
     title: p.title,
@@ -103,15 +102,9 @@ export default function DashboardPage() {
     const won = proposals.filter((p) => p.status === "WON").length;
     const winRate =
       decided.length > 0 ? Math.round((won / decided.length) * 100) : null;
-    const active2 = proposals.filter((p) =>
-      ["IN_PROGRESS", "REVIEW"].includes(p.status),
-    );
-    const avgCompletion =
-      active2.length > 0
-        ? Math.round(
-            active2.reduce((s, p) => s + p.completionPct, 0) / active2.length,
-          )
-        : null;
+    // Completion % is not available in the list query (section content is not
+    // fetched for performance). Always null here — shown in the editor instead.
+    const avgCompletion: number | null = null;
 
     return { active, winRate, avgCompletion };
   }, [proposals]);

@@ -81,7 +81,7 @@ export const proposalRouter = router({
           deadline: true,
           createdAt: true,
           updatedAt: true,
-          sections: { select: { content: true } },
+          _count: { select: { sections: true } },
         },
       });
 
@@ -95,19 +95,43 @@ export const proposalRouter = router({
     }),
 
   /**
-   * Fetch a single proposal with all relations.
+   * Fetch a single proposal with editor-needed fields only.
+   * complianceMatrix and winLoss are not rendered in the editor; fetch them
+   * separately if/when a dedicated view needs them.
    */
   get: orgProtectedProcedure
     .input(z.object({ id: z.string().cuid() }))
     .query(async ({ ctx, input }) => {
       const proposal = await ctx.db.proposal.findFirst({
         where: { id: input.id, orgId: ctx.internalOrgId },
-        include: {
-          rfpSource: true,
-          requirements: { orderBy: { id: "asc" } },
-          sections: { orderBy: { order: "asc" } },
-          complianceMatrix: true,
-          winLoss: true,
+        select: {
+          id: true,
+          title: true,
+          clientName: true,
+          status: true,
+          deadline: true,
+          createdAt: true,
+          updatedAt: true,
+          requirements: {
+            select: {
+              id: true,
+              section: true,
+              requirement: true,
+              priority: true,
+              addressed: true,
+            },
+            orderBy: { id: "asc" },
+          },
+          sections: {
+            select: {
+              id: true,
+              title: true,
+              content: true,
+              order: true,
+              confidenceScore: true,
+            },
+            orderBy: { order: "asc" },
+          },
         },
       });
 
