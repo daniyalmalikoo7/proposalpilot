@@ -13,6 +13,7 @@ interface RFPUploadPanelProps {
   readonly onSkip: () => void;
   readonly error: string | null;
   readonly onClearError: () => void;
+  readonly isSkipping?: boolean;
 }
 
 export function RFPUploadPanel({
@@ -20,6 +21,7 @@ export function RFPUploadPanel({
   onSkip,
   error,
   onClearError,
+  isSkipping = false,
 }: RFPUploadPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -105,6 +107,7 @@ export function RFPUploadPanel({
           size="sm"
           className="h-auto p-0 text-xs"
           onClick={onSkip}
+          disabled={isSkipping}
         >
           Start with a blank proposal
         </Button>

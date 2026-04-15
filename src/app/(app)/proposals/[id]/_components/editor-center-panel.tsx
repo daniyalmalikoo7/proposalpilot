@@ -91,6 +91,7 @@ export function EditorCenterPanel({
           onSkip={onSkipRFP}
           error={extractionError}
           onClearError={onClearError}
+          isSkipping={isCreatingSections}
         />
       </div>
     );
