@@ -35,6 +35,17 @@ import type { SectionGeneratorOutput } from "@/lib/ai/validators/section-generat
 
 export type { ProposalSection, GenerateContext };
 
+const ERROR_MESSAGES: Record<string, string> = {
+  "Output blocked by safety guard":
+    "The AI safety filter flagged this content. Try simplifying the requirements or rephrasing.",
+  "AI output could not be parsed":
+    "The AI response was malformed. Click Retry to try again.",
+  "All generation models are currently unavailable":
+    "AI service is temporarily unavailable. Please wait a moment and try again.",
+  "Generation failed":
+    "Something went wrong during generation. Click Retry to try again.",
+};
+
 // ── Error boundary ──────────────────────────────────────────────────────────
 class EditorErrorBoundary extends Component<
   { readonly children: ReactNode; readonly title: string },
@@ -412,14 +423,23 @@ function ProposalEditorInner({
       {error && (
         <div className="flex items-center gap-2 border-b border-danger/20 bg-danger-bg px-4 py-2 text-xs text-danger">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-          <span>{error}</span>
-          <button
-            type="button"
-            onClick={clearError}
-            className="ml-auto hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
-          >
-            Dismiss
-          </button>
+          <span>{ERROR_MESSAGES[error] ?? error}</span>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => { clearError(); void start(); }}
+              className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
+            >
+              Retry
+            </button>
+            <button
+              type="button"
+              onClick={clearError}
+              className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))] rounded"
+            >
+              Dismiss
+            </button>
+          </div>
         </div>
       )}
 
