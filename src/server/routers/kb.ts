@@ -133,6 +133,32 @@ export const kbRouter = router({
     }),
 
   /**
+   * Fetch a single knowledge base item by ID (used for detail preview).
+   */
+  get: orgProtectedProcedure
+    .input(z.object({ id: z.string().cuid() }))
+    .query(async ({ ctx, input }) => {
+      const item = await ctx.db.knowledgeBaseItem.findFirst({
+        where: { id: input.id, orgId: ctx.internalOrgId, isActive: true },
+        select: {
+          id: true,
+          type: true,
+          title: true,
+          content: true,
+          fileUrl: true,
+          isWin: true,
+          metadata: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+      if (!item) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Knowledge base item not found." });
+      }
+      return item;
+    }),
+
+  /**
    * Semantic search over the knowledge base using pgvector.
    * Falls back to full-text search if embedding is unavailable.
    */

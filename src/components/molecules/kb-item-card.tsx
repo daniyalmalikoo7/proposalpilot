@@ -5,6 +5,8 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Eye, FileText, MoreHorizontal, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/atoms/button";
+import { Skeleton } from "@/components/atoms/skeleton";
+import { trpc } from "@/lib/trpc/client";
 import type { KBItem, KBItemType } from "@/lib/types/proposal";
 import { KB_TYPE_LABELS } from "@/lib/types/proposal";
 
@@ -31,6 +33,7 @@ interface KBItemCardProps {
 export function KBItemCard({ item, onDelete }: KBItemCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { data: detail } = trpc.kb.get.useQuery({ id: item.id }, { enabled: expanded });
 
   const handleDeleteConfirm = () => {
     onDelete?.(item.id);
@@ -135,6 +138,21 @@ export function KBItemCard({ item, onDelete }: KBItemCardProps) {
             <span className="text-foreground-muted">File size</span>
             <span>{formatFileSize(item.fileSize)}</span>
           </div>
+          <div className="space-y-1">
+            <span className="text-xs text-foreground-muted">Preview</span>
+            {detail ? (
+              <p className="text-xs text-foreground leading-relaxed line-clamp-6">
+                {detail.content.slice(0, 500)}
+                {detail.content.length > 500 ? "…" : ""}
+              </p>
+            ) : (
+              <div className="space-y-1.5">
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-4/5" />
+                <Skeleton className="h-3 w-3/4" />
+              </div>
+            )}
+          </div>
           {onDelete && (
             <Button
               variant="outline"
@@ -146,6 +164,13 @@ export function KBItemCard({ item, onDelete }: KBItemCardProps) {
               Delete document
             </Button>
           )}
+          <button
+            type="button"
+            onClick={() => setExpanded(false)}
+            className="text-xs text-foreground-muted hover:text-foreground underline"
+          >
+            Close
+          </button>
         </div>
       )}
 
