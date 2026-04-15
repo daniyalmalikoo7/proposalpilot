@@ -5,9 +5,10 @@
 //            (confidence_score, requirements_addressed, citations).
 //            Sent as the "complete" SSE event with the same shape as before.
 
-// Vercel Pro: allow up to 60 s for SSE streaming responses.
+// Allow up to 300 s for SSE streaming responses (Phase 1 generation can take 45–90 s
+// for long proposals; Phase 2 metadata adds another 10–20 s).
 // Edge runtime is not viable here because this route uses Prisma (Node.js runtime required).
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
@@ -301,19 +302,24 @@ export async function POST(req: NextRequest): Promise<Response> {
 
         // ── Phase 2: Metadata extraction (non-streaming) ────────────────────
         // Ask a lighter model to score the already-generated content against
-        // the requirements and KB. Falls back to safe defaults on any error.
-        const defaultMeta = {
-          confidence_score: 0.5,
+        // the requirements and KB.
+        //
+        // IMPORTANT: the complete event is emitted from INSIDE this try/catch so
+        // that fullContent is never lost if Phase 2 fails.  Any error — network
+        // timeout, Gemini quota, JSON parse failure — falls to the catch branch
+        // which immediately sends the complete event with content + zero confidence.
+        const fallbackCompletePayload: z.infer<typeof SectionGeneratorOutputSchema> = {
+          title: input.sectionTitle,
+          content: fullContent,
+          confidence_score: 0,
           requirements_addressed: input.requirements.map((_, i) => ({
             requirement_index: i,
             addressed: true,
             how_addressed: "Addressed in the generated section content",
           })),
-          citations: [] as z.infer<typeof CitationSchema>[],
-          review_notes: null as string | null,
+          citations: [],
+          review_notes: null,
         };
-
-        let meta = { ...defaultMeta };
 
         try {
           const metaUserPrompt = [
@@ -381,40 +387,50 @@ export async function POST(req: NextRequest): Promise<Response> {
             "section-generator-meta",
           );
 
-          // Parse and validate with Zod; fall through to defaults on failure
           const MetaSchema = z.object({
             confidence_score: z.number().min(0).max(1),
             requirements_addressed: z.array(RequirementAddressedSchema),
             citations: z.array(CitationSchema),
             review_notes: z.string().nullable(),
           });
-          const parsed = MetaSchema.safeParse(JSON.parse(metaText) as unknown);
-          if (parsed.success) {
-            meta = parsed.data;
+          const parsedMeta = MetaSchema.safeParse(JSON.parse(metaText) as unknown);
+
+          let completePayload: z.infer<typeof SectionGeneratorOutputSchema>;
+          if (parsedMeta.success) {
+            completePayload = {
+              title: input.sectionTitle,
+              content: fullContent,
+              ...parsedMeta.data,
+            };
           } else {
-            logger.warn("stream-section metadata parse failed, using defaults", {
-              error: parsed.error.message,
-            });
+            logger.warn(
+              "stream-section metadata parse failed — sending content without scores",
+              { error: parsedMeta.error.message },
+            );
+            completePayload = fallbackCompletePayload;
           }
+
+          // ── Emit complete event ───────────────────────────────────────────
+          controller.enqueue(
+            encoder.encode(
+              `event: complete\ndata: ${JSON.stringify(completePayload)}\n\n`,
+            ),
+          );
         } catch (metaErr) {
           logger.warn(
-            "stream-section metadata extraction failed, using defaults",
-            { error: metaErr instanceof Error ? metaErr.message : String(metaErr) },
+            "Phase 2 metadata call failed — sending content without scores",
+            {
+              error:
+                metaErr instanceof Error ? metaErr.message : String(metaErr),
+            },
+          );
+          // Always emit complete with the streamed content so it is never lost.
+          controller.enqueue(
+            encoder.encode(
+              `event: complete\ndata: ${JSON.stringify(fallbackCompletePayload)}\n\n`,
+            ),
           );
         }
-
-        // ── Emit complete event (same shape as before) ──────────────────────
-        const completePayload: z.infer<typeof SectionGeneratorOutputSchema> = {
-          title: input.sectionTitle,
-          content: fullContent,
-          ...meta,
-        };
-
-        controller.enqueue(
-          encoder.encode(
-            `event: complete\ndata: ${JSON.stringify(completePayload)}\n\n`,
-          ),
-        );
       } catch (err) {
         logger.error("stream-section failed", {
           error: err instanceof Error ? err.message : String(err),
