@@ -15,6 +15,7 @@ import {
   RotateCcw,
   AlertTriangle,
   Zap,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Badge } from "@/components/atoms/badge";
@@ -25,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/atoms/tooltip";
+import { trpc } from "@/lib/trpc/client";
 import { EditorToolbar } from "./editor-toolbar";
 import { useSectionGeneration } from "./use-section-generation";
 import { markdownToHtml } from "./markdown-to-html";
@@ -137,6 +139,13 @@ function ProposalEditorInner({
   const [confidenceScore, setConfidenceScore] = useState<number | null>(
     section.confidenceScore ?? null,
   );
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const utils = trpc.useUtils();
+  const deleteSectionMutation = trpc.proposal.deleteSection.useMutation({
+    onSuccess: () => {
+      void utils.proposal.get.invalidate({ id: generateContext.proposalId });
+    },
+  });
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoGenerateFiredRef = useRef(false);
   // Ref so the stale onUpdate closure can read the latest isGenerating value
@@ -274,7 +283,7 @@ function ProposalEditorInner({
       role="region"
       aria-label={section.title}
       className={cn(
-        "flex flex-col rounded-lg border border-border bg-background-elevated transition-shadow hover:shadow-md",
+        "group relative flex flex-col rounded-lg border border-border bg-background-elevated transition-shadow hover:shadow-md",
         getConfidenceBorderClass(confidenceScore),
       )}
     >
@@ -294,6 +303,15 @@ function ProposalEditorInner({
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setConfirmDelete(true)}
+            className="h-7 w-7 p-0 text-foreground-muted opacity-0 transition-opacity group-hover:opacity-100 hover:text-danger"
+            aria-label={`Delete ${section.title} section`}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
           <AnimatePresence mode="wait">
             {isGenerating ? (
               <motion.div
@@ -413,6 +431,28 @@ function ProposalEditorInner({
       >
         <EditorContent editor={editor} />
       </div>
+
+      {/* Delete confirmation overlay */}
+      {confirmDelete && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-lg bg-background-elevated/95 p-6 backdrop-blur-sm">
+          <p className="text-center text-sm font-medium">Delete &ldquo;{section.title}&rdquo;?</p>
+          <p className="text-center text-xs text-foreground-muted">This cannot be undone.</p>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setConfirmDelete(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-7 text-xs"
+              disabled={deleteSectionMutation.isPending}
+              onClick={() => deleteSectionMutation.mutate({ sectionId: section.id, proposalId: generateContext.proposalId })}
+            >
+              {deleteSectionMutation.isPending ? "Deleting…" : "Delete"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
