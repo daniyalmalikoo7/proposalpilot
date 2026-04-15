@@ -35,12 +35,27 @@ type DbProposal = {
   deadline: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  sections: ReadonlyArray<{ content: string }>;
+  sections: ReadonlyArray<{ content: string | null }> | null | undefined;
+};
+
+const containerVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.04 } },
+};
+
+const rowVariants = {
+  hidden: { opacity: 0, y: 6 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] as const },
+  },
 };
 
 function mapProposal(p: DbProposal): Proposal {
-  const total = p.sections.length;
-  const filled = p.sections.filter((s) => s.content.trim().length > 0).length;
+  const sections = p.sections ?? [];
+  const total = sections.length;
+  const filled = sections.filter((s) => (s.content ?? "").trim().length > 0).length;
   const completionPct = total > 0 ? Math.round((filled / total) * 100) : 0;
   return {
     id: p.id,
@@ -249,18 +264,12 @@ export default function DashboardPage() {
           <motion.div
             initial="hidden"
             animate="visible"
-            variants={{
-              hidden: {},
-              visible: { transition: { staggerChildren: 0.04 } },
-            }}
+            variants={containerVariants}
           >
             {page.map((proposal) => (
               <motion.div
                 key={proposal.id}
-                variants={{
-                  hidden: { opacity: 0, y: 6 },
-                  visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
-                }}
+                variants={rowVariants}
               >
                 <ProposalCard proposal={proposal} />
               </motion.div>
