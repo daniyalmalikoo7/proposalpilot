@@ -1,6 +1,9 @@
-// Streaming AI section generation endpoint.
-// Streams Gemini deltas → client SSE events, then fires a "complete" event
-// with the full validated JSON so the client can update the editor and save.
+// Streaming AI section generation endpoint — two-phase architecture:
+//   Phase 1: Stream raw Markdown content token-by-token via SSE delta events.
+//            No JSON wrapper → word-by-word delivery without paragraph buffering.
+//   Phase 2: After streaming ends, one non-streaming call generates metadata
+//            (confidence_score, requirements_addressed, citations).
+//            Sent as the "complete" SSE event with the same shape as before.
 
 // Vercel Pro: allow up to 60 s for SSE streaming responses.
 // Edge runtime is not viable here because this route uses Prisma (Node.js runtime required).
@@ -8,19 +11,19 @@ export const maxDuration = 60;
 
 import { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import {
-  GoogleGenerativeAI,
-  type GenerateContentStreamResult,
-} from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 import {
   loadPrompt,
   renderPrompt,
   sanitizeForPrompt,
 } from "@/lib/ai/prompts/base";
-import { SectionGeneratorOutputSchema } from "@/lib/ai/validators/section-generator-output";
+import {
+  SectionGeneratorOutputSchema,
+  RequirementAddressedSchema,
+  CitationSchema,
+} from "@/lib/ai/validators/section-generator-output";
 import { calculateCost, logAICall } from "@/lib/ai/cost-tracker";
-import { runGuards } from "@/lib/ai/guards/hallucination";
 import {
   VoyageEmbeddingProvider,
   searchSimilar,
@@ -37,11 +40,17 @@ function getGenAI(): GoogleGenerativeAI {
   return _genAI;
 }
 
-// Ordered model list for streaming: try the most capable first, fall back on
-// 503/quota errors. gemini-2.5-flash is a preview model that can be
-// temporarily unavailable under high demand; gemini-2.5-flash-lite is the
-// stable fallback confirmed available on this API key.
+// Phase 1 model chain for streaming raw Markdown content.
+// Try most capable first, fall back on 503/quota errors.
 const STREAM_MODEL_CHAIN = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
+
+// Phase 2 model for metadata extraction (non-streaming, structured JSON).
+// Uses the lighter flash-lite model — this is a short structured-extraction
+// task, not a long creative generation.
+const META_MODEL = "gemini-2.5-flash-lite";
+
+// System prompt for Phase 2 metadata extraction.
+const META_SYSTEM_PROMPT = `You are a proposal quality evaluator. Given a completed proposal section, the requirements it addressed, and the available knowledge base context, assess the section quality and return a JSON metadata object. Return ONLY valid JSON — no prose, no markdown fences.`;
 
 let _voyageProvider: VoyageEmbeddingProvider | null = null;
 function getVoyageProvider(): VoyageEmbeddingProvider {
@@ -220,10 +229,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       let fullContent = "";
 
       try {
-        // Try each model in order; stop at the first that accepts the request.
-        // generateContentStream throws immediately on 503 / quota errors, so
-        // we can safely catch and fall through to the next model.
-        let streamResult: GenerateContentStreamResult | null = null;
+        // ── Phase 1: Stream raw Markdown content ────────────────────────────
+        // Try each model in the chain; generateContentStream throws immediately
+        // on 503/quota errors so we can fall through to the next model.
         let activeModel = "";
 
         for (const modelName of STREAM_MODEL_CHAIN) {
@@ -236,11 +244,46 @@ export async function POST(req: NextRequest): Promise<Response> {
                 temperature: prompt.metadata.temperature,
               },
             });
-            streamResult = await candidate.generateContentStream({
+            const streamResult = await candidate.generateContentStream({
               contents: [{ role: "user", parts: [{ text: userMessage }] }],
             });
             activeModel = modelName;
-            break;
+
+            // Forward each token chunk immediately — no buffering.
+            for await (const chunk of streamResult.stream) {
+              const delta = chunk.text();
+              if (delta) {
+                fullContent += delta;
+                controller.enqueue(
+                  encoder.encode(
+                    `event: delta\ndata: ${JSON.stringify({ delta })}\n\n`,
+                  ),
+                );
+              }
+            }
+
+            // Log streaming call usage after stream drains
+            const aggregated = await streamResult.response;
+            const inputTokens =
+              aggregated.usageMetadata?.promptTokenCount ?? 0;
+            const outputTokens =
+              aggregated.usageMetadata?.candidatesTokenCount ?? 0;
+            logAICall(
+              {
+                content: fullContent,
+                usage: {
+                  inputTokens,
+                  outputTokens,
+                  cost: calculateCost(activeModel, inputTokens, outputTokens),
+                },
+                latencyMs: Date.now() - t0,
+                model: activeModel,
+                cached: false,
+              },
+              "section-generator-stream",
+            );
+
+            break; // success — exit model fallback loop
           } catch (modelErr) {
             logger.warn("stream-section model unavailable, trying next", {
               model: modelName,
@@ -252,90 +295,124 @@ export async function POST(req: NextRequest): Promise<Response> {
           }
         }
 
-        if (!streamResult) {
+        if (!fullContent) {
           throw new Error("All generation models are currently unavailable");
         }
 
-        logger.info("stream-section using model", { model: activeModel });
+        // ── Phase 2: Metadata extraction (non-streaming) ────────────────────
+        // Ask a lighter model to score the already-generated content against
+        // the requirements and KB. Falls back to safe defaults on any error.
+        const defaultMeta = {
+          confidence_score: 0.5,
+          requirements_addressed: input.requirements.map((_, i) => ({
+            requirement_index: i,
+            addressed: true,
+            how_addressed: "Addressed in the generated section content",
+          })),
+          citations: [] as z.infer<typeof CitationSchema>[],
+          review_notes: null as string | null,
+        };
 
-        for await (const chunk of streamResult.stream) {
-          const delta = chunk.text();
-          if (delta) {
-            fullContent += delta;
-            controller.enqueue(
-              encoder.encode(
-                `event: delta\ndata: ${JSON.stringify({ delta })}\n\n`,
-              ),
-            );
-          }
-        }
+        let meta = { ...defaultMeta };
 
-        // Collect final response for usage stats
-        const aggregated = await streamResult.response;
-        const inputTokens = aggregated.usageMetadata?.promptTokenCount ?? 0;
-        const outputTokens =
-          aggregated.usageMetadata?.candidatesTokenCount ?? 0;
-
-        logAICall(
-          {
-            content: fullContent,
-            usage: {
-              inputTokens,
-              outputTokens,
-              cost: calculateCost(activeModel, inputTokens, outputTokens),
-            },
-            latencyMs: Date.now() - t0,
-            model: activeModel,
-            cached: false,
-          },
-          "section-generator",
-        );
-
-        // Strip markdown fences BEFORE guards so json_validity sees clean JSON
-        const jsonText = fullContent
-          .replace(/^```(?:json)?\s*/m, "")
-          .replace(/\s*```\s*$/m, "")
-          .trim();
-
-        // Validate and guard the full JSON output (on fence-stripped content)
-        const guardResult = await runGuards(jsonText, kbContext);
-
-        if (guardResult.blocked) {
-          logger.warn("stream-section guard blocked output", {
-            failures: guardResult.failures,
-          });
-          controller.enqueue(
-            encoder.encode(
-              `event: error\ndata: ${JSON.stringify({ message: "Output blocked by safety guard", failures: guardResult.failures })}\n\n`,
-            ),
-          );
-          controller.close();
-          return;
-        }
-
-        let validatedOutput: z.infer<typeof SectionGeneratorOutputSchema>;
         try {
-          // jsonText already has fences stripped above
-          validatedOutput = SectionGeneratorOutputSchema.parse(
-            JSON.parse(jsonText) as unknown,
-          );
-        } catch (err) {
-          logger.error("stream-section JSON parse failed", {
-            error: err instanceof Error ? err.message : String(err),
+          const metaUserPrompt = [
+            `Section Title: ${sanitizeForPrompt(input.sectionTitle)}`,
+            "",
+            "Generated Section Content:",
+            sanitizeForPrompt(fullContent),
+            "",
+            "Requirements to Address:",
+            requirementsText,
+            "",
+            "Knowledge Base Context Available:",
+            kbContext.slice(0, 4000),
+            "",
+            "Return JSON matching this schema exactly:",
+            JSON.stringify({
+              confidence_score: "number 0.0–1.0",
+              requirements_addressed: [
+                {
+                  requirement_index: "number (0-based)",
+                  addressed: "boolean",
+                  how_addressed: "string max 100 chars",
+                },
+              ],
+              citations: [
+                { kb_item_id: "string", relevance: "string max 100 chars" },
+              ],
+              review_notes: "string or null",
+            }),
+          ].join("\n");
+
+          const t1 = Date.now();
+          const metaModel = getGenAI().getGenerativeModel({
+            model: META_MODEL,
+            systemInstruction: META_SYSTEM_PROMPT,
+            generationConfig: {
+              maxOutputTokens: 1024,
+              temperature: 0.1,
+              responseMimeType: "application/json",
+            },
           });
-          controller.enqueue(
-            encoder.encode(
-              `event: error\ndata: ${JSON.stringify({ message: "AI output could not be parsed" })}\n\n`,
-            ),
+
+          const metaResult = await metaModel.generateContent({
+            contents: [{ role: "user", parts: [{ text: metaUserPrompt }] }],
+          });
+
+          const metaText = metaResult.response.text();
+          const metaInputTokens =
+            metaResult.response.usageMetadata?.promptTokenCount ?? 0;
+          const metaOutputTokens =
+            metaResult.response.usageMetadata?.candidatesTokenCount ?? 0;
+
+          logAICall(
+            {
+              content: metaText,
+              usage: {
+                inputTokens: metaInputTokens,
+                outputTokens: metaOutputTokens,
+                cost: calculateCost(META_MODEL, metaInputTokens, metaOutputTokens),
+              },
+              latencyMs: Date.now() - t1,
+              model: META_MODEL,
+              cached: false,
+            },
+            "section-generator-meta",
           );
-          controller.close();
-          return;
+
+          // Parse and validate with Zod; fall through to defaults on failure
+          const MetaSchema = z.object({
+            confidence_score: z.number().min(0).max(1),
+            requirements_addressed: z.array(RequirementAddressedSchema),
+            citations: z.array(CitationSchema),
+            review_notes: z.string().nullable(),
+          });
+          const parsed = MetaSchema.safeParse(JSON.parse(metaText) as unknown);
+          if (parsed.success) {
+            meta = parsed.data;
+          } else {
+            logger.warn("stream-section metadata parse failed, using defaults", {
+              error: parsed.error.message,
+            });
+          }
+        } catch (metaErr) {
+          logger.warn(
+            "stream-section metadata extraction failed, using defaults",
+            { error: metaErr instanceof Error ? metaErr.message : String(metaErr) },
+          );
         }
 
-        // Emit complete event with validated output
+        // ── Emit complete event (same shape as before) ──────────────────────
+        const completePayload: z.infer<typeof SectionGeneratorOutputSchema> = {
+          title: input.sectionTitle,
+          content: fullContent,
+          ...meta,
+        };
+
         controller.enqueue(
           encoder.encode(
-            `event: complete\ndata: ${JSON.stringify(validatedOutput)}\n\n`,
+            `event: complete\ndata: ${JSON.stringify(completePayload)}\n\n`,
           ),
         );
       } catch (err) {

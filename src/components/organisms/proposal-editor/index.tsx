@@ -16,7 +16,6 @@ import {
   AlertTriangle,
   Zap,
 } from "lucide-react";
-import { Skeleton } from "@/components/atoms/skeleton";
 import { Button } from "@/components/atoms/button";
 import { Badge } from "@/components/atoms/badge";
 import { cn } from "@/lib/utils";
@@ -93,6 +92,33 @@ function ConfidenceBadge({ score }: { readonly score: number }) {
   );
 }
 
+/**
+ * Lightweight markdown → HTML for streaming preview.
+ * Only converts patterns where both delimiters are present on the same line,
+ * so partial/unclosed markdown at the stream boundary renders as plain text
+ * rather than leaking raw syntax into the editor.
+ */
+function streamingMarkdownToHtml(md: string): string {
+  if (!md) return "";
+  return md
+    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
+    .replace(/^# (.+)$/gm, "<h1>$1</h1>")
+    .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, "<em>$1</em>")
+    .replace(/^[-*] (.+)$/gm, "<li>$1</li>")
+    .replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>${m}</ul>`)
+    .split(/\n{2,}/)
+    .map((block) => {
+      const t = block.trim();
+      if (!t) return "";
+      if (/^<[hul]/.test(t)) return t;
+      return `<p>${t.replace(/\n/g, "<br>")}</p>`;
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
 function getConfidenceBorderClass(score: number | null): string {
   if (score === null) return "border-l-4 border-l-transparent";
   if (score > 0.7) return "border-l-4 border-l-success";
@@ -113,6 +139,8 @@ function ProposalEditorInner({
   );
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoGenerateFiredRef = useRef(false);
+  // Ref so the stale onUpdate closure can read the latest isGenerating value
+  const isGeneratingRef = useRef(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -134,6 +162,9 @@ function ProposalEditorInner({
       },
     },
     onUpdate: ({ editor: ed }) => {
+      // Don't debounce-save while streaming — content changes every chunk.
+      // handleGenerateComplete calls onContentChange directly after the stream.
+      if (isGeneratingRef.current) return;
       const html = ed.getHTML();
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
       autoSaveTimer.current = setTimeout(() => {
@@ -165,6 +196,25 @@ function ProposalEditorInner({
       generateContext,
       onComplete: handleGenerateComplete,
     });
+
+  // Keep ref in sync during render so the stale onUpdate closure sees it
+  isGeneratingRef.current = isGenerating;
+
+  // Progressive rendering: deltas are now raw Markdown tokens, so streamBuffer
+  // IS the content. Two cases:
+  //   1. streamBuffer empty  → no tokens yet; show placeholder immediately
+  //   2. streamBuffer has tokens → render as HTML, grows word-by-word
+  useEffect(() => {
+    if (!isGenerating || !editor) return;
+    if (streamBuffer) {
+      editor.commands.setContent(streamingMarkdownToHtml(streamBuffer));
+    } else {
+      // Generation just started — give immediate visual feedback before first token
+      editor.commands.setContent(
+        '<p class="animate-pulse text-foreground-muted">✦ Generating proposal content…</p>',
+      );
+    }
+  }, [isGenerating, streamBuffer, editor]);
 
   useEffect(() => {
     if (autoGenerate && !autoGenerateFiredRef.current && !isGenerating) {
@@ -313,48 +363,13 @@ function ProposalEditorInner({
         </div>
       )}
 
-      {/* Streaming area — aria-live so screen readers announce updates */}
+      {/* Editor — always mounted; aria-live announces streaming updates to screen readers */}
       <div
         aria-live="polite"
         aria-busy={isGenerating}
         aria-label={`${section.title} content`}
       >
-        {/* Stream preview */}
-        <AnimatePresence>
-          {isGenerating && streamBuffer && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="border-b border-border bg-background-subtle/50 px-6 py-2"
-            >
-              <p className="line-clamp-2 font-mono text-xs text-foreground-muted">
-                {streamBuffer.slice(-200)}
-                <span className="animate-pulse">▋</span>
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Editor area */}
-        <div className="relative">
-          {isGenerating && !streamBuffer && (
-            <div className="space-y-3 px-6 py-4">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-11/12" />
-              <Skeleton className="h-4 w-4/5" />
-              <Skeleton className="mt-4 h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-5/6" />
-              <Skeleton className="mt-4 h-4 w-full" />
-              <Skeleton className="h-4 w-2/3" />
-            </div>
-          )}
-          <div className={isGenerating && !streamBuffer ? "hidden" : undefined}>
-            <EditorContent editor={editor} />
-          </div>
-        </div>
+        <EditorContent editor={editor} />
       </div>
     </div>
   );
