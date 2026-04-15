@@ -6,12 +6,15 @@ import { z } from "zod";
 export const RequirementAddressedSchema = z.object({
   requirement_index: z.number().int().nonnegative(),
   addressed: z.boolean(),
-  how_addressed: z.string().max(100),
+  // No max — Gemini routinely exceeds 100 chars; a hard limit causes silent
+  // Phase 2 validation failures that fall back to confidence_score: 0.
+  how_addressed: z.string(),
 });
 
 export const CitationSchema = z.object({
   kb_item_id: z.string(),
-  relevance: z.string().max(100),
+  // Same rationale — no hard max on AI-generated descriptive fields.
+  relevance: z.string(),
 });
 
 export const SectionGeneratorOutputSchema = z.object({

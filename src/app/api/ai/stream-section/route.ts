@@ -411,6 +411,11 @@ export async function POST(req: NextRequest): Promise<Response> {
           }
 
           // ── Emit complete event ───────────────────────────────────────────
+          logger.info("Phase 2 metadata result", {
+            confidence_score: completePayload.confidence_score,
+            requirements_addressed: completePayload.requirements_addressed?.length,
+            phase2_succeeded: parsedMeta.success,
+          });
           controller.enqueue(
             encoder.encode(
               `event: complete\ndata: ${JSON.stringify(completePayload)}\n\n`,
