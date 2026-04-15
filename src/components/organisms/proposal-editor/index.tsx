@@ -141,6 +141,12 @@ function ProposalEditorInner({
   const autoGenerateFiredRef = useRef(false);
   // Ref so the stale onUpdate closure can read the latest isGenerating value
   const isGeneratingRef = useRef(false);
+  // Typewriter animation: tracks how many characters have been revealed so far.
+  // The interval reads streamBufferRef (always current) so it doesn't need to
+  // be restarted on every chunk arrival.
+  const revealedLengthRef = useRef(0);
+  const typewriterRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const streamBufferRef = useRef("");
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -181,6 +187,12 @@ function ProposalEditorInner({
 
   const handleGenerateComplete = useCallback(
     (html: string, output: SectionGeneratorOutput) => {
+      // Stop the typewriter before setting final content so the interval
+      // cannot overwrite the full markdownToHtml result with a partial frame.
+      if (typewriterRef.current) {
+        clearInterval(typewriterRef.current);
+        typewriterRef.current = null;
+      }
       editor?.commands.setContent(html);
       onContentChange(section.id, html);
       setConfidenceScore(output.confidence_score);
@@ -197,23 +209,53 @@ function ProposalEditorInner({
       onComplete: handleGenerateComplete,
     });
 
-  // Keep ref in sync during render so the stale onUpdate closure sees it
+  // Keep refs in sync during render so stale closures (onUpdate, typewriter) see them
   isGeneratingRef.current = isGenerating;
+  streamBufferRef.current = streamBuffer;
 
-  // Progressive rendering: deltas are now raw Markdown tokens, so streamBuffer
-  // IS the content. Two cases:
-  //   1. streamBuffer empty  → no tokens yet; show placeholder immediately
-  //   2. streamBuffer has tokens → render as HTML, grows word-by-word
+  // Typewriter animation: reveals streamed content character-by-character (~30 chars
+  // per frame at 60fps = ~1800 chars/s) regardless of how large Gemini's chunks are.
+  //
+  // The interval reads streamBufferRef.current (updated every render) so it doesn't
+  // need to be torn down and restarted on every chunk arrival — it simply catches up
+  // to the latest buffer length on each tick.
+  //
+  // Lifecycle:
+  //   isGenerating=true,  streamBuffer=""  → show animated placeholder
+  //   isGenerating=true,  streamBuffer!=="" → start interval (if not running)
+  //   isGenerating=false                   → clear interval + reset length
   useEffect(() => {
-    if (!isGenerating || !editor) return;
-    if (streamBuffer) {
-      editor.commands.setContent(streamingMarkdownToHtml(streamBuffer));
-    } else {
-      // Generation just started — give immediate visual feedback before first token
+    if (!isGenerating || !editor) {
+      if (typewriterRef.current) {
+        clearInterval(typewriterRef.current);
+        typewriterRef.current = null;
+      }
+      revealedLengthRef.current = 0;
+      return;
+    }
+
+    if (!streamBuffer) {
+      // Generation started but no tokens yet — show placeholder once
+      revealedLengthRef.current = 0;
       editor.commands.setContent(
         '<p class="animate-pulse text-foreground-muted">✦ Generating proposal content…</p>',
       );
+      return;
     }
+
+    // Interval already running — it will pick up new content via streamBufferRef
+    if (typewriterRef.current) return;
+
+    typewriterRef.current = setInterval(() => {
+      const target = streamBufferRef.current;
+      // Caught up with current buffer — wait for the next chunk without a render
+      if (revealedLengthRef.current >= target.length) return;
+      const next = Math.min(revealedLengthRef.current + 30, target.length);
+      revealedLengthRef.current = next;
+      editor.commands.setContent(
+        streamingMarkdownToHtml(target.slice(0, next)),
+      );
+    }, 16); // ~60 fps
   }, [isGenerating, streamBuffer, editor]);
 
   useEffect(() => {
